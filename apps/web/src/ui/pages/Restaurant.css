@@ -1,0 +1,76 @@
+.resto{max-width:600px; margin-inline:auto; padding-bottom:110px}
+
+/* hero */
+.resto-hero{position:relative; height:clamp(150px,42vw,210px); display:grid; place-items:center;
+  font-size:72px}
+.resto-hero::after{content:""; position:absolute; inset:0;
+  background:linear-gradient(to top, var(--ink) 4%, transparent 60%)}
+.resto-hero .resto-icon{position:relative; z-index:1; filter:drop-shadow(0 6px 18px rgba(0,0,0,.4))}
+.resto-hero .back{position:absolute; top:var(--gutter); left:var(--gutter); z-index:2;
+  width:40px; height:40px; border-radius:var(--r-sm); background:rgba(22,16,28,.6);
+  border:1px solid var(--ink-line); color:var(--paper); cursor:pointer; font-size:18px;
+  backdrop-filter:blur(4px)}
+
+.resto-body{padding:0 var(--gutter)}
+
+/* หัวร้าน */
+.resto-head{margin-top:-8px; position:relative; z-index:1; margin-bottom:var(--sp-6)}
+.resto-cat{display:inline-block; font-family:var(--mono); font-size:var(--fs-label); color:var(--mango);
+  border:1px solid rgba(255,182,39,.35); border-radius:var(--r-pill); padding:3px 10px; margin-bottom:var(--sp-3)}
+.resto-name{font-family:var(--display); font-weight:800; font-size:var(--fs-display-l); margin:0 0 8px; line-height:1.1}
+.resto-meta{font-family:var(--mono); font-size:.82rem; color:var(--paper-dim)}
+.resto-meta .rate{color:var(--mango)}
+.resto-blurb{color:var(--paper-dim); font-size:var(--fs-data); margin:10px 0 0}
+
+/* แบนเนอร์นอกพื้นที่จัดส่ง */
+.resto-offzone{display:flex; gap:var(--sp-3); align-items:flex-start; margin-bottom:var(--sp-6);
+  background:rgba(255,77,61,.08); border:1px solid rgba(255,77,61,.35); border-radius:var(--r);
+  padding:var(--sp-4)}
+.resto-offzone__icon{font-size:24px; flex:0 0 auto; line-height:1.2}
+.resto-offzone__text{display:flex; flex-direction:column; gap:3px; min-width:0}
+.resto-offzone__text b{color:var(--chili); font-weight:700}
+.resto-offzone__text span{font-size:var(--fs-label); color:var(--paper-dim)}
+
+.resto-sec{font-family:var(--display); font-weight:700; font-size:var(--fs-display-l); margin:0 0 var(--sp-4)}
+
+/* เมนูที่สั่งไม่ได้ (ร้านนอกเขต) */
+.dish-row--off{opacity:.5; cursor:not-allowed}
+.dish-row--off:hover{border-color:var(--ink-line)}
+
+/* รายการเมนู */
+.dishes{display:grid; gap:var(--sp-3)}
+.dish-row{display:flex; gap:var(--sp-4); align-items:stretch; text-decoration:none; color:inherit;
+  background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r); padding:var(--sp-3);
+  transition:border-color .15s}
+.dish-row:hover{border-color:rgba(255,182,39,.35)}
+.dish-info{min-width:0; flex:1; display:flex; flex-direction:column; gap:4px}
+.dish-info h3{font-size:var(--fs-h); font-weight:600; margin:0}
+.dish-desc{font-size:var(--fs-label); color:var(--paper-dim); margin:0;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.dish-price{font-family:var(--mono); color:var(--mango); font-size:.95rem; margin-top:auto}
+.dish-thumb{position:relative; flex:0 0 88px; width:88px; border-radius:var(--r-sm);
+  display:grid; place-items:center; font-size:38px}
+.dish-add{position:absolute; right:6px; bottom:6px; width:26px; height:26px; border-radius:50%;
+  background:var(--mango); color:var(--ink); display:grid; place-items:center; font-size:18px; font-weight:700;
+  box-shadow:0 2px 8px rgba(0,0,0,.35)}
+
+/* แถบตะกร้าติดล่าง (ใช้สไตล์เดียวกับหน้า Home) */
+.resto .cartbar{position:fixed; left:50%; transform:translateX(-50%); bottom:18px; z-index:5;
+  width:min(560px,calc(100% - 32px)); display:flex; align-items:center; gap:var(--sp-3);
+  background:var(--chili); color:var(--ink); border-radius:var(--r); padding:14px var(--sp-5);
+  box-shadow:var(--glow-chili); font-weight:600; text-decoration:none}
+.resto .cartbar .count{background:rgba(0,0,0,.18); border-radius:var(--r-pill); padding:3px 10px;
+  font-family:var(--mono); font-size:.82rem}
+.resto .cartbar .total{margin-left:auto; font-family:var(--mono)}
+
+/* พื้นผิว gradient (ตรงกับ Home) */
+.resto .g1{background:linear-gradient(135deg,#5A2E2A,#8A4B2F)}
+.resto .g2{background:linear-gradient(135deg,#5B4420,#9A7B22)}
+.resto .g3{background:linear-gradient(135deg,#2E4A33,#4F7A3D)}
+.resto .g4{background:linear-gradient(135deg,#4A2540,#7A3560)}
+.resto .g5{background:linear-gradient(135deg,#503018,#9A5A22)}
+.resto .g6{background:linear-gradient(135deg,#274152,#3D6E7A)}
+
+/* not found */
+.resto--missing .empty{text-align:center; padding:18vh var(--gutter) 0; color:var(--paper-dim)}
+.resto--missing .big{font-size:54px; margin-bottom:var(--sp-3)}

@@ -1,0 +1,31 @@
+.merchant{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 48px}
+
+.m-top{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+  margin-bottom:var(--sp-5)}
+.m-who{font-family:var(--display); font-weight:700; font-size:var(--fs-h); min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.m-back{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
+.m-back:hover{color:var(--paper)}
+.m-links{display:flex; gap:var(--sp-3); flex:0 0 auto}
+
+/* ใบออเดอร์ (order ticket) */
+.m-ticket{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
+  padding:var(--sp-5); border-left:4px solid var(--mango)}
+.m-ticket__head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
+  margin-bottom:var(--sp-4)}
+.m-no{font-family:var(--mono); font-weight:700; font-size:1.05rem}
+.m-stage{font-family:var(--mono); font-size:var(--fs-label); color:var(--mango);
+  border:1px solid rgba(255,182,39,.35); border-radius:var(--r-pill); padding:4px 12px}
+.m-stage--done{color:var(--paper-dim); border-color:var(--ink-line)}
+
+.m-lines{list-style:none; margin:0; padding:0; display:grid; gap:var(--sp-3);
+  border-top:1px solid var(--ink-line); padding-top:var(--sp-4)}
+.m-lines li{display:flex; gap:var(--sp-3); align-items:baseline}
+.m-qty{font-family:var(--mono); font-weight:700; color:var(--mango); flex:0 0 auto}
+.m-item{min-width:0}
+.m-opts{color:var(--paper-dim); font-size:var(--fs-label)}
+.m-note{color:var(--paper-dim); font-size:var(--fs-label); font-style:italic}
+
+.m-actions{display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-top:var(--sp-5)}
+.m-actions .btn{flex:1 1 auto; min-width:120px; text-align:center; justify-content:center}
+.m-idle{margin:0; color:var(--paper-dim); font-size:var(--fs-data)}

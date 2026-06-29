@@ -1,0 +1,30 @@
+{
+  "name": "food-delivery-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Food delivery marketplace — monorepo (packages/domain + apps/web + apps/api)",
+  "scripts": {
+    "dev": "vite apps/web",
+    "build": "vite build apps/web",
+    "preview": "vite preview apps/web",
+    "typecheck": "tsc -p apps/web/tsconfig.json && tsc -p packages/domain/tsconfig.json",
+    "test": "node --import tsx --test \"packages/domain/src/**/*.test.ts\"",
+    "test:ui": "vitest run --root apps/web",
+    "test:ui:watch": "vitest --root apps/web"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^26.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^29.1.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.11",
+    "vitest": "^4.1.9"
+  }
+}

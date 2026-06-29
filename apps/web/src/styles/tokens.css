@@ -1,0 +1,107 @@
+/* ============================================================
+   tokens.css — แหล่งความจริงเดียวของดีไซน์ "ตลาดกลางคืน"
+   ใช้ร่วมทุกหน้าฝั่งลูกค้า  (ดู docs/design/customer-web.md)
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Kanit:wght@600;700;800&family=Anuphan:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+:root{
+  /* ── สี ─────────────────────────────────────────────── */
+  --ink:#16101C;        /* ดำอมม่วงอุ่น — พื้นค่ำคืน */
+  --ink-card:#221829;   /* พื้นการ์ด "แผงร้าน" */
+  --ink-line:#34273E;   /* เส้น/ขอบ */
+  --mango:#FFB627;      /* แสงป้ายไฟ — ไฮไลต์/display */
+  --chili:#FF4D3D;      /* ความร้อน — ปุ่มหลัก/ของด่วน */
+  --pandan:#57B368;     /* สด/พร้อม/สำเร็จ */
+  --paper:#F4ECE0;      /* ตัวอักษรหลัก (ขาวอุ่น) */
+  --paper-dim:#9C8FA6;  /* ตัวอักษรรอง */
+
+  /* ── แสงเรือง (signature) ───────────────────────────── */
+  --glow-mango:0 0 28px rgba(255,182,39,.40);
+  --glow-chili:0 0 26px rgba(255,77,61,.45);
+  --glow-pandan:0 0 24px rgba(87,179,104,.40);
+
+  /* ── ฟอนต์ ──────────────────────────────────────────── */
+  --display:"Kanit",system-ui,sans-serif;
+  --ui:"Anuphan",system-ui,sans-serif;
+  --mono:"Space Mono",ui-monospace,monospace;
+
+  /* ── type scale ─────────────────────────────────────── */
+  --fs-display-xl:clamp(2.4rem,9vw,3.8rem);
+  --fs-display-l:1.75rem;
+  --fs-h:1.125rem;
+  --fs-body:1rem;
+  --fs-label:.8125rem;
+  --fs-data:.9375rem;
+
+  /* ── spacing (ฐาน 4) ────────────────────────────────── */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px;
+  --sp-5:24px; --sp-6:32px; --sp-7:48px; --sp-8:64px;
+  --gutter:clamp(16px,4vw,24px);
+
+  /* ── รัศมีมุม ────────────────────────────────────────── */
+  --r:16px; --r-sm:10px; --r-pill:999px;
+}
+
+/* ── base ─────────────────────────────────────────────── */
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; color:var(--paper); background:var(--ink);
+  font-family:var(--ui); font-size:var(--fs-body); line-height:1.55;
+  overflow-x:hidden;
+  /* ไอ/แสงแผงลอยจางๆ บนพื้นค่ำคืน */
+  background-image:
+    radial-gradient(60% 40% at 80% 0%, rgba(255,182,39,.07), transparent 70%),
+    radial-gradient(50% 35% at 10% 12%, rgba(255,77,61,.06), transparent 70%);
+  background-attachment:fixed;
+}
+img{max-width:100%; display:block}
+
+/* ── focus ที่มองเห็น (a11y) ──────────────────────────── */
+:focus-visible{outline:2px solid var(--mango); outline-offset:2px; border-radius:var(--r-sm)}
+
+/* ============================================================
+   primitives ที่ใช้ซ้ำ
+   ============================================================ */
+
+/* ปุ่ม */
+.btn{appearance:none; cursor:pointer; font-family:var(--ui); font-weight:600;
+  font-size:var(--fs-body); border:none; border-radius:var(--r-sm);
+  padding:13px 20px; color:var(--ink); transition:transform .12s ease, filter .2s}
+.btn:active{transform:translateY(1px)}
+.btn--chili{background:var(--chili); box-shadow:var(--glow-chili)}
+.btn--mango{background:var(--mango); box-shadow:var(--glow-mango)}
+.btn--ghost{background:var(--ink-card); color:var(--paper); border:1px solid var(--ink-line);
+  box-shadow:none}
+
+/* ชิป */
+.chip{display:inline-flex; align-items:center; gap:var(--sp-2);
+  font-size:var(--fs-label); color:var(--paper); background:var(--ink-card);
+  border:1px solid var(--ink-line); padding:8px 14px; border-radius:var(--r-pill);
+  white-space:nowrap}
+.chip--mango{color:var(--mango); background:rgba(255,182,39,.08); border-color:rgba(255,182,39,.3)}
+.chip--pandan{color:var(--pandan); background:rgba(87,179,104,.10); border-color:rgba(87,179,104,.3)}
+
+/* ตัวเลข/ข้อมูล */
+.mono{font-family:var(--mono); font-size:var(--fs-data)}
+
+/* eyebrow — ไทยไม่มีตัวพิมพ์ใหญ่ จึงแยกด้วยน้ำหนัก+สี ไม่ใช่ uppercase */
+.eyebrow{font-size:var(--fs-label); font-weight:500; color:var(--paper-dim)}
+
+/* สถานะว่าง (empty state) */
+.empty{text-align:center; padding:64px 0; color:var(--paper-dim)}
+.empty .big{font-size:56px; margin-bottom:12px}
+.empty p{margin:0 0 18px}
+
+/* แถบเลื่อนแนวนอน (แผงร้าน) */
+.hscroll{display:flex; gap:var(--sp-3); overflow-x:auto; scroll-snap-type:x mandatory;
+  padding-bottom:var(--sp-2); margin-inline:calc(-1*var(--gutter)); padding-inline:var(--gutter);
+  scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.hscroll>*{scroll-snap-align:start; flex:0 0 auto}
+
+/* ปิด motion ถ้าผู้ใช้ขอ */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+}

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ข้าวมันไก่ · เลือกตัวเลือก</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  /* ใช้ token กลางจาก tokens.css — ที่นี่เหลือเฉพาะ CSS ของหน้านี้ */
+  .wrap{max-width:600px; margin-inline:auto; padding-bottom:104px}
+
+  /* ── hero รูปอาหาร ─────────────────────────────────────────── */
+  .hero{position:relative; height:clamp(180px,52vw,260px);
+    background:linear-gradient(135deg,#5A2E2A,#8A4B2F); display:grid; place-items:center; font-size:84px}
+  .hero::after{content:""; position:absolute; inset:0;
+    background:linear-gradient(to top, var(--ink) 4%, transparent 55%)}
+  .hero .back{position:absolute; top:var(--gutter); left:var(--gutter); z-index:1;
+    width:40px; height:40px; border-radius:var(--r-sm); background:rgba(22,16,28,.6);
+    border:1px solid var(--ink-line); color:var(--paper); cursor:pointer; font-size:18px;
+    backdrop-filter:blur(4px)}
+
+  .body{padding:0 var(--gutter)}
+
+  /* ── หัวเมนู ────────────────────────────────────────────────── */
+  .item-head{margin-top:-8px; position:relative; z-index:1}
+  .shop{font-size:var(--fs-label); color:var(--mango); margin-bottom:6px}
+  .item-name{font-family:var(--display); font-weight:800; font-size:var(--fs-display-l);
+    margin:0 0 6px; line-height:1.1}
+  .price-base{font-family:var(--mono); color:var(--mango); font-size:1.05rem}
+  .desc{color:var(--paper-dim); font-size:var(--fs-data); margin:10px 0 0}
+
+  hr{border:none; border-top:1px solid var(--ink-line); margin:var(--sp-5) 0}
+
+  /* ── กลุ่มตัวเลือก ─────────────────────────────────────────── */
+  .group{margin-bottom:var(--sp-5)}
+  .group-head{display:flex; align-items:center; gap:10px; margin-bottom:var(--sp-3)}
+  .group-head h2{font-family:var(--ui); font-weight:600; font-size:var(--fs-h); margin:0}
+  .req{color:var(--chili); font-size:.7rem; font-family:var(--mono)}
+
+  .opt{position:relative; display:flex; align-items:center; gap:12px; cursor:pointer;
+    padding:13px 14px; margin-bottom:var(--sp-2); border-radius:var(--r-sm);
+    border:1px solid var(--ink-line); background:var(--ink-card); transition:border-color .15s}
+  .opt input{position:absolute; opacity:0; width:1px; height:1px}
+  .ind{flex:0 0 auto; width:22px; height:22px; border:2px solid var(--ink-line);
+    display:grid; place-items:center; color:var(--ink); font-size:12px; font-weight:700}
+  .group--single .ind{border-radius:50%}
+  .group--multi .ind{border-radius:6px}
+  .opt .name{flex:1; font-size:var(--fs-body)}
+  .opt .add{font-family:var(--mono); font-size:.85rem; color:var(--paper-dim)}
+  .opt input:checked ~ .ind{background:var(--mango); border-color:var(--mango)}
+  .opt input:checked ~ .ind::after{content:"✓"}
+  .opt:has(input:checked){border-color:rgba(255,182,39,.45)}
+  .opt:has(input:checked) .add{color:var(--mango)}
+  .opt input:focus-visible ~ .ind{outline:2px solid var(--mango); outline-offset:3px}
+
+  /* ── หมายเหตุ ──────────────────────────────────────────────── */
+  .note label{display:block; font-weight:600; font-size:var(--fs-h); margin-bottom:var(--sp-3)}
+  .note textarea{width:100%; min-height:64px; resize:vertical; font-family:var(--ui);
+    font-size:var(--fs-body); color:var(--paper); background:var(--ink-card);
+    border:1px solid var(--ink-line); border-radius:var(--r-sm); padding:12px 14px}
+  .note textarea::placeholder{color:var(--paper-dim)}
+  .note textarea:focus{outline:none; border-color:rgba(255,182,39,.45)}
+
+  /* ── จำนวน ─────────────────────────────────────────────────── */
+  .qty{display:flex; align-items:center; justify-content:center; gap:var(--sp-5);
+    margin:var(--sp-6) 0}
+  .qty button{width:46px; height:46px; border-radius:50%; font-size:22px; cursor:pointer;
+    background:var(--ink-card); border:1px solid var(--ink-line); color:var(--paper)}
+  .qty button:disabled{opacity:.35; cursor:not-allowed}
+  .qty .n{font-family:var(--mono); font-size:1.4rem; min-width:32px; text-align:center}
+
+  /* ── แถบเพิ่มลงตะกร้า (ติดล่าง) ────────────────────────────── */
+  .addbar{position:fixed; left:50%; transform:translateX(-50%); bottom:18px; z-index:5;
+    width:min(560px,calc(100% - 32px))}
+  .addbar .btn{width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .addbar .total{font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    🍗
+    <button class="back" aria-label="ย้อนกลับ">‹</button>
+  </div>
+
+  <div class="body">
+    <div class="item-head">
+      <div class="shop">ข้าวมันไก่ตำนาน ลาดพร้าว · ★ 4.8</div>
+      <h1 class="item-name">ข้าวมันไก่</h1>
+      <span class="price-base">฿50</span>
+      <p class="desc">ไก่ต้มเนื้อนุ่ม ข้าวหุงมันหอม น้ำจิ้มเต้าเจี้ยวสูตรร้าน</p>
+    </div>
+
+    <hr>
+
+    <!-- กลุ่ม: เลือก 1 บังคับ -->
+    <fieldset class="group group--single" style="border:none;margin:0;padding:0">
+      <div class="group-head"><h2>ความเผ็ด</h2><span class="chip chip--mango">เลือก 1</span><span class="req">จำเป็น</span></div>
+      <label class="opt"><input type="radio" name="spice" value="0"><span class="ind"></span><span class="name">ไม่เผ็ด</span></label>
+      <label class="opt"><input type="radio" name="spice" value="0" checked><span class="ind"></span><span class="name">เผ็ดน้อย</span></label>
+      <label class="opt"><input type="radio" name="spice" value="0"><span class="ind"></span><span class="name">เผ็ดกลาง</span></label>
+      <label class="opt"><input type="radio" name="spice" value="0"><span class="ind"></span><span class="name">เผ็ดมาก</span></label>
+    </fieldset>
+
+    <!-- กลุ่ม: เลือกหลายไม่บังคับ -->
+    <fieldset class="group group--multi" style="border:none;margin:0;padding:0">
+      <div class="group-head"><h2>เพิ่มเติม</h2><span class="chip">เลือกได้หลายอย่าง</span></div>
+      <label class="opt"><input type="checkbox" class="ex" value="10" checked><span class="ind"></span><span class="name">เพิ่มไข่ต้ม</span><span class="add">+฿10</span></label>
+      <label class="opt"><input type="checkbox" class="ex" value="10"><span class="ind"></span><span class="name">ข้าวเพิ่ม</span><span class="add">+฿10</span></label>
+      <label class="opt"><input type="checkbox" class="ex" value="15"><span class="ind"></span><span class="name">ไก่พิเศษ</span><span class="add">+฿15</span></label>
+      <label class="opt"><input type="checkbox" class="ex" value="5"><span class="ind"></span><span class="name">น้ำจิ้มแยกถ้วย</span><span class="add">+฿5</span></label>
+    </fieldset>
+
+    <!-- หมายเหตุ -->
+    <div class="note group">
+      <label for="rmk">หมายเหตุถึงร้าน</label>
+      <textarea id="rmk" placeholder="เช่น ไม่ใส่ผักชี, ขอช้อนส้อมเพิ่ม"></textarea>
+    </div>
+
+    <!-- จำนวน -->
+    <div class="qty">
+      <button id="minus" aria-label="ลดจำนวน" disabled>−</button>
+      <span class="n" id="qn" aria-live="polite">1</span>
+      <button id="plus" aria-label="เพิ่มจำนวน">+</button>
+    </div>
+  </div>
+</div>
+
+<!-- แถบเพิ่มลงตะกร้า -->
+<div class="addbar">
+  <button class="btn btn--chili" id="add">
+    <span>เพิ่มลงตะกร้า</span>
+    <span class="total" id="total">฿60</span>
+  </button>
+</div>
+
+<script>
+  const BASE=50, $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  let qty=1;
+  function calc(){
+    const ex=$$('.ex:checked').reduce((s,e)=>s+ +e.value,0);
+    const each=BASE+ex, total=each*qty;
+    $('#total').textContent='฿'+total;
+    $('#qn').textContent=qty; $('#minus').disabled=qty<=1;
+  }
+  $('#plus').onclick=()=>{ if(qty<20){qty++; calc();} };
+  $('#minus').onclick=()=>{ if(qty>1){qty--; calc();} };
+  $$('.ex, input[name="spice"]').forEach(i=>i.addEventListener('change',calc));
+  calc();
+</script>
+</body>
+</html>

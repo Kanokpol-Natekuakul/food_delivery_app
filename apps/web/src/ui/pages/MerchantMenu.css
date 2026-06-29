@@ -1,0 +1,36 @@
+.mmenu{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 48px}
+
+.mmenu-top{display:flex; align-items:center; gap:var(--sp-4); margin-bottom:var(--sp-5)}
+.mmenu-title{font-family:var(--display); font-weight:700; font-size:var(--fs-h); min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.m-back{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
+.m-back:hover{color:var(--paper)}
+
+.mmenu-list{list-style:none; margin:0 0 var(--sp-6); padding:0; display:grid; gap:var(--sp-3)}
+
+.mdish{display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-4);
+  background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r); padding:var(--sp-4)}
+.mdish-main{min-width:0}
+.mdish-name{font-weight:600}
+.mdish-price{font-family:var(--mono); color:var(--mango); margin-left:6px}
+.mdish-desc{font-size:var(--fs-label); color:var(--paper-dim); margin-top:4px}
+.mdish-act{display:flex; gap:var(--sp-2); flex:0 0 auto}
+.mdish-act .btn{font-size:var(--fs-label); padding:7px 12px}
+.mdish-del{color:var(--chili)}
+
+.mdish--edit{flex-direction:column; align-items:stretch; gap:var(--sp-3)}
+.mdish--edit .mdish-act{justify-content:flex-end}
+
+/* ฟอร์มฟิลด์ (ใช้ทั้งเพิ่มและแก้ไข) */
+.mfields{display:grid; gap:var(--sp-2)}
+.mfield{font-family:var(--ui); font-size:var(--fs-body); color:var(--paper);
+  background:var(--ink); border:1px solid var(--ink-line); border-radius:var(--r-sm); padding:11px 13px}
+.mfield::placeholder{color:var(--paper-dim)}
+.mfield:focus{outline:none; border-color:rgba(255,182,39,.45)}
+.mfield--price{max-width:140px}
+
+.mdish-err{margin:2px 0 0; color:var(--chili); font-size:var(--fs-label)}
+
+.madd{border-top:1px solid var(--ink-line); padding-top:var(--sp-5)}
+.madd-title{font-family:var(--display); font-weight:700; font-size:var(--fs-h); margin:0 0 var(--sp-3)}
+.madd-btn{margin-top:var(--sp-3)}

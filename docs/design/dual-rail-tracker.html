@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ติดตามออเดอร์ · รางคู่</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+  /* ใช้ token กลางจาก tokens.css — ที่นี่เหลือเฉพาะ CSS ของหน้านี้ */
+  .wrap{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 96px}
+
+  /* ── header สรุปออเดอร์ ───────────────────────────────────────── */
+  .top{display:flex; align-items:center; gap:12px; margin-bottom:20px}
+  .back{appearance:none; background:var(--ink-card); border:1px solid var(--ink-line);
+    color:var(--paper); width:40px; height:40px; border-radius:12px; font-size:18px; cursor:pointer}
+  .top .meta{min-width:0}
+  .top .shop{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .top .oid{font-family:var(--mono); font-size:.8rem; color:var(--paper-dim)}
+
+  .headline{margin:0 0 4px; font-family:var(--display); font-weight:800;
+    font-size:clamp(1.7rem,7vw,2.3rem); line-height:1.04; letter-spacing:-.01em}
+  .sub{margin:0 0 14px; color:var(--paper-dim)}
+  .chip-cancel{display:inline-flex; align-items:center; gap:8px; font-family:var(--mono);
+    font-size:.8rem; color:var(--mango); background:rgba(255,182,39,.10);
+    border:1px solid rgba(255,182,39,.3); padding:6px 12px; border-radius:999px}
+  .chip-cancel[hidden]{display:none}
+
+  /* ── เดโม: สลับสถานะ ──────────────────────────────────────────── */
+  .demo{margin:18px 0 6px}
+  .demo-label{font-size:.78rem; color:var(--paper-dim); margin-bottom:8px}
+  .demo-row{display:flex; flex-wrap:wrap; gap:8px}
+  .demo-row button{appearance:none; cursor:pointer; font-family:var(--ui); font-size:.85rem;
+    color:var(--paper); background:var(--ink-card); border:1px solid var(--ink-line);
+    padding:8px 14px; border-radius:999px; transition:border-color .2s, background .2s}
+  .demo-row button[aria-pressed="true"]{border-color:var(--mango); color:var(--mango);
+    background:rgba(255,182,39,.08)}
+
+  /* ── โครงราง ──────────────────────────────────────────────────── */
+  .board{margin-top:22px}
+  .rail-heads{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:6px}
+  .rail-head{min-width:0; font-weight:600; font-size:.95rem; display:flex; align-items:center; gap:6px}
+  .rail-head .who{color:var(--paper-dim); font-size:.8rem; font-weight:400;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+
+  .parallel{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+
+  .track{min-width:0; list-style:none; margin:0; padding:0; position:relative}
+  /* เส้นรางแนวตั้งหลังจุด */
+  .track::before{content:""; position:absolute; left:11px; top:14px; bottom:14px; width:2px;
+    background:var(--ink-line); border-radius:2px}
+  .node{position:relative; display:grid; grid-template-columns:24px 1fr; gap:10px;
+    align-items:start; padding:9px 0}
+  .dot{position:relative; z-index:1; width:24px; height:24px; border-radius:50%;
+    background:var(--ink); border:2px solid var(--ink-line); display:grid; place-items:center;
+    font-size:11px; color:var(--ink)}
+  .label{min-width:0}
+  .label b{display:block; font-weight:500; font-size:.92rem; overflow-wrap:anywhere}
+  .label time{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim)}
+
+  /* สถานะจุด */
+  .node.is-done .dot{background:var(--pandan); border-color:var(--pandan)}
+  .node.is-done .dot::after{content:"✓"; color:var(--ink); font-weight:700}
+  .node.is-active .dot{background:var(--mango); border-color:var(--mango); box-shadow:var(--glow-mango)}
+  .node.is-active .label b{color:var(--mango)}
+  .node.is-todo{opacity:.5}
+  .node.is-broken .dot{background:var(--chili); border-color:var(--chili); box-shadow:var(--glow-chili)}
+  .node.is-broken .dot::after{content:"✕"; color:var(--ink); font-weight:700}
+  .node.is-broken .label b{color:var(--chili)}
+  .node.is-released{opacity:.45}
+  .node.is-released .label b{text-decoration:line-through}
+
+  /* ── จุดบรรจบ (funnel + diamond) ─────────────────────────────── */
+  .merge{display:grid; justify-items:center; margin:2px 0}
+  .funnel{width:100%; max-width:280px; height:46px; display:block}
+  .funnel path{fill:none; stroke:var(--ink-line); stroke-width:2}
+  .merge.is-live .funnel path{stroke:var(--mango); filter:drop-shadow(0 0 6px rgba(255,182,39,.5))}
+  .merge.is-done .funnel path{stroke:var(--pandan)}
+  .diamond{margin-top:-6px; width:30px; height:30px; transform:rotate(45deg); border-radius:7px;
+    background:var(--ink-card); border:2px solid var(--ink-line)}
+  .merge.is-live .diamond{background:var(--chili); border-color:var(--chili); box-shadow:var(--glow-chili)}
+  .merge.is-done .diamond{background:var(--pandan); border-color:var(--pandan)}
+  .merge-label{margin-top:10px; font-weight:600; font-size:.95rem; text-align:center}
+  .merge.is-live .merge-label{color:var(--chili)}
+  .merge-label small{display:block; font-weight:400; font-size:.78rem; color:var(--paper-dim)}
+
+  /* ── รางเดี่ยวหลังรับอาหาร ───────────────────────────────────── */
+  .single{max-width:260px; margin:8px auto 0}
+
+  /* ── OTP ──────────────────────────────────────────────────────── */
+  .otp{margin-top:20px; background:var(--ink-card); border:1px solid var(--ink-line);
+    border-radius:var(--r); padding:20px; text-align:center; transition:opacity .3s}
+  .otp.is-locked{opacity:.45}
+  .otp.is-live{border-color:rgba(255,182,39,.45); box-shadow:var(--glow-mango)}
+  .otp h2{margin:0 0 4px; font-family:var(--display); font-weight:700; font-size:1.25rem}
+  .otp p{margin:0 0 14px; color:var(--paper-dim); font-size:.9rem}
+  .otp-digits{display:flex; justify-content:center; gap:8px; margin-bottom:16px}
+  .otp-digits span{width:clamp(44px,13vw,56px); height:clamp(54px,16vw,68px);
+    display:grid; place-items:center; font-family:var(--mono); font-weight:700;
+    font-size:clamp(1.6rem,7vw,2.1rem); background:var(--ink); border-radius:12px;
+    border:1px solid var(--ink-line); color:var(--paper)}
+  .otp.is-live .otp-digits span{color:var(--mango); border-color:rgba(255,182,39,.4)}
+
+  /* ── การ์ดไรเดอร์ + ปุ่มโทร ──────────────────────────────────── */
+  .rider{display:flex; align-items:center; gap:12px; justify-content:center; margin-bottom:14px}
+  .rider .ava{width:40px; height:40px; border-radius:50%; background:var(--ink-line);
+    display:grid; place-items:center; font-size:18px}
+  .rider .name{font-weight:600}
+  .rider .rate{font-family:var(--mono); font-size:.78rem; color:var(--mango)}
+  .otp__call{width:100%}
+
+  /* ── การ์ด terminal (ปฏิเสธ ฯลฯ) ─────────────────────────────── */
+  .terminal{margin-top:18px; background:var(--ink-card); border:1px solid var(--chili);
+    border-radius:var(--r); padding:18px; display:flex; gap:14px; align-items:flex-start}
+  .terminal[hidden]{display:none}
+  .terminal .ic{font-size:24px; line-height:1}
+  .terminal b{display:block; margin-bottom:3px}
+  .terminal p{margin:0 0 12px; color:var(--paper-dim); font-size:.9rem}
+  .terminal .btn{padding:10px 18px; font-size:.92rem}
+
+  .hide{display:none !important}
+
+  /* ── motion เฉพาะเมื่อผู้ใช้ไม่ปิด ────────────────────────────── */
+  @media (prefers-reduced-motion:no-preference){
+    .node.is-active .dot{animation:pulse 1.8s ease-in-out infinite}
+    .merge.is-live .diamond{animation:pulse 1.6s ease-in-out infinite}
+    .otp.is-live{animation:breathe 2.4s ease-in-out infinite}
+    @keyframes pulse{0%,100%{box-shadow:var(--glow-mango)}50%{box-shadow:0 0 8px rgba(255,182,39,.25)}}
+    @keyframes breathe{0%,100%{box-shadow:var(--glow-mango)}50%{box-shadow:0 0 14px rgba(255,182,39,.2)}}
+    .fade{animation:fade .35s ease}
+    @keyframes fade{from{opacity:0; transform:translateY(6px)}to{opacity:1; transform:none}}
+  }
+
+  /* ── responsive: จอกว้างขึ้น ──────────────────────────────────── */
+  @media (min-width:600px){
+    .wrap{padding-top:32px}
+    .parallel{gap:24px}
+    .rail-heads{gap:24px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <button class="back" aria-label="ย้อนกลับ">‹</button>
+    <div class="meta">
+      <div class="shop">ข้าวมันไก่ตำนาน ลาดพร้าว</div>
+      <div class="oid">ออเดอร์ #FD-20842</div>
+    </div>
+  </div>
+
+  <h1 class="headline" id="headline" aria-live="polite">กำลังทำอาหาร...</h1>
+  <p class="sub" id="sub">ไรเดอร์ถึงร้านแล้ว — รออาหารเสร็จ</p>
+  <span class="chip-cancel" id="cancelChip">⏱ ยกเลิกฟรีได้อีก <span id="cd">04:46</span></span>
+
+  <!-- เดโมสลับสถานะ -->
+  <div class="demo">
+    <div class="demo-label">ดูสถานะ (เดโม):</div>
+    <div class="demo-row" role="group" aria-label="เลือกสถานะตัวอย่าง">
+      <button data-go="cooking" aria-pressed="true">กำลังทำ</button>
+      <button data-go="delivering" aria-pressed="false">กำลังส่ง</button>
+      <button data-go="arrived" aria-pressed="false">ถึงแล้ว (OTP)</button>
+      <button data-go="rejected" aria-pressed="false">ร้านปฏิเสธ</button>
+    </div>
+  </div>
+
+  <div class="board">
+    <!-- ระยะ 2 รางวิ่งคู่กัน -->
+    <div class="rail-heads">
+      <div class="rail-head">🔥 ราง ร้าน</div>
+      <div class="rail-head">🛵 ราง ไรเดอร์ <span class="who">สมชาย</span></div>
+    </div>
+
+    <div class="parallel">
+      <ol class="track" id="kitchen">
+        <li class="node is-done"><span class="dot"></span><div class="label"><b>รับออเดอร์</b><time>20:14</time></div></li>
+        <li class="node is-active"><span class="dot"></span><div class="label"><b>กำลังทำอาหาร</b><time>20:15</time></div></li>
+        <li class="node is-todo"><span class="dot"></span><div class="label"><b>อาหารเสร็จ</b><time>—</time></div></li>
+      </ol>
+      <ol class="track" id="rider">
+        <li class="node is-done"><span class="dot"></span><div class="label"><b>รอไรเดอร์คว้า</b><time>20:14</time></div></li>
+        <li class="node is-done"><span class="dot"></span><div class="label"><b>คว้างานแล้ว</b><time>20:15</time></div></li>
+        <li class="node is-active"><span class="dot"></span><div class="label"><b>ถึงร้าน</b><time>20:19</time></div></li>
+      </ol>
+    </div>
+
+    <!-- จุดบรรจบ -->
+    <div class="merge is-live" id="merge">
+      <svg class="funnel" viewBox="0 0 280 46" aria-hidden="true" preserveAspectRatio="none">
+        <path d="M70 2 C70 28, 140 22, 140 44"/>
+        <path d="M210 2 C210 28, 140 22, 140 44"/>
+      </svg>
+      <div class="diamond"></div>
+      <div class="merge-label" id="mergeLabel">ไรเดอร์รับอาหาร<small>รออาหารเสร็จก่อน</small></div>
+    </div>
+
+    <!-- รางเดี่ยวหลังรับอาหาร -->
+    <ol class="track single" id="single">
+      <li class="node is-todo"><span class="dot"></span><div class="label"><b>กำลังไปส่ง</b><time>—</time></div></li>
+      <li class="node is-todo"><span class="dot"></span><div class="label"><b>ถึงหน้าบ้านคุณ</b><time>—</time></div></li>
+    </ol>
+  </div>
+
+  <!-- OTP -->
+  <section class="otp is-locked" id="otp" aria-label="รหัสรับของ">
+    <div class="rider">
+      <span class="ava">🛵</span>
+      <div><div class="name">สมชาย ใจดี</div><div class="rate">★ 4.9</div></div>
+    </div>
+    <h2>รหัสรับของ</h2>
+    <p id="otpHint">รหัสจะใช้ได้เมื่อไรเดอร์ถึงหน้าบ้าน</p>
+    <div class="otp-digits"><span>4</span><span>8</span><span>2</span><span>1</span></div>
+    <button class="btn btn--chili otp__call">โทรหาไรเดอร์</button>
+  </section>
+
+  <!-- terminal: ปฏิเสธ -->
+  <div class="terminal" id="terminal" hidden>
+    <span class="ic">🔥</span>
+    <div>
+      <b>ร้านของหมดพอดี</b>
+      <p>คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว ลองร้านอร่อยใกล้ๆ คุณดูไหม</p>
+      <button class="btn btn--mango">ดูร้านใกล้ฉัน</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── ข้อมูลแต่ละสถานะ (อิงวงจรชีวิตออเดอร์จริง) ──────────────────
+  const D='is-done', A='is-active', T='is-todo', B='is-broken', R='is-released';
+  const scenarios = {
+    cooking:    {kitchen:[D,A,T], rider:[D,D,A], merge:'live',  single:[T,T], otp:'locked',
+                 head:'กำลังทำอาหาร...', sub:'ไรเดอร์ถึงร้านแล้ว — รออาหารเสร็จ', cancel:true, terminal:false,
+                 mergeLabel:['ไรเดอร์รับอาหาร','รออาหารเสร็จก่อน']},
+    delivering: {kitchen:[D,D,D], rider:[D,D,D], merge:'done', single:[A,T], otp:'locked',
+                 head:'กำลังไปส่ง 🛵', sub:'ไรเดอร์รับอาหารแล้ว กำลังมุ่งหน้าหาคุณ', cancel:false, terminal:false,
+                 mergeLabel:['ไรเดอร์รับอาหารแล้ว','']},
+    arrived:    {kitchen:[D,D,D], rider:[D,D,D], merge:'done', single:[D,A], otp:'live',
+                 head:'ไรเดอร์ถึงแล้ว!', sub:'บอกรหัสนี้กับไรเดอร์เพื่อรับของ', cancel:false, terminal:false,
+                 mergeLabel:['ไรเดอร์รับอาหารแล้ว','']},
+    rejected:   {kitchen:[D,B,T], rider:[D,R,T], merge:'off', single:[T,T], otp:'hide',
+                 head:'ร้านของหมดพอดี', sub:'ออเดอร์ถูกยกเลิก — ดูรายละเอียดด้านล่าง', cancel:false, terminal:true,
+                 mergeLabel:['ไรเดอร์รับอาหาร','']},
+  };
+
+  const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+  function setTrack(id, states){
+    $$('#'+id+' .node').forEach((n,i)=>{
+      n.classList.remove(D,A,T,B,R);
+      n.classList.add(states[i]);
+    });
+  }
+  let cdTimer;
+  function apply(key){
+    const s=scenarios[key];
+    setTrack('kitchen',s.kitchen); setTrack('rider',s.rider); setTrack('single',s.single);
+
+    const merge=$('#merge'); merge.classList.remove('is-live','is-done');
+    if(s.merge==='live') merge.classList.add('is-live');
+    if(s.merge==='done') merge.classList.add('is-done');
+    merge.style.opacity = s.merge==='off' ? .4 : 1;
+    $('#mergeLabel').innerHTML = s.mergeLabel[0] + (s.mergeLabel[1]?`<small>${s.mergeLabel[1]}</small>`:'');
+
+    const otp=$('#otp'); otp.classList.remove('is-locked','is-live','hide');
+    if(s.otp==='locked') otp.classList.add('is-locked');
+    if(s.otp==='live'){ otp.classList.add('is-live'); $('#otpHint').textContent='ไรเดอร์รออยู่หน้าบ้าน — แจ้งรหัสนี้ได้เลย'; }
+    if(s.otp==='hide') otp.classList.add('hide');
+
+    $('#terminal').hidden = !s.terminal;
+    $('#headline').textContent=s.head; $('#sub').textContent=s.sub;
+    $('#cancelChip').hidden=!s.cancel;
+
+    // countdown เฉพาะตอนยกเลิกฟรีได้
+    clearInterval(cdTimer);
+    if(s.cancel){
+      let t=286;
+      const tick=()=>{ const m=String(Math.floor(t/60)).padStart(2,'0'),
+        sec=String(t%60).padStart(2,'0'); $('#cd').textContent=`${m}:${sec}`;
+        if(t--<=0){ clearInterval(cdTimer); $('#cancelChip').hidden=true; } };
+      tick(); cdTimer=setInterval(tick,1000);
+    }
+    // ปุ่มเดโม
+    $$('.demo-row button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.go===key));
+    $('.board').classList.remove('fade'); void $('.board').offsetWidth; $('.board').classList.add('fade');
+  }
+  $$('.demo-row button').forEach(b=>b.addEventListener('click',()=>{
+    location.hash=b.dataset.go; apply(b.dataset.go);
+  }));
+  const start = location.hash.replace('#','');
+  apply(scenarios[start] ? start : 'cooking');
+</script>
+</body>
+</html>

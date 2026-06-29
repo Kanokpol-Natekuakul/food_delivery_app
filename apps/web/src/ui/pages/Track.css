@@ -1,0 +1,26 @@
+.app{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 48px}
+
+.track-back{display:inline-block; margin-bottom:var(--sp-4); color:var(--paper-dim);
+  text-decoration:none; font-size:var(--fs-label)}
+.track-back:hover{color:var(--paper)}
+
+.panel{margin-top:32px; border-top:1px solid var(--ink-line); padding-top:20px}
+.panel__label{font-size:.8rem; color:var(--paper-dim); margin-bottom:10px}
+.panel__clock{display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px}
+.panel__clock .btn{font-size:.78rem; padding:6px 12px}
+.panel__sim{font-family:var(--mono); font-size:.82rem; color:var(--paper); margin-right:4px}
+.panel__sim b{color:var(--mango)}
+.panel__policy{font-family:var(--mono); font-size:.74rem; color:var(--paper-dim);
+  margin:0 0 14px; line-height:1.5}
+.panel__row{display:flex; flex-wrap:wrap; gap:8px}
+.panel__row .btn{font-size:.82rem; padding:8px 14px}
+.panel__msg{margin-top:12px; color:var(--chili); font-family:var(--mono); font-size:.82rem}
+
+.complaint{display:flex; flex-direction:column; gap:12px; align-items:flex-start}
+.complaint__field{display:flex; flex-direction:column; gap:6px; width:100%;
+  font-size:.82rem; color:var(--paper-dim)}
+.complaint__field select{padding:8px 10px; border-radius:var(--r-sm);
+  border:1px solid var(--ink-line); background:var(--ink-card); color:var(--paper); font-size:.9rem}
+.complaint__photo{display:flex; align-items:center; gap:8px; font-size:.85rem; cursor:pointer}
+.complaint__hint{margin:0; color:var(--paper-dim); font-size:.76rem}
+.complaint__done{margin:0; color:var(--pandan); font-size:.92rem}

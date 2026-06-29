@@ -1,0 +1,101 @@
+.admin{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 48px}
+
+.a-top{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-5)}
+.a-who{font-family:var(--display); font-weight:700; font-size:var(--fs-h)}
+.a-back{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
+.a-back:hover{color:var(--paper)}
+
+.a-h2{font-family:var(--display); font-weight:700; font-size:var(--fs-h); margin:0 0 var(--sp-3)}
+
+/* แผงกำกับดูแลผู้ใช้ */
+.a-mod{margin-bottom:var(--sp-6)}
+.a-actor{display:flex; align-items:center; gap:var(--sp-3); padding:10px 12px; margin-bottom:var(--sp-2);
+  background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r-sm)}
+.a-actor__name{flex:1; min-width:0; font-size:var(--fs-data)}
+.a-actor--off .a-actor__name{color:var(--paper-dim); text-decoration:line-through}
+.a-actor__stat{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); flex:0 0 auto}
+
+/* ป้ายระดับการจัดการจากสถิติร้องเรียน (ADR 0006) */
+.a-flag{font-family:var(--mono); font-size:.7rem; border-radius:var(--r-pill); padding:2px 8px; flex:0 0 auto}
+.a-flag--ok{color:var(--pandan); border:1px solid rgba(87,179,104,.4)}
+.a-flag--watch{color:var(--mango); border:1px solid rgba(255,182,39,.4)}
+.a-flag--action{color:var(--chili); border:1px solid rgba(255,77,61,.4)}
+.a-susp{font-family:var(--mono); font-size:.72rem; color:var(--chili);
+  border:1px solid rgba(255,77,61,.4); border-radius:var(--r-pill); padding:2px 8px}
+.a-act{font-family:var(--mono); font-size:.7rem; border-radius:var(--r-pill); padding:2px 8px; flex:0 0 auto}
+.a-act--notify{color:var(--mango); border:1px solid rgba(255,182,39,.4)}
+.a-act--downrank{color:var(--chili); border:1px solid rgba(255,77,61,.4)}
+.a-actor__btn{font-size:var(--fs-label); padding:6px 12px; flex:0 0 auto}
+
+/* Wallet & Settlement */
+.a-wallet{margin-bottom:var(--sp-6)}
+.a-wnote{margin:0 0 var(--sp-3); color:var(--paper-dim); font-size:var(--fs-label); line-height:1.5}
+.a-wempty{margin:0; color:var(--paper-dim); font-size:var(--fs-data)}
+.a-wrow{display:flex; align-items:center; gap:var(--sp-3); padding:10px 12px; margin-bottom:var(--sp-2);
+  background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r-sm)}
+.a-wname{flex:1; min-width:0; font-size:var(--fs-data); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.a-wbal{font-family:var(--mono); font-weight:700; color:var(--mango)}
+.a-wpay{font-size:var(--fs-label); padding:6px 14px; flex:0 0 auto}
+.a-wrun{width:100%; justify-content:center; margin-bottom:var(--sp-3)}
+
+/* ตัวจับเวลารอบ settlement อัตโนมัติ */
+.a-sched{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r-sm);
+  padding:10px 12px; margin-bottom:var(--sp-3)}
+.a-schedinfo{display:block; font-size:var(--fs-data); margin-bottom:var(--sp-2)}
+.a-schedinfo b{font-family:var(--mono)}
+.a-schedbtns{display:flex; flex-wrap:wrap; gap:var(--sp-2)}
+.a-schedbtns .btn{font-size:var(--fs-label); padding:6px 12px}
+.a-schedmsg{margin:var(--sp-2) 0 0; color:var(--pandan); font-family:var(--mono); font-size:.74rem}
+.a-waccrue{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); flex:0 0 auto}
+
+/* ส่วนท้าย: รีเซ็ตข้อมูล */
+.a-footer{margin-top:var(--sp-6); padding-top:var(--sp-4); border-top:1px solid var(--ink-line)}
+.a-reset{width:100%; justify-content:center; color:var(--paper-dim)}
+.a-reset:hover{color:var(--chili)}
+
+/* ร้องเรียนหลังส่ง */
+.a-disputes{margin-bottom:var(--sp-6)}
+.a-dispute{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
+  padding:var(--sp-4); border-left:4px solid var(--chili); margin-bottom:var(--sp-3)}
+.a-dstat{color:var(--paper-dim); font-family:var(--mono); font-size:.72rem}
+.a-dactions{display:flex; gap:var(--sp-3)}
+.a-dgood{flex:1; justify-content:center}
+.a-dreject{flex:0 0 auto; color:var(--chili)}
+
+/* คำขอปรับอัตราคอมมิชชัน */
+.a-rates{margin-bottom:var(--sp-6)}
+.a-rrow{display:flex; align-items:center; gap:var(--sp-3); padding:10px 12px; margin-bottom:var(--sp-2);
+  background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r-sm)}
+.a-rinfo{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.a-rname{font-size:var(--fs-data)}
+.a-rmove{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim)}
+.a-ractions{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); flex:0 0 auto}
+.a-rapprove,.a-rreject{font-size:var(--fs-label); padding:6px 12px}
+.a-rreject{color:var(--chili)}
+.a-rcounter{display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-label); color:var(--paper-dim)}
+.a-rcounter input{width:48px; padding:5px 6px; border-radius:var(--r-sm); border:1px solid var(--ink-line);
+  background:var(--ink-bg); color:var(--paper); font-family:var(--mono); font-size:var(--fs-label)}
+.a-rcounter .btn{font-size:var(--fs-label); padding:6px 10px}
+
+/* รายการออเดอร์ */
+.a-orders{display:grid; gap:var(--sp-3)}
+.a-order{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
+  padding:var(--sp-4); border-left:4px solid var(--paper-dim)}
+.a-order__head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:6px}
+.a-no{font-family:var(--mono); font-weight:700}
+.a-kind{font-family:var(--mono); font-size:var(--fs-label); color:var(--paper-dim);
+  border:1px solid var(--ink-line); border-radius:var(--r-pill); padding:2px 9px}
+.a-rails{display:flex; flex-direction:column; gap:2px; font-size:var(--fs-label);
+  color:var(--paper-dim); margin-bottom:var(--sp-3)}
+
+.a-cancel{color:var(--chili); width:100%; justify-content:center}
+
+.a-settle{display:flex; flex-direction:column; gap:4px}
+.a-fault{align-self:flex-start; font-family:var(--mono); font-size:.72rem;
+  border-radius:var(--r-pill); padding:3px 10px}
+.a-fault--none{color:var(--pandan); border:1px solid rgba(87,179,104,.4)}
+.a-fault--customer{color:var(--mango); border:1px solid rgba(255,182,39,.4)}
+.a-fault--merchant{color:var(--chili); border:1px solid rgba(255,77,61,.4)}
+.a-money{font-family:var(--mono); font-size:var(--fs-label); color:var(--paper)}
+.a-split{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); line-height:1.5}
+.a-note{font-size:var(--fs-label); color:var(--paper-dim); line-height:1.5}

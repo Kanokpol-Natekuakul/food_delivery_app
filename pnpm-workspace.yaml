@@ -1,0 +1,7 @@
+# Monorepo: เว็บ (root, ชั่วคราว) + แพ็กเกจโดเมน + API
+# - packages/domain : โดเมนบริสุทธิ์ (@app/domain) ใช้ร่วม web + api
+# - apps/api        : Fastify + Drizzle(Postgres) + pg-boss(cron) + Lucia(auth)
+# หมายเหตุ: เว็บยังอยู่ที่ root (อ้างโดเมนผ่าน path alias) — ย้ายเข้า apps/web ภายหลังได้
+packages:
+  - 'packages/*'
+  - 'apps/*'

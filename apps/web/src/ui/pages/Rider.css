@@ -1,0 +1,39 @@
+.rider{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 48px}
+
+.r-top{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-5)}
+.r-who{font-family:var(--display); font-weight:700; font-size:var(--fs-h)}
+.r-back{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
+.r-back:hover{color:var(--paper)}
+
+/* ใบงาน (job ticket) — เน้นด้วยเส้นซ้ายสีเขียว "พร้อมวิ่ง" */
+.r-ticket{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
+  padding:var(--sp-5); border-left:4px solid var(--pandan)}
+.r-ticket__head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-4)}
+.r-no{font-family:var(--mono); font-weight:700; font-size:1.05rem}
+.r-stage{font-family:var(--mono); font-size:var(--fs-label); color:var(--pandan);
+  border:1px solid rgba(87,179,104,.35); border-radius:var(--r-pill); padding:4px 12px}
+.r-stage--done{color:var(--paper-dim); border-color:var(--ink-line)}
+
+.r-route{display:flex; flex-direction:column; gap:4px; font-size:var(--fs-data); color:var(--paper-dim);
+  margin-bottom:var(--sp-4)}
+.r-route b{color:var(--paper); font-weight:600}
+
+.r-lines{list-style:none; margin:0; padding:0; display:grid; gap:var(--sp-2);
+  border-top:1px solid var(--ink-line); padding-top:var(--sp-4)}
+.r-lines li{display:flex; gap:var(--sp-3); align-items:baseline}
+.r-qty{font-family:var(--mono); font-weight:700; color:var(--mango); flex:0 0 auto}
+.r-item{min-width:0}
+
+.r-actions{display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-top:var(--sp-5)}
+.r-susp{background:rgba(255,77,61,.08); border:1px solid rgba(255,77,61,.35); border-radius:var(--r);
+  padding:var(--sp-3) var(--sp-4); margin-bottom:var(--sp-4); color:var(--chili); font-size:var(--fs-data)}
+.r-warn{background:rgba(255,182,39,.08); border:1px solid rgba(255,182,39,.35); border-radius:var(--r);
+  padding:var(--sp-3) var(--sp-4); margin-bottom:var(--sp-4); color:var(--mango); font-size:var(--fs-data)}
+.r-hold{display:flex; align-items:center; gap:var(--sp-3); flex-wrap:wrap;
+  background:rgba(255,182,39,.06); border:1px dashed rgba(255,182,39,.4); border-radius:var(--r);
+  padding:var(--sp-3) var(--sp-4); margin-bottom:var(--sp-4); color:var(--mango); font-size:var(--fs-data)}
+.r-hold .btn{font-size:var(--fs-label); padding:6px 12px}
+
+.r-actions .btn{flex:1 1 auto; min-width:120px; text-align:center; justify-content:center}
+.r-actions .btn:disabled{opacity:.45; cursor:not-allowed}
+.r-idle{margin:0; color:var(--paper-dim); font-size:var(--fs-data)}

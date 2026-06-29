@@ -1,0 +1,10 @@
+{
+  "//": "ใช้ตอน typecheck เท่านั้น: ปิด declaration + ขยาย rootDir ครอบ packages/domain (ที่อ้างผ่าน path alias) เพื่อเลี่ยง TS6059 — การ build จริงใช้ tsconfig.json",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "rootDir": "../.."
+  },
+  "include": ["src", "drizzle.config.ts"]
+}

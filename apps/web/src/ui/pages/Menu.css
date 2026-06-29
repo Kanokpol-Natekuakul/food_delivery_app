@@ -1,0 +1,67 @@
+.menu{max-width:600px; margin-inline:auto; padding-bottom:104px}
+
+/* hero รูปอาหาร */
+.menu .dish{position:relative; height:clamp(180px,52vw,260px);
+  background:linear-gradient(135deg,#5A2E2A,#8A4B2F); display:grid; place-items:center; font-size:84px}
+.menu .dish::after{content:""; position:absolute; inset:0;
+  background:linear-gradient(to top, var(--ink) 4%, transparent 55%)}
+.menu .dish .back{position:absolute; top:var(--gutter); left:var(--gutter); z-index:1;
+  width:40px; height:40px; border-radius:var(--r-sm); background:rgba(22,16,28,.6);
+  border:1px solid var(--ink-line); color:var(--paper); cursor:pointer; font-size:18px;
+  backdrop-filter:blur(4px)}
+
+.menu .body{padding:0 var(--gutter)}
+
+/* หัวเมนู */
+.menu .item-head{margin-top:-8px; position:relative; z-index:1}
+.menu .shop{font-size:var(--fs-label); color:var(--mango); margin-bottom:6px}
+.menu .item-name{font-family:var(--display); font-weight:800; font-size:var(--fs-display-l);
+  margin:0 0 6px; line-height:1.1}
+.menu .price-base{font-family:var(--mono); color:var(--mango); font-size:1.05rem}
+.menu .desc{color:var(--paper-dim); font-size:var(--fs-data); margin:10px 0 0}
+
+.menu hr{border:none; border-top:1px solid var(--ink-line); margin:var(--sp-5) 0}
+
+/* กลุ่มตัวเลือก */
+.menu .group{margin:0 0 var(--sp-5); border:0; padding:0; min-width:0}
+.menu .group-head{display:flex; align-items:center; gap:10px; margin-bottom:var(--sp-3)}
+.menu .group-head h2{font-family:var(--ui); font-weight:600; font-size:var(--fs-h); margin:0}
+.menu .req{color:var(--chili); font-size:.7rem; font-family:var(--mono)}
+
+.menu .opt{position:relative; display:flex; align-items:center; gap:12px; cursor:pointer;
+  padding:13px 14px; margin-bottom:var(--sp-2); border-radius:var(--r-sm);
+  border:1px solid var(--ink-line); background:var(--ink-card); transition:border-color .15s}
+.menu .opt input{position:absolute; opacity:0; width:1px; height:1px}
+.menu .ind{flex:0 0 auto; width:22px; height:22px; border:2px solid var(--ink-line);
+  display:grid; place-items:center; color:var(--ink); font-size:12px; font-weight:700}
+.menu .group--single .ind{border-radius:50%}
+.menu .group--multi .ind{border-radius:6px}
+.menu .opt .name{flex:1; font-size:var(--fs-body)}
+.menu .opt .add{font-family:var(--mono); font-size:.85rem; color:var(--paper-dim)}
+.menu .opt input:checked ~ .ind{background:var(--mango); border-color:var(--mango)}
+.menu .opt input:checked ~ .ind::after{content:"✓"}
+.menu .opt:has(input:checked){border-color:rgba(255,182,39,.45)}
+.menu .opt:has(input:checked) .add{color:var(--mango)}
+.menu .opt input:focus-visible ~ .ind{outline:2px solid var(--mango); outline-offset:3px}
+
+/* หมายเหตุ */
+.menu .note label{display:block; font-weight:600; font-size:var(--fs-h); margin-bottom:var(--sp-3)}
+.menu .note textarea{width:100%; min-height:64px; resize:vertical; font-family:var(--ui);
+  font-size:var(--fs-body); color:var(--paper); background:var(--ink-card);
+  border:1px solid var(--ink-line); border-radius:var(--r-sm); padding:12px 14px}
+.menu .note textarea::placeholder{color:var(--paper-dim)}
+.menu .note textarea:focus{outline:none; border-color:rgba(255,182,39,.45)}
+
+/* จำนวน */
+.menu .qty{display:flex; align-items:center; justify-content:center; gap:var(--sp-5); margin:var(--sp-6) 0}
+.menu .qty button{width:46px; height:46px; border-radius:50%; font-size:22px; cursor:pointer;
+  background:var(--ink-card); border:1px solid var(--ink-line); color:var(--paper)}
+.menu .qty button:disabled{opacity:.35; cursor:not-allowed}
+.menu .qty .n{font-family:var(--mono); font-size:1.4rem; min-width:32px; text-align:center}
+
+/* แถบเพิ่มลงตะกร้า (ติดล่าง) */
+.menu .addbar{position:fixed; left:50%; transform:translateX(-50%); bottom:18px; z-index:5;
+  width:min(560px,calc(100% - 32px))}
+.menu .addbar .btn{width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px}
+.menu .addbar .btn:disabled{cursor:not-allowed; justify-content:center; color:var(--paper-dim)}
+.menu .addbar .total{font-family:var(--mono)}
