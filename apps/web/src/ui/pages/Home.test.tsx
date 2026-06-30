@@ -13,15 +13,18 @@ const stateWith = (downranked: string[]): State => ({
 });
 
 describe('Home — ค้นหา / หมวดหมู่ / Service Zone', () => {
+  // ร้านโผล่ได้ทั้งแถว "เปิดอยู่ตอนนี้" และ "ใกล้คุณ" — scope query ไปลิสต์ "ใกล้คุณ" (ทุกร้านจาก catalog)
+  const near = () => within(screen.getByLabelText('ร้านใกล้คุณ'));
+
   it('พิมพ์ในช่องค้นหาแล้วกรองรายการให้เหลือเฉพาะร้านที่ชื่อตรง', async () => {
     renderWithProviders(<Home />);
     // ก่อนค้นหา เห็นหลายร้าน
-    expect(screen.getByText('ส้มตำแซ่บนัว')).toBeInTheDocument();
-    expect(screen.getByText('ข้าวต้มโต้รุ่งเฮียอ้วน')).toBeInTheDocument();
+    expect(near().getByText('ส้มตำแซ่บนัว')).toBeInTheDocument();
+    expect(near().getByText('ข้าวต้มโต้รุ่งเฮียอ้วน')).toBeInTheDocument();
 
     await userEvent.type(screen.getByRole('searchbox', { name: 'ค้นหาเมนูหรือร้าน' }), 'ส้มตำ');
 
-    expect(screen.getByText('ส้มตำแซ่บนัว')).toBeInTheDocument();
+    expect(near().getByText('ส้มตำแซ่บนัว')).toBeInTheDocument();
     expect(screen.queryByText('ข้าวต้มโต้รุ่งเฮียอ้วน')).not.toBeInTheDocument();
   });
 
@@ -29,7 +32,7 @@ describe('Home — ค้นหา / หมวดหมู่ / Service Zone', (
     renderWithProviders(<Home />);
     await userEvent.click(screen.getByRole('button', { name: /ก๋วยเตี๋ยว/ }));
 
-    expect(screen.getByText('ก๋วยเตี๋ยวเรือป้านิด')).toBeInTheDocument();
+    expect(near().getByText('ก๋วยเตี๋ยวเรือป้านิด')).toBeInTheDocument();
     expect(screen.queryByText('ชาไข่มุกซอย 5')).not.toBeInTheDocument(); // หมวดเครื่องดื่ม ถูกกรองออก
   });
 
@@ -50,7 +53,7 @@ describe('Home — ค้นหา / หมวดหมู่ / Service Zone', (
     renderWithProviders(<Home />, { initialState: stateWith(['merchant:cha-maimuk']) });
     const ranked = within(screen.getByLabelText('ร้านใกล้คุณ'))
       .getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
-    expect(ranked[0]).toBe('ข้าวมันไก่ตำนาน');
+    expect(ranked[0]).toBe('ข้าวมันไก่ตำนาน ลาดพร้าว'); // ชื่อเต็มจาก catalog จริง
     expect(ranked[ranked.length - 1]).toBe('ชาไข่มุกซอย 5');
   });
 

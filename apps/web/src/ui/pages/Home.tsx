@@ -2,34 +2,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore, deliveryCoord, deliveryLabel } from '../store';
 import { cartItemCount, foodTotal } from '@app/domain/cart/cart.js';
-import { checkServiceability } from '@app/domain/delivery/delivery.js';
-import type { LatLng } from '@app/domain/delivery/delivery.js';
+import { checkServiceability, deliveryFee } from '@app/domain/delivery/delivery.js';
 import { rankByStanding } from '@app/domain/moderation/moderation.js';
-import { findRestaurant } from '../data/catalog';
-import type { Restaurant } from '../data/catalog';
 import { LocationPicker } from '../components/LocationPicker';
 import './Home.css';
 
-/** ร้านนี้อยู่นอกพื้นที่จัดส่งไหม (คิดจากพิกัดร้าน + ที่อยู่จัดส่งที่เลือก) */
-const isOffZone = (list: readonly Restaurant[], id: string, coord: LatLng): boolean => {
-  const r = findRestaurant(list, id);
-  return r ? !checkServiceability(coord, r.coord).orderable : false;
-};
-
-const stalls = [
-  { id: 'khao-man-kai', g: 'g1', icon: '🍗', name: 'ข้าวมันไก่ตำนาน', cat: 'ข้าวมันไก่', meta: '★ 4.8', sub: '12 นาที · 1.2 กม.', tag: 'ของเด็ด' },
-  { id: 'kuaytiao-ruea', g: 'g2', icon: '🍜', name: 'ก๋วยเตี๋ยวเรือป้านิด', cat: 'ก๋วยเตี๋ยว', meta: '★ 4.7', sub: '18 นาที · 2.0 กม.' },
-  { id: 'cha-maimuk', g: 'g4', icon: '🧋', name: 'ชาไข่มุกซอย 5', cat: 'เครื่องดื่ม', meta: '★ 4.9', sub: '9 นาที · 0.6 กม.' },
-  { id: 'somtam', g: 'g3', icon: '🥗', name: 'ส้มตำแซ่บนัว', cat: 'อีสาน', meta: '★ 4.6', sub: '22 นาที · 2.4 กม.' },
-];
-
-const near = [
-  { id: 'cha-maimuk', g: 'g4', icon: '🧋', name: 'ชาไข่มุกซอย 5', cat: 'เครื่องดื่ม', sub: 'เครื่องดื่ม · ของหวาน', meta: ['★ 4.9', '9 นาที', '฿15 ค่าส่ง'] },
-  { id: 'khao-man-kai', g: 'g1', icon: '🍗', name: 'ข้าวมันไก่ตำนาน', cat: 'ข้าวมันไก่', sub: 'ข้าว · ตามสั่ง', meta: ['★ 4.8', '12 นาที', '฿20 ค่าส่ง'] },
-  { id: 'moo-ping', g: 'g5', icon: '🍢', name: 'หมูปิ้งเจ๊แดง', cat: 'อีสาน', sub: 'ของกินเล่น', meta: ['★ 4.7', '14 นาที', '฿18 ค่าส่ง'] },
-  { id: 'tom-lueat-moo', g: 'g6', icon: '🍲', name: 'ต้มเลือดหมูเฮียชาญ', cat: 'ก๋วยเตี๋ยว', sub: 'ก๋วยเตี๋ยว', meta: ['★ 4.5'], closed: 'เปิด 17:00' },
-  { id: 'khao-tom-rung', g: 'g2', icon: '🍚', name: 'ข้าวต้มโต้รุ่งเฮียอ้วน', cat: 'ตามสั่ง', sub: 'ตามสั่ง · โต้รุ่ง', meta: ['★ 4.6', 'เปิดดึก'] },
-];
+/** ★ 4.8 → 4.8 (ใช้เรียงร้านเด่นตามเรตติ้ง) */
+const ratingValue = (s: string): number => parseFloat(s.replace(/[^\d.]/g, '')) || 0;
 
 const cats = [
   ['🍜', 'ก๋วยเตี๋ยว'], ['🍚', 'ตามสั่ง'], ['🍗', 'ข้าวมันไก่'],
@@ -55,8 +34,20 @@ export function Home() {
   // ร้านที่ถูกลดอันดับ (auto-action ADR 0006) ตกไปอยู่ท้ายลิสต์
   const byStanding = <T extends { id: string }>(items: T[]) =>
     rankByStanding(items, (it) => `merchant:${it.id}`, state.downranked);
-  const fStalls = byStanding(stalls.filter((s) => matches(s.name, s.cat)));
-  const fNear = byStanding(near.filter((r) => matches(r.name, r.cat)));
+
+  // ดึงจาก catalog จริง (state.restaurants) + คิดระยะ/ค่าส่ง/เวลา จากที่อยู่จัดส่งที่ปักหมุด (coord)
+  const enriched = state.restaurants.map((r) => {
+    const svc = checkServiceability(coord, r.coord);
+    return {
+      id: r.id, name: r.name, icon: r.icon, g: r.g, rating: r.rating, cat: r.cat, blurb: r.blurb,
+      km: svc.distanceKm, fee: deliveryFee(svc.distanceKm), eta: Math.round(8 + svc.distanceKm * 4),
+      offzone: !svc.orderable,
+    };
+  });
+  const filtered = enriched.filter((c) => matches(c.name, c.cat));
+  // เปิดอยู่ตอนนี้ = ร้านในเขต เรียงตามเรตติ้ง; ใกล้คุณ = ทุกร้าน เรียงตามระยะจริง
+  const fStalls = byStanding([...filtered].filter((c) => !c.offzone).sort((a, b) => ratingValue(b.rating) - ratingValue(a.rating)));
+  const fNear = byStanding([...filtered].sort((a, b) => a.km - b.km));
   const filtering = q !== '' || activeCat !== null;
   const noResults = filtering && fStalls.length === 0 && fNear.length === 0;
 
@@ -122,10 +113,10 @@ export function Home() {
               </div>
               <div className="hscroll">
                 {fStalls.map((s) => (
-                  <Link className="stall" to={`/r/${s.id}`} key={s.name}>
-                    <div className={`thumb ${s.g}`}>{s.icon}{s.tag && <span className="tag">{s.tag}</span>}</div>
+                  <Link className="stall" to={`/r/${s.id}`} key={s.id}>
+                    <div className={`thumb ${s.g}`}>{s.icon}</div>
                     <h3>{s.name}</h3>
-                    <div className="meta"><span className="rate">{s.meta}</span> · {s.sub}</div>
+                    <div className="meta"><span className="rate">{s.rating}</span> · {s.km.toFixed(1)} กม.</div>
                   </Link>
                 ))}
               </div>
@@ -140,15 +131,16 @@ export function Home() {
               </div>
               <div className="near">
                 {fNear.map((r) => (
-                  <Link className="row" to={`/r/${r.id}`} key={r.name}>
+                  <Link className="row" to={`/r/${r.id}`} key={r.id}>
                     <div className={`thumb ${r.g}`}>{r.icon}</div>
                     <div className="info">
                       <h3>{r.name}</h3>
-                      <p className="sub">{r.sub}</p>
+                      <p className="sub">{r.blurb}</p>
                       <div className="meta">
-                        {r.meta.map((m, i) => <span className={i === 0 ? 'rate' : undefined} key={i}>{m}</span>)}
-                        {r.closed && <span className="closed">{r.closed}</span>}
-                        {isOffZone(state.restaurants, r.id, coord) && <span className="offzone">นอกพื้นที่</span>}
+                        <span className="rate">{r.rating}</span>
+                        <span>{r.eta} นาที</span>
+                        <span>฿{r.fee} ค่าส่ง</span>
+                        {r.offzone && <span className="offzone">นอกพื้นที่</span>}
                       </div>
                     </div>
                   </Link>
