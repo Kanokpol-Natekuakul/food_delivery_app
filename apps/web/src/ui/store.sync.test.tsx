@@ -21,6 +21,14 @@ function spySource() {
       id: 'srv-uuid', status: 'pending' as const,
       merchantId: input.merchantId, currentRate: input.currentRate, proposedRate: input.proposedRate, reason: input.reason ?? '',
     })),
+    createOrder: vi.fn(async () => ({ id: 'order-uuid' })),
+    completeOrder: vi.fn().mockResolvedValue(undefined),
+    fileDispute: vi.fn(async (input) => ({
+      dispute: {
+        id: 'disp-uuid', orderId: input.orderId, customer: 'customer:aon', merchant: 'merchant:khao-man-kai',
+        rider: 'rider:somchai', category: input.category, hasPhoto: input.hasPhoto, status: 'open' as const, refund: 0,
+      },
+    })),
   } satisfies MutationSource;
 }
 
@@ -88,5 +96,45 @@ describe('StoreProvider — create mutation adopt server id (cutover tail)', () 
     // หลัง API ตอบ → reconcile แทน rr1 ด้วย server id
     await waitFor(() => expect(screen.getByTestId('rate-ids')).toHaveTextContent('srv-uuid'));
     expect(screen.getByTestId('rate-ids').textContent).toBe('srv-uuid'); // ไม่เหลือ rr1
+  });
+});
+
+// place → ออเดอร์สดฝั่ง server (adopt id) → complete → fileDispute อ้างออเดอร์จริง (adopt id)
+function OrderProbe() {
+  const { state, dispatch } = useStore();
+  return (
+    <>
+      <span data-testid="live">{state.liveOrderId ?? 'none'}</span>
+      <span data-testid="disp">{state.disputes.map((d) => d.id).join(',')}</span>
+      <button onClick={() => dispatch({ type: 'place' })}>place</button>
+      <button onClick={() => dispatch({ type: 'setOrder', order: { kind: 'Completed' } })}>complete</button>
+      <button onClick={() => dispatch({ type: 'fileDispute', category: 'wrong_item', hasPhoto: true })}>file</button>
+    </>
+  );
+}
+
+describe('StoreProvider — place-order + fileDispute adopt server id (cutover tail)', () => {
+  it('place: สร้างออเดอร์สดฝั่ง server แล้วตั้ง liveOrderId จาก id ที่คืนมา', async () => {
+    const m = spySource();
+    render(<StoreProvider sync={m}><OrderProbe /></StoreProvider>);
+    await userEvent.click(screen.getByText('place'));
+    expect(m.createOrder).toHaveBeenCalledOnce();
+    await waitFor(() => expect(screen.getByTestId('live')).toHaveTextContent('order-uuid'));
+  });
+
+  it('fileDispute: หลัง place+complete → ยิงไป server ด้วย liveOrderId แล้ว adopt id ร้องเรียน', async () => {
+    const m = spySource();
+    render(<StoreProvider sync={m}><OrderProbe /></StoreProvider>);
+    await userEvent.click(screen.getByText('place'));
+    await waitFor(() => expect(screen.getByTestId('live')).toHaveTextContent('order-uuid'));
+
+    await userEvent.click(screen.getByText('complete'));
+    expect(m.completeOrder).toHaveBeenCalledWith('order-uuid'); // ดันสถานะ Completed ฝั่ง server
+
+    await userEvent.click(screen.getByText('file'));
+    expect(m.fileDispute).toHaveBeenCalledWith({ orderId: 'order-uuid', category: 'wrong_item', hasPhoto: true });
+    // local สร้าง dp2 → reconcile แทนด้วย disp-uuid จาก server
+    await waitFor(() => expect(screen.getByTestId('disp')).toHaveTextContent('disp-uuid'));
+    expect(screen.getByTestId('disp').textContent).not.toContain('dp2');
   });
 });

@@ -23,8 +23,9 @@ import {
   approveRateRequest as apiApproveRate, rejectRateRequest as apiRejectRate, counterRateRequest as apiCounterRate,
   acceptCounterOffer as apiAcceptCounter, declineCounterOffer as apiDeclineCounter,
   login as apiLogin, logout as apiLogout, me as apiMe, submitRateRequest as apiSubmitRate,
+  createOrder as apiCreateOrder, completeOrder as apiCompleteOrder, fileDispute as apiFileDispute,
 } from '../api/client';
-import type { ApiOrder, ApiModeration, AuthUser, SubmitRateInput } from '../api/client';
+import type { ApiOrder, ApiModeration, AuthUser, SubmitRateInput, CreateOrderInput, FileDisputeInput } from '../api/client';
 
 // สแนปช็อตสิ่งที่ลูกค้าสั่ง ณ ตอนจ่ายเงิน — OrderState เป็น state machine ล้วน ไม่ถือเมนู
 // ฝั่งร้าน/ไรเดอร์จึงอ้างจากตรงนี้เพื่อรู้ว่าออเดอร์นี้คือเมนูอะไร ร้านไหน
@@ -63,6 +64,8 @@ export type State = {
   // ผู้ใช้ที่ล็อกอิน (Lucia session) — null/ไม่มี = ยังไม่ล็อกอิน; แทนตัวตนฮาร์ดโค้ดเดิมเมื่อมีค่า
   // optional: เทสต์ที่สร้าง State เองไม่ต้องระบุ (ถือว่ายังไม่ล็อกอิน)
   auth?: AuthUser | null;
+  // id ของออเดอร์สดฝั่ง server (ตั้งหลัง place mirror) — ใช้ร้องเรียนกับออเดอร์จริง; null/ไม่มี = ยังไม่ persist
+  liveOrderId?: string | null;
 };
 
 // ร้านที่ "ผู้ใช้ฝั่งร้าน" เป็นเจ้าของ (เดโม) — ใช้ในหน้าเจรจาอัตราคอม
@@ -155,6 +158,8 @@ type Action =
   // ── เจรจาอัตราคอมสองทาง (ADR 0003) ──
   | { type: 'submitRateRequest'; merchantId: string; currentRate: number; proposedRate: number; reason: string } // ร้านยื่น
   | { type: 'reconcileRateRequest'; localId: string; request: RateRequest } // adopt entity จาก server (แทน local id)
+  | { type: 'reconcileLiveOrder'; id: string }                  // ตั้ง id ออเดอร์สดจาก server (หลัง place)
+  | { type: 'reconcileDispute'; localId: string; dispute: Dispute } // adopt ร้องเรียนจาก server (แทน local id)
   | { type: 'approveRateRequest'; id: string }            // แอดมินอนุมัติ → อัปเดต rateOverrides
   | { type: 'rejectRateRequest'; id: string }             // แอดมินปฏิเสธ
   | { type: 'counterRateRequest'; id: string; counter: number } // แอดมินเสนอแย้ง
@@ -189,6 +194,7 @@ function reducer(s: State, a: Action): State {
         restaurantId: null,
         order: placeOrder(),
         placed: { restaurantId: s.restaurantId, lines: s.cart.lines },
+        liveOrderId: null, // รอ server คืน id (mirror place → reconcileLiveOrder)
       };
     case 'setOrder': {
       const order = a.order;
@@ -275,6 +281,9 @@ function reducer(s: State, a: Action): State {
     }
     case 'reconcileRateRequest': // แทนคำขอ local ด้วย entity จริงจาก server (id ตรงกับ DB)
       return { ...s, rateRequests: s.rateRequests.map((q) => (q.id === a.localId ? a.request : q)) };
+    case 'reconcileLiveOrder': return { ...s, liveOrderId: a.id };
+    case 'reconcileDispute': // แทนร้องเรียน local ด้วย entity จริงจาก server
+      return { ...s, disputes: s.disputes.map((d) => (d.id === a.localId ? a.dispute : d)) };
     case 'approveRateRequest': {
       const target = s.rateRequests.find((q) => q.id === a.id);
       if (!target) return s;
@@ -443,11 +452,15 @@ export type MutationSource = {
   acceptCounterOffer: (id: string) => Promise<unknown>;
   declineCounterOffer: (id: string) => Promise<unknown>;
   submitRateRequest: (input: SubmitRateInput) => Promise<RateRequest>; // create → คืน entity ที่มี server id
+  createOrder: (input: CreateOrderInput) => Promise<{ id: string }>;   // วางออเดอร์สด → คืน id
+  completeOrder: (id: string) => Promise<unknown>;                     // ดันสถานะ Completed (ปลดล็อกร้องเรียน)
+  fileDispute: (input: FileDisputeInput) => Promise<{ dispute: Dispute }>; // ร้องเรียน → คืน entity ที่มี server id
 };
 const liveMutations: MutationSource = {
   cancelOrder, resolveDispute: apiResolveDispute, suspendActor, unsuspendActor, runSettlement: apiRunSettlement,
   approveRateRequest: apiApproveRate, rejectRateRequest: apiRejectRate, counterRateRequest: apiCounterRate,
   acceptCounterOffer: apiAcceptCounter, declineCounterOffer: apiDeclineCounter, submitRateRequest: apiSubmitRate,
+  createOrder: apiCreateOrder, completeOrder: apiCompleteOrder, fileDispute: apiFileDispute,
 };
 
 // auth client (login/logout/me) — inject ได้ในเทสต์; ดีฟอลต์ = client จริง
@@ -542,6 +555,30 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
       m.submitRateRequest({ merchantId: action.merchantId, currentRate: action.currentRate, proposedRate: action.proposedRate, reason: action.reason })
         .then((request) => dispatch({ type: 'reconcileRateRequest', localId, request }))
         .catch(() => { /* server ปฏิเสธ → คงคำขอ local (TODO: rollback) */ });
+      return;
+    }
+    // วางออเดอร์สด → สร้างฝั่ง server แล้ว adopt id (ใช้ร้องเรียนกับออเดอร์จริงภายหลัง)
+    if (action.type === 'place') {
+      m.createOrder({ restaurantId: prev.restaurantId, lines: prev.cart.lines, customer: prev.auth?.actorId ?? CUSTOMER_ID, rider: LIVE_RIDER })
+        .then(({ id }) => dispatch({ type: 'reconcileLiveOrder', id }))
+        .catch(() => { /* ออฟไลน์ → ออเดอร์อยู่ local อย่างเดียว (ร้องเรียนผ่าน server ไม่ได้) */ });
+      return;
+    }
+    // ออเดอร์สดสำเร็จครั้งแรก → ดันสถานะ Completed ฝั่ง server (ปลดล็อกร้องเรียน)
+    if (action.type === 'setOrder') {
+      if (action.order.kind === 'Completed' && prev.order?.kind !== 'Completed' && prev.liveOrderId) {
+        m.completeOrder(prev.liveOrderId).catch(() => { /* คง local */ });
+      }
+      return;
+    }
+    // ร้องเรียนออเดอร์สด → ส่งไป server (ตัวตนผู้ร้องจาก session ฝั่ง server) แล้ว adopt id
+    if (action.type === 'fileDispute') {
+      if (prev.liveOrderId) {
+        const localId = `dp${prev.disputes.length + 1}`;
+        m.fileDispute({ orderId: prev.liveOrderId, category: action.category, hasPhoto: action.hasPhoto })
+          .then(({ dispute }) => dispatch({ type: 'reconcileDispute', localId, dispute }))
+          .catch(() => { /* server ปฏิเสธ → คงร้องเรียน local */ });
+      }
       return;
     }
     mirror(m, action, prev)?.catch(() => { /* TODO: refetch/rollback เมื่อ server ปฏิเสธ */ });

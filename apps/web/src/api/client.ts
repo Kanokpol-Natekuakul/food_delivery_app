@@ -34,7 +34,10 @@ export const getRestaurant = (id: string) => req<Restaurant>('GET', `/restaurant
 // ── ออเดอร์ ──
 export type ApiPlaced = { restaurantId: string | null; lines: OrderLine[] };
 export type ApiOrder = { id: string; restaurantId: string | null; riderId: string | null; customerId: string | null; placed: ApiPlaced; state: OrderState };
+export type CreateOrderInput = { restaurantId: string | null; lines: OrderLine[]; customer?: string; rider?: string };
 export const getOrders = () => req<ApiOrder[]>('GET', '/orders');
+export const createOrder = (input: CreateOrderInput) => req<{ id: string; state: OrderState }>('POST', '/orders', input);
+export const completeOrder = (id: string) => req<{ ok: true; state: OrderState }>('POST', `/orders/${id}/complete`);
 export const cancelOrder = (id: string) => req<{ ok: true; state: OrderState; settlement: Settlement | null }>('POST', `/orders/${id}/cancel`);
 
 // ── auth (Lucia) — ตัวตนจาก session cookie ──
