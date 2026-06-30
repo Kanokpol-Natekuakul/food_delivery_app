@@ -35,3 +35,13 @@
 .cart .placebar .btn{width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px}
 .cart .placebar .btn:disabled{cursor:not-allowed; justify-content:center; color:var(--paper-dim)}
 .cart .placebar .total{font-family:var(--mono)}
+
+/* ── Responsive: desktop — รายการซ้าย / สรุปยอด ขวา (sticky) ── */
+@media (min-width:1024px){
+  .cart{max-width:960px; display:grid; grid-template-columns:1fr 340px;
+    grid-auto-flow:row dense; column-gap:var(--sp-7); row-gap:var(--sp-3); align-items:start}
+  .cart-back,.cart-title,.cart-shop{grid-column:1 / -1}
+  .cart .lines{grid-column:1; margin-bottom:0}
+  .cart .summary{grid-column:2; position:sticky; top:var(--sp-5); border-top:none;
+    background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r); padding:var(--sp-5)}
+}

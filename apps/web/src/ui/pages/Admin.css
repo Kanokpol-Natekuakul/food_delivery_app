@@ -99,3 +99,15 @@
 .a-money{font-family:var(--mono); font-size:var(--fs-label); color:var(--paper)}
 .a-split{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); line-height:1.5}
 .a-note{font-size:var(--fs-label); color:var(--paper-dim); line-height:1.5}
+
+/* ── Responsive: tablet/desktop — แอดมินกว้างขึ้น, รายการออเดอร์กาง grid ── */
+@media (min-width:768px){
+  .admin{max-width:760px}
+}
+@media (min-width:1024px){
+  .admin{max-width:1040px}
+  .a-orders{grid-template-columns:1fr 1fr}
+  .a-disputes{display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3)}
+  .a-disputes .a-h2{grid-column:1 / -1; margin-bottom:0}
+  .a-disputes .a-dispute{margin-bottom:0}
+}

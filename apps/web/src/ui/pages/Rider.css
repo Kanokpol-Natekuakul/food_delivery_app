@@ -37,3 +37,9 @@
 .r-actions .btn{flex:1 1 auto; min-width:120px; text-align:center; justify-content:center}
 .r-actions .btn:disabled{opacity:.45; cursor:not-allowed}
 .r-idle{margin:0; color:var(--paper-dim); font-size:var(--fs-data)}
+
+/* ── Responsive: tablet/desktop — คอนโซลไรเดอร์กว้างขึ้น ── */
+@media (min-width:768px){
+  .rider{max-width:720px}
+  .r-actions .btn{flex:0 1 auto; min-width:160px}
+}

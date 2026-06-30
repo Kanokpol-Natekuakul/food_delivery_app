@@ -148,7 +148,21 @@
   @keyframes blink{0%,70%{opacity:1}71%,100%{opacity:.35}}
 }
 
-@media (min-width:600px){
-  .home .near{grid-template-columns:1fr 1fr}
+/* ── Responsive: tablet/desktop (มือถือ-first คงเดิม) ── */
+@media (min-width:768px){
+  .home{max-width:760px}
   .home .hero{padding-top:var(--sp-6)}
+  .home .near{grid-template-columns:1fr 1fr}
+  .home .cats{justify-content:center; flex-wrap:wrap; margin-inline:0; padding-inline:0}
+}
+@media (min-width:1024px){
+  .home{max-width:1100px}
+  .home .hero{padding-top:var(--sp-7)}
+  .home .search{max-width:600px; margin-inline:auto}
+  /* แถว "เปิดอยู่ตอนนี้" — เดสก์ท็อปกาง grid แทนเลื่อนแนวนอน (ไม่ต้องลาก/หมุน wheel) */
+  .home .stalls .hscroll{display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr));
+    gap:var(--sp-4); overflow:visible; margin-inline:0; padding-inline:0}
+  .home .stall{width:auto}
+  .home .stall .thumb{height:132px}
+  .home .near{grid-template-columns:repeat(3,1fr)}
 }

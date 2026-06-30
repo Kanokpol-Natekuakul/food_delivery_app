@@ -74,3 +74,13 @@
 /* not found */
 .resto--missing .empty{text-align:center; padding:18vh var(--gutter) 0; color:var(--paper-dim)}
 .resto--missing .big{font-size:54px; margin-bottom:var(--sp-3)}
+
+/* ── Responsive: tablet/desktop — เมนูกาง 2 คอลัมน์ ── */
+@media (min-width:768px){
+  .resto{max-width:820px}
+  .dishes{grid-template-columns:1fr 1fr}
+}
+@media (min-width:1024px){
+  .resto{max-width:1000px}
+  .resto-hero{height:240px}
+}

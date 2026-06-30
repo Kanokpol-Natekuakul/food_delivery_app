@@ -65,3 +65,12 @@
 .menu .addbar .btn{width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px}
 .menu .addbar .btn:disabled{cursor:not-allowed; justify-content:center; color:var(--paper-dim)}
 .menu .addbar .total{font-family:var(--mono)}
+
+/* ── Responsive: tablet/desktop — หน้าเลือกเมนูเดี่ยว คงโฟกัสกลางจอ แค่กว้างขึ้น ── */
+@media (min-width:768px){
+  .menu{max-width:680px}
+}
+@media (min-width:1024px){
+  .menu{max-width:760px}
+  .menu .dish{height:280px}
+}

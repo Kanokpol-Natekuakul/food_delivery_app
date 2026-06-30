@@ -29,3 +29,9 @@
 .m-actions{display:flex; flex-wrap:wrap; gap:var(--sp-3); margin-top:var(--sp-5)}
 .m-actions .btn{flex:1 1 auto; min-width:120px; text-align:center; justify-content:center}
 .m-idle{margin:0; color:var(--paper-dim); font-size:var(--fs-data)}
+
+/* ── Responsive: tablet/desktop — คอนโซลร้านกว้างขึ้น อ่านใบออเดอร์สบายตา ── */
+@media (min-width:768px){
+  .merchant{max-width:720px}
+  .m-actions .btn{flex:0 1 auto; min-width:160px}
+}

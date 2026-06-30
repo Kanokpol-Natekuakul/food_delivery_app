@@ -18,3 +18,13 @@
 .allr-meta { font-family: var(--mono); font-size: .78rem; color: var(--paper-dim); display: flex; gap: 12px; align-items: center; }
 .allr-meta .rate { color: var(--mango); }
 .allr-meta .offzone { color: var(--chili); border: 1px solid rgba(255,77,61,.4); border-radius: var(--r-pill); padding: 1px 8px; font-size: .72rem; }
+
+/* ── Responsive: tablet/desktop ── */
+@media (min-width:768px){
+  .allr{max-width:760px}
+  .allr-list{grid-template-columns:1fr 1fr}
+}
+@media (min-width:1024px){
+  .allr{max-width:1100px}
+  .allr-list{grid-template-columns:repeat(3,1fr)}
+}
