@@ -26,7 +26,11 @@ apps/api/          @app/api — Fastify + Postgres(Drizzle) + pg-boss(cron) + Lu
 - **server**: `POST /auth/login` (actorId+password → scrypt verify → session cookie), `POST /auth/logout`, `GET /auth/me`. guard `requireUser`/`requireAdmin` (อ่าน session ผ่าน `readSession`). wire: `POST /disputes` ตัวตนผู้ร้อง = session.actorId + คู่กรณีจากออเดอร์ (ไม่เชื่อ body); moderation = แอดมินเท่านั้น. seed users 4 ราย (customer:aon/merchant:khao-man-kai/rider:somchai/admin:root, รหัส `demo1234`). e2e: 401/403/200 + dispute identity จาก session.
 - **web**: `state.auth` + action `setAuth`; context เพิ่ม `login()`/`logout()` (backed by `AuthClient`, inject ได้ในเทสต์); เช็ค `me()` ตอน mount (เปิดเมื่อ hydrate/authClient). หน้า `/login` (ฟอร์ม + ปุ่มบัญชีเดโม) + แถบ `AuthBar` บนสุด (โชว์ผู้ใช้/ออกจากระบบ). `fileDispute` ใช้ `state.auth?.actorId ?? CUSTOMER_ID`. UI **60/60** (+3 login).
 
-**store→API cutover tail ที่เหลือ**: create mutations (submitRateRequest/fileDispute — adopt server id), menu CRUD + place order (ยังไม่มี endpoint), refetch/rollback เมื่อ server ปฏิเสธ, แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role.
+**create mutation adopt server id ✅ (submitRateRequest)**: dispatchWithSync จัดการ create แยก — optimistic ใส่ local id (`rr{n}`) → `submitRateRequest` ไป API → ได้ entity (server UUID) → dispatch `reconcileRateRequest` แทน local ด้วย server entity → approve/counter ทีหลังใช้ server id (ไม่ 404). e2e: submit→UUID→approve ด้วย UUID ผ่าน. UI **61/61**.
+
+**store→API cutover tail ที่เหลือ**: **fileDispute** (pattern เดียวกัน แต่ trigger = "ออเดอร์สด" ที่ยังไม่ persist ฝั่ง server → ต้องทำ place-order endpoint ก่อน), menu CRUD endpoint, refetch/rollback เมื่อ server ปฏิเสธ, แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role.
+
+> เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 
 ## การรัน (เว็บ — ที่ root)
 

@@ -22,9 +22,9 @@ import {
   cancelOrder, resolveDispute as apiResolveDispute, suspendActor, unsuspendActor, runSettlement as apiRunSettlement,
   approveRateRequest as apiApproveRate, rejectRateRequest as apiRejectRate, counterRateRequest as apiCounterRate,
   acceptCounterOffer as apiAcceptCounter, declineCounterOffer as apiDeclineCounter,
-  login as apiLogin, logout as apiLogout, me as apiMe,
+  login as apiLogin, logout as apiLogout, me as apiMe, submitRateRequest as apiSubmitRate,
 } from '../api/client';
-import type { ApiOrder, ApiModeration, AuthUser } from '../api/client';
+import type { ApiOrder, ApiModeration, AuthUser, SubmitRateInput } from '../api/client';
 
 // สแนปช็อตสิ่งที่ลูกค้าสั่ง ณ ตอนจ่ายเงิน — OrderState เป็น state machine ล้วน ไม่ถือเมนู
 // ฝั่งร้าน/ไรเดอร์จึงอ้างจากตรงนี้เพื่อรู้ว่าออเดอร์นี้คือเมนูอะไร ร้านไหน
@@ -154,6 +154,7 @@ type Action =
   | { type: 'rejectDispute'; id: string }                                 // แอดมินปฏิเสธ (สงสัยโกง)
   // ── เจรจาอัตราคอมสองทาง (ADR 0003) ──
   | { type: 'submitRateRequest'; merchantId: string; currentRate: number; proposedRate: number; reason: string } // ร้านยื่น
+  | { type: 'reconcileRateRequest'; localId: string; request: RateRequest } // adopt entity จาก server (แทน local id)
   | { type: 'approveRateRequest'; id: string }            // แอดมินอนุมัติ → อัปเดต rateOverrides
   | { type: 'rejectRateRequest'; id: string }             // แอดมินปฏิเสธ
   | { type: 'counterRateRequest'; id: string; counter: number } // แอดมินเสนอแย้ง
@@ -272,6 +273,8 @@ function reducer(s: State, a: Action): State {
       });
       return r.ok ? { ...s, rateRequests: [...s.rateRequests, r.request] } : s;
     }
+    case 'reconcileRateRequest': // แทนคำขอ local ด้วย entity จริงจาก server (id ตรงกับ DB)
+      return { ...s, rateRequests: s.rateRequests.map((q) => (q.id === a.localId ? a.request : q)) };
     case 'approveRateRequest': {
       const target = s.rateRequests.find((q) => q.id === a.id);
       if (!target) return s;
@@ -439,11 +442,12 @@ export type MutationSource = {
   counterRateRequest: (id: string, counter: number) => Promise<unknown>;
   acceptCounterOffer: (id: string) => Promise<unknown>;
   declineCounterOffer: (id: string) => Promise<unknown>;
+  submitRateRequest: (input: SubmitRateInput) => Promise<RateRequest>; // create → คืน entity ที่มี server id
 };
 const liveMutations: MutationSource = {
   cancelOrder, resolveDispute: apiResolveDispute, suspendActor, unsuspendActor, runSettlement: apiRunSettlement,
   approveRateRequest: apiApproveRate, rejectRateRequest: apiRejectRate, counterRateRequest: apiCounterRate,
-  acceptCounterOffer: apiAcceptCounter, declineCounterOffer: apiDeclineCounter,
+  acceptCounterOffer: apiAcceptCounter, declineCounterOffer: apiDeclineCounter, submitRateRequest: apiSubmitRate,
 };
 
 // auth client (login/logout/me) — inject ได้ในเทสต์; ดีฟอลต์ = client จริง
@@ -529,10 +533,18 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
   const dispatchWithSync = useCallback<Dispatch<Action>>((action) => {
     const prev = stateRef.current;
     dispatch(action);
-    if (sync) {
-      const m = sync === true ? liveMutations : sync;
-      mirror(m, action, prev)?.catch(() => { /* TODO slice ถัดไป: refetch/rollback เมื่อ server ปฏิเสธ */ });
+    if (!sync) return;
+    const m = sync === true ? liveMutations : sync;
+    // create → adopt server id: optimistic ใส่ local id แล้วแทนด้วย entity จาก server (id ตรง DB)
+    // ทำนาย local id จาก prev (ตรงกับสูตรใน reducer) เพื่อรู้ว่าจะ reconcile ตัวไหน
+    if (action.type === 'submitRateRequest') {
+      const localId = `rr${prev.rateRequests.length + 1}`;
+      m.submitRateRequest({ merchantId: action.merchantId, currentRate: action.currentRate, proposedRate: action.proposedRate, reason: action.reason })
+        .then((request) => dispatch({ type: 'reconcileRateRequest', localId, request }))
+        .catch(() => { /* server ปฏิเสธ → คงคำขอ local (TODO: rollback) */ });
+      return;
     }
+    mirror(m, action, prev)?.catch(() => { /* TODO: refetch/rollback เมื่อ server ปฏิเสธ */ });
   }, [sync]);
 
   // ── auth (Lucia session) ──
