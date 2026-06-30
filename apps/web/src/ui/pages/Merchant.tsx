@@ -36,7 +36,7 @@ export function Merchant() {
 
   const apply = (a: MerchantAction) => {
     const r = ACTION[a].run(order);
-    if (r.ok) dispatch({ type: 'setOrder', order: r.state });
+    if (r.ok) dispatch({ type: 'setOrder', order: r.state, txn: a }); // txn → mirror /transition (ราง ร้าน)
   };
 
   return (

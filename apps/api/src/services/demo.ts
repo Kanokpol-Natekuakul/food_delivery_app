@@ -74,6 +74,7 @@ export async function seedDemo(conn: Db = db): Promise<{ orders: number; dispute
     await tx.delete(schema.ledgerEntries);
     await tx.delete(schema.disputes);
     await tx.delete(schema.rateOverrides);
+    await tx.delete(schema.moderation); // baseline = ไม่มีการพักงาน/ลดอันดับ
     await tx.delete(schema.orders);
 
     for (const o of demoOrders) {

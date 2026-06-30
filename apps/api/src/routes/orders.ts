@@ -5,8 +5,26 @@
 import type { FastifyInstance } from 'fastify';
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { adminCancel, placeOrder } from '@app/domain/order/transitions.js';
+import {
+  adminCancel, placeOrder, claimJob,
+  merchantAccept, merchantMarkReady, merchantReject,
+  riderArriveAtMerchant, pickup, riderArriveAtCustomer, confirmDelivery, declareFailedDelivery, releaseClaim,
+} from '@app/domain/order/transitions.js';
 import type { OrderState } from '@app/domain/order/state.js';
+import type { TransitionResult } from '@app/domain/order/transitions.js';
+import { requireUser, requireMerchantOf } from './auth.js';
+
+// ราง "ร้าน" — แก้ได้โดย merchant เจ้าของร้าน/admin
+const MERCHANT_TX: Record<string, (s: OrderState) => TransitionResult> = {
+  accept: merchantAccept, markReady: merchantMarkReady, reject: merchantReject,
+};
+// ราง "ไรเดอร์" — แก้ได้โดยไรเดอร์ที่ถือออเดอร์นี้ (riderId ตรง session)
+const RIDER_TX: Record<string, (s: OrderState) => TransitionResult> = {
+  arriveAtMerchant: riderArriveAtMerchant, pickup, arriveAtCustomer: riderArriveAtCustomer,
+  confirmDelivery: (s) => confirmDelivery(s, { otpMatches: true }),
+  declareFailed: (s) => declareFailedDelivery(s, { attemptsExhausted: true }),
+  release: releaseClaim,
+};
 import type { OrderLine } from '@app/domain/cart/cart.js';
 import { foodTotal, SERVICE_FEE } from '@app/domain/cart/cart.js';
 import { haversineKm, deliveryFee } from '@app/domain/delivery/delivery.js';
@@ -47,6 +65,53 @@ export async function orderRoutes(app: FastifyInstance): Promise<void> {
     const state: OrderState = { kind: 'Completed' };
     await db.update(schema.orders).set({ state }).where(eq(schema.orders.id, id));
     return { ok: true, state };
+  });
+
+  // ไรเดอร์ (จาก session) คว้างาน — pull-based dispatch (ADR 0001): assign riderId + transition
+  // ตัวตนไรเดอร์มาจาก session ไม่ใช่ body (ลูกค้าที่วางออเดอร์ ≠ ไรเดอร์); ถูกพักงาน → คว้าไม่ได้
+  app.post<{ Params: { id: string } }>('/orders/:id/claim', async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return reply;
+    if (user.role !== 'rider') return reply.code(403).send({ error: 'ต้องเป็นไรเดอร์' });
+    return db.transaction(async (tx) => {
+      const [row] = await tx.select().from(schema.orders).where(eq(schema.orders.id, req.params.id));
+      if (!row) return reply.code(404).send({ error: 'ไม่พบออเดอร์' });
+
+      const [mod] = await tx.select().from(schema.moderation).where(eq(schema.moderation.account, user.actorId));
+      const result = claimJob(row.state as OrderState, { riderSuspended: mod?.suspended ?? false });
+      if (!result.ok) return reply.code(409).send({ error: result.reason });
+
+      await tx.update(schema.orders).set({ state: result.state, riderId: user.actorId }).where(eq(schema.orders.id, req.params.id));
+      return { ok: true, state: result.state, riderId: user.actorId };
+    });
+  });
+
+  // เดิน state machine ทั้งราง ร้าน+ไรเดอร์ (pickup/deliver ฯลฯ) — auth ตามราง, โดเมนตัดสิน transition
+  app.post<{ Params: { id: string }; Body: { action: string } }>('/orders/:id/transition', async (req, reply) => {
+    const { action } = req.body;
+    const [order] = await db.select().from(schema.orders).where(eq(schema.orders.id, req.params.id));
+    if (!order) return reply.code(404).send({ error: 'ไม่พบออเดอร์' });
+
+    const merchantFn = MERCHANT_TX[action];
+    const riderFn = RIDER_TX[action];
+    if (merchantFn) {
+      if (!await requireMerchantOf(req, reply, order.restaurantId ?? '')) return reply;
+    } else if (riderFn) {
+      const user = await requireUser(req, reply);
+      if (!user) return reply;
+      if (user.role !== 'rider' || order.riderId !== user.actorId) return reply.code(403).send({ error: 'ไม่ใช่งานของคุณ' });
+    } else {
+      return reply.code(400).send({ error: `transition ไม่รู้จัก: ${action}` });
+    }
+
+    return db.transaction(async (tx) => {
+      const [cur] = await tx.select().from(schema.orders).where(eq(schema.orders.id, req.params.id));
+      if (!cur) return reply.code(404).send({ error: 'ไม่พบออเดอร์' });
+      const result = (merchantFn ?? riderFn!)(cur.state as OrderState);
+      if (!result.ok) return reply.code(409).send({ error: result.reason });
+      await tx.update(schema.orders).set({ state: result.state }).where(eq(schema.orders.id, req.params.id));
+      return { ok: true, state: result.state };
+    });
   });
 
   app.post<{ Params: { id: string } }>('/orders/:id/cancel', async (req, reply) => {

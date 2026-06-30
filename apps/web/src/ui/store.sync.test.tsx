@@ -32,6 +32,8 @@ function spySource() {
     addMenuItem: vi.fn().mockResolvedValue(undefined),
     updateMenuItem: vi.fn().mockResolvedValue(undefined),
     removeMenuItem: vi.fn().mockResolvedValue(undefined),
+    claimOrder: vi.fn().mockResolvedValue(undefined),
+    transitionOrder: vi.fn().mockResolvedValue(undefined),
   } satisfies MutationSource;
 }
 
@@ -109,9 +111,13 @@ function OrderProbe() {
     <>
       <span data-testid="live">{state.liveOrderId ?? 'none'}</span>
       <span data-testid="disp">{state.disputes.map((d) => d.id).join(',')}</span>
+      <span data-testid="order-rider">{state.order?.kind === 'AwaitingHandoff' ? state.order.rider : '-'}</span>
+      <span data-testid="live-rider">{state.liveRider ?? 'none'}</span>
       <button onClick={() => dispatch({ type: 'place' })}>place</button>
       <button onClick={() => dispatch({ type: 'setOrder', order: { kind: 'Completed' } })}>complete</button>
       <button onClick={() => dispatch({ type: 'fileDispute', category: 'wrong_item', hasPhoto: true })}>file</button>
+      <button onClick={() => dispatch({ type: 'claimLive', rider: 'rider:nid', riderSuspended: false, priorityHeld: false })}>claim</button>
+      <button onClick={() => dispatch({ type: 'setOrder', order: { kind: 'AwaitingHandoff', merchant: 'Preparing', rider: 'Unclaimed' }, txn: 'accept' })}>accept</button>
     </>
   );
 }
@@ -123,6 +129,30 @@ describe('StoreProvider — place-order + fileDispute adopt server id (cutover t
     await userEvent.click(screen.getByText('place'));
     expect(m.createOrder).toHaveBeenCalledOnce();
     await waitFor(() => expect(screen.getByTestId('live')).toHaveTextContent('order-uuid'));
+  });
+
+  it('claimLive: หลัง place → คว้างาน (Unclaimed→Claimed) + mirror /claim + ตั้ง liveRider', async () => {
+    const m = spySource();
+    render(<StoreProvider sync={m}><OrderProbe /></StoreProvider>);
+    await userEvent.click(screen.getByText('place'));
+    await waitFor(() => expect(screen.getByTestId('live')).toHaveTextContent('order-uuid'));
+    expect(screen.getByTestId('order-rider').textContent).toBe('Unclaimed'); // ออเดอร์ใหม่ยังไม่มีใครคว้า
+
+    await userEvent.click(screen.getByText('claim'));
+    expect(screen.getByTestId('order-rider').textContent).toBe('Claimed'); // โดเมน claimJob
+    expect(screen.getByTestId('live-rider').textContent).toBe('rider:nid');
+    expect(m.claimOrder).toHaveBeenCalledWith('order-uuid'); // mirror → server assign riderId=session
+  });
+
+  it('setOrder ที่มี txn → mirror /transition (เดิน state machine ฝั่ง server)', async () => {
+    const m = spySource();
+    render(<StoreProvider sync={m}><OrderProbe /></StoreProvider>);
+    await userEvent.click(screen.getByText('place'));
+    await waitFor(() => expect(screen.getByTestId('live')).toHaveTextContent('order-uuid'));
+
+    await userEvent.click(screen.getByText('accept'));
+    expect(m.transitionOrder).toHaveBeenCalledWith('order-uuid', 'accept');
+    expect(m.completeOrder).not.toHaveBeenCalled(); // มี txn → ไม่ใช้ /complete
   });
 
   it('fileDispute: หลัง place+complete → ยิงไป server ด้วย liveOrderId แล้ว adopt id ร้องเรียน', async () => {

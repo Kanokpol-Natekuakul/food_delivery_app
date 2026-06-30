@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, riderActorId } from '../store';
 import type { OrderState } from '@app/domain/order/state.js';
 import type { TransitionResult } from '@app/domain/order/transitions.js';
 import {
@@ -13,10 +13,6 @@ import { isPriorityHeld, RIDER_PRIORITY_WINDOW_SEC } from '@app/domain/order/tim
 import { isSuspended } from '@app/domain/moderation/moderation.js';
 import { findRestaurant } from '../data/catalog';
 import './Rider.css';
-
-// ไรเดอร์ที่ล็อกอินอยู่ (V1 ฮาร์ดโค้ด — ตรงกับ id ที่แอดมินระงับได้ในหน้า /admin)
-const RIDER_ID = 'rider:somchai';
-const RIDER_NAME = 'สมชาย';
 
 const ACTION: Record<RiderAction, { label: string; cls: string; run: (s: OrderState) => TransitionResult }> = {
   claim: { label: 'คว้างาน', cls: 'btn--mango', run: claimJob },
@@ -45,12 +41,15 @@ export function Rider() {
     );
   }
 
+  // ตัวตนไรเดอร์จาก session ถ้าล็อกอินเป็น rider ไม่งั้น fallback เดโม (rider:somchai)
+  const riderId = riderActorId(state);
+  const riderName = riderId.replace(/^rider:/, '');
   const view = riderView(order);
   const restaurant = findRestaurant(state.restaurants, placed?.restaurantId ?? undefined);
-  const suspended = isSuspended(state.suspended, RIDER_ID);
-  const downranked = state.downranked.includes(RIDER_ID);
+  const suspended = isSuspended(state.suspended, riderId);
+  const downranked = state.downranked.includes(riderId);
   // แจ้งเตือนจากสถิติ (แสดงเมื่อยังไม่ถูกระงับ — ระงับมีแบนเนอร์ของตัวเอง)
-  const warned = state.notified.includes(RIDER_ID) && !suspended;
+  const warned = state.notified.includes(riderId) && !suspended;
 
   // pull-based dispatch (ADR 0001): ไรเดอร์ถูกลดอันดับต้องรอช่วงให้สิทธิ์อันดับสูงก่อน
   const jobOpen = order.kind === 'AwaitingHandoff' && order.rider === 'Unclaimed';
@@ -63,17 +62,19 @@ export function Rider() {
   }, [held]);
 
   const apply = (a: RiderAction) => {
-    // คว้างานต้องผ่านด่านพักงาน + ช่วงให้สิทธิ์อันดับสูง (โดเมน claimJob ตรวจซ้ำอีกชั้น)
-    const r = a === 'claim'
-      ? claimJob(order, { riderSuspended: suspended, priorityHeld: held })
-      : ACTION[a].run(order);
-    if (r.ok) dispatch({ type: 'setOrder', order: r.state });
+    // คว้างาน → claimLive (โดเมน claimJob ตรวจพักงาน/ช่วงให้สิทธิ์ + persist riderId=session ฝั่ง server)
+    if (a === 'claim') {
+      dispatch({ type: 'claimLive', rider: riderId, riderSuspended: suspended, priorityHeld: held });
+      return;
+    }
+    const r = ACTION[a].run(order);
+    if (r.ok) dispatch({ type: 'setOrder', order: r.state, txn: a }); // txn → mirror /transition (ราง ไรเดอร์)
   };
 
   return (
     <div className="rider">
       <div className="r-top">
-        <span className="r-who">🛵 งานไรเดอร์ · {RIDER_NAME}</span>
+        <span className="r-who">🛵 งานไรเดอร์ · {riderName}</span>
         <Link className="r-back" to="/merchant">ดูฝั่งร้าน ›</Link>
       </div>
 

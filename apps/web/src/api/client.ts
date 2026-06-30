@@ -44,6 +44,8 @@ export type CreateOrderInput = { restaurantId: string | null; lines: OrderLine[]
 export const getOrders = () => req<ApiOrder[]>('GET', '/orders');
 export const createOrder = (input: CreateOrderInput) => req<{ id: string; state: OrderState }>('POST', '/orders', input);
 export const completeOrder = (id: string) => req<{ ok: true; state: OrderState }>('POST', `/orders/${id}/complete`);
+export const claimOrder = (id: string) => req<{ ok: true; state: OrderState; riderId: string }>('POST', `/orders/${id}/claim`);
+export const transitionOrder = (id: string, action: string) => req<{ ok: true; state: OrderState }>('POST', `/orders/${id}/transition`, { action });
 export const cancelOrder = (id: string) => req<{ ok: true; state: OrderState; settlement: Settlement | null }>('POST', `/orders/${id}/cancel`);
 
 // ── auth (Lucia) — ตัวตนจาก session cookie ──

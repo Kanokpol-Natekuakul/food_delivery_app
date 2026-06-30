@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useReducer, useRef, useCallback }
 import type { Dispatch, ReactNode } from 'react';
 import { emptyCart, addLine, removeLine, setLineQty, foodTotal, SERVICE_FEE } from '@app/domain/cart/cart.js';
 import type { Cart, OrderLine } from '@app/domain/cart/cart.js';
-import { placeOrder, adminCancel } from '@app/domain/order/transitions.js';
+import { placeOrder, adminCancel, claimJob } from '@app/domain/order/transitions.js';
 import type { OrderState } from '@app/domain/order/state.js';
 import { suspend, unsuspend, isSuspended } from '@app/domain/moderation/moderation.js';
 import { haversineKm, deliveryFee } from '@app/domain/delivery/delivery.js';
@@ -25,6 +25,7 @@ import {
   login as apiLogin, logout as apiLogout, me as apiMe, submitRateRequest as apiSubmitRate,
   createOrder as apiCreateOrder, completeOrder as apiCompleteOrder, fileDispute as apiFileDispute,
   addMenuItem as apiAddMenu, updateMenuItem as apiUpdateMenu, removeMenuItem as apiRemoveMenu,
+  claimOrder as apiClaimOrder, transitionOrder as apiTransitionOrder,
 } from '../api/client';
 import type { ApiOrder, ApiModeration, AuthUser, SubmitRateInput, CreateOrderInput, FileDisputeInput } from '../api/client';
 
@@ -67,7 +68,14 @@ export type State = {
   auth?: AuthUser | null;
   // id ของออเดอร์สดฝั่ง server (ตั้งหลัง place mirror) — ใช้ร้องเรียนกับออเดอร์จริง; null/ไม่มี = ยังไม่ persist
   liveOrderId?: string | null;
+  // ไรเดอร์ที่คว้างานออเดอร์สด (pull-based dispatch ADR 0001) — ตั้งตอน claim; null/ไม่มี = ยังไม่มีใครคว้า
+  liveRider?: string | null;
 };
+
+// ไรเดอร์ที่ล็อกอินอยู่ฝั่ง rider console — จาก session ถ้าล็อกอินเป็น rider ไม่งั้น fallback เดโม
+export function riderActorId(state: State): string {
+  return state.auth?.role === 'rider' ? state.auth.actorId : LIVE_RIDER;
+}
 
 // ร้านที่ "ผู้ใช้ฝั่งร้าน" เป็นเจ้าของ (เดโม fallback เมื่อยังไม่ล็อกอิน) — ใช้ในหน้าฝั่งร้าน
 export const MERCHANT_RESTAURANT_ID = 'khao-man-kai';
@@ -143,7 +151,7 @@ type Action =
   | { type: 'remove'; id: string }
   | { type: 'qty'; id: string; qty: number }
   | { type: 'place' }           // สร้างออเดอร์จากตะกร้า แล้วล้างตะกร้า
-  | { type: 'setOrder'; order: OrderState }
+  | { type: 'setOrder'; order: OrderState; txn?: string } // txn = ชื่อ transition (ราง ร้าน/ไรเดอร์) สำหรับ mirror ไป server
   | { type: 'reset' }           // เริ่มออเดอร์ใหม่ (เดโม)
   | { type: 'resetApp' }        // รีเซ็ตทั้งแอปกลับเป็น seed (คู่กับล้างข้อมูลที่ persist)
   | { type: 'hydrate'; patch: Partial<State> } // เติม state จาก backend (cutover: read จาก API แทน seed)
@@ -164,6 +172,7 @@ type Action =
   // ── เจรจาอัตราคอมสองทาง (ADR 0003) ──
   | { type: 'submitRateRequest'; merchantId: string; currentRate: number; proposedRate: number; reason: string } // ร้านยื่น
   | { type: 'reconcileRateRequest'; localId: string; request: RateRequest } // adopt entity จาก server (แทน local id)
+  | { type: 'claimLive'; rider: string; riderSuspended: boolean; priorityHeld: boolean } // ไรเดอร์คว้างานออเดอร์สด
   | { type: 'reconcileLiveOrder'; id: string }                  // ตั้ง id ออเดอร์สดจาก server (หลัง place)
   | { type: 'reconcileDispute'; localId: string; dispute: Dispute } // adopt ร้องเรียนจาก server (แทน local id)
   | { type: 'approveRateRequest'; id: string }            // แอดมินอนุมัติ → อัปเดต rateOverrides
@@ -208,7 +217,7 @@ function reducer(s: State, a: Action): State {
       if (order.kind === 'Completed' && s.order?.kind !== 'Completed' && s.placed) {
         const record: AdminOrder = {
           id: `LV${s.orders.length + 1}`, placed: s.placed, state: order,
-          rider: LIVE_RIDER, customer: CUSTOMER_ID,
+          rider: s.liveRider ?? LIVE_RIDER, customer: s.auth?.actorId ?? CUSTOMER_ID,
         };
         const ledger = [...postOrder(s.ledger, s.restaurants, s.rateOverrides, record)];
         return { ...s, order, orders: [...s.orders, record], ledger };
@@ -253,7 +262,7 @@ function reducer(s: State, a: Action): State {
           orderId: 'สด',
           customer: s.auth?.actorId ?? CUSTOMER_ID, // ตัวตนจาก session ถ้าล็อกอิน ไม่งั้น fallback เดโม
           merchant: merchantAccount(s.placed),
-          rider: LIVE_RIDER,
+          rider: s.liveRider ?? LIVE_RIDER, // ไรเดอร์ที่คว้างาน (ถ้ามี) ไม่งั้น fallback เดโม
           category: a.category,
           hasPhoto: a.hasPhoto,
         },
@@ -287,6 +296,12 @@ function reducer(s: State, a: Action): State {
     }
     case 'reconcileRateRequest': // แทนคำขอ local ด้วย entity จริงจาก server (id ตรงกับ DB)
       return { ...s, rateRequests: s.rateRequests.map((q) => (q.id === a.localId ? a.request : q)) };
+    case 'claimLive': {
+      // ไรเดอร์คว้างานออเดอร์สด (Unclaimed→Claimed) — โดเมนตรวจพักงาน/ช่วงให้สิทธิ์อันดับสูง
+      if (!s.order) return s;
+      const r = claimJob(s.order, { riderSuspended: a.riderSuspended, priorityHeld: a.priorityHeld });
+      return r.ok ? { ...s, order: r.state, liveRider: a.rider } : s;
+    }
     case 'reconcileLiveOrder': return { ...s, liveOrderId: a.id };
     case 'reconcileDispute': // แทนร้องเรียน local ด้วย entity จริงจาก server
       return { ...s, disputes: s.disputes.map((d) => (d.id === a.localId ? a.dispute : d)) };
@@ -464,13 +479,16 @@ export type MutationSource = {
   addMenuItem: (restaurantId: string, dish: Dish) => Promise<unknown>;          // เมนู CRUD (dish id ฝั่ง client เสถียร ไม่ต้อง adopt)
   updateMenuItem: (restaurantId: string, dishId: string, fields: ItemFields) => Promise<unknown>;
   removeMenuItem: (restaurantId: string, dishId: string) => Promise<unknown>;
+  claimOrder: (id: string) => Promise<unknown>;                                // ไรเดอร์ (session) คว้างาน → assign riderId ฝั่ง server
+  transitionOrder: (id: string, action: string) => Promise<unknown>;           // เดิน state machine (ราง ร้าน/ไรเดอร์)
 };
 const liveMutations: MutationSource = {
   cancelOrder, resolveDispute: apiResolveDispute, suspendActor, unsuspendActor, runSettlement: apiRunSettlement,
   approveRateRequest: apiApproveRate, rejectRateRequest: apiRejectRate, counterRateRequest: apiCounterRate,
   acceptCounterOffer: apiAcceptCounter, declineCounterOffer: apiDeclineCounter, submitRateRequest: apiSubmitRate,
   createOrder: apiCreateOrder, completeOrder: apiCompleteOrder, fileDispute: apiFileDispute,
-  addMenuItem: apiAddMenu, updateMenuItem: apiUpdateMenu, removeMenuItem: apiRemoveMenu,
+  addMenuItem: apiAddMenu, updateMenuItem: apiUpdateMenu, removeMenuItem: apiRemoveMenu, claimOrder: apiClaimOrder,
+  transitionOrder: apiTransitionOrder,
 };
 
 // auth client (login/logout/me) — inject ได้ในเทสต์; ดีฟอลต์ = client จริง
@@ -570,18 +588,23 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
         .catch(rollback);
       return;
     }
-    // วางออเดอร์สด → สร้างฝั่ง server แล้ว adopt id (ใช้ร้องเรียนกับออเดอร์จริงภายหลัง)
+    // วางออเดอร์สด → สร้างฝั่ง server (ไม่มีไรเดอร์ — รอ pull-based claim) แล้ว adopt id
     if (action.type === 'place') {
-      m.createOrder({ restaurantId: prev.restaurantId, lines: prev.cart.lines, customer: prev.auth?.actorId ?? CUSTOMER_ID, rider: LIVE_RIDER })
+      m.createOrder({ restaurantId: prev.restaurantId, lines: prev.cart.lines, customer: prev.auth?.actorId ?? CUSTOMER_ID })
         .then(({ id }) => dispatch({ type: 'reconcileLiveOrder', id }))
         .catch(rollback);
       return;
     }
-    // ออเดอร์สดสำเร็จครั้งแรก → ดันสถานะ Completed ฝั่ง server (ปลดล็อกร้องเรียน)
+    // ไรเดอร์คว้างานออเดอร์สด → assign riderId=session ฝั่ง server (pull-based dispatch ADR 0001)
+    if (action.type === 'claimLive') {
+      if (prev.liveOrderId) m.claimOrder(prev.liveOrderId).catch(rollback);
+      return;
+    }
+    // เดิน state machine ฝั่ง server: txn (ราง ร้าน/ไรเดอร์) → /transition; ไม่มี txn แต่ Completed (เดโม Track) → /complete
     if (action.type === 'setOrder') {
-      if (action.order.kind === 'Completed' && prev.order?.kind !== 'Completed' && prev.liveOrderId) {
-        m.completeOrder(prev.liveOrderId).catch(rollback);
-      }
+      if (!prev.liveOrderId) return;
+      if (action.txn) m.transitionOrder(prev.liveOrderId, action.txn).catch(rollback);
+      else if (action.order.kind === 'Completed' && prev.order?.kind !== 'Completed') m.completeOrder(prev.liveOrderId).catch(rollback);
       return;
     }
     // ร้องเรียนออเดอร์สด → ส่งไป server (ตัวตนผู้ร้องจาก session ฝั่ง server) แล้ว adopt id

@@ -40,7 +40,11 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **merchant identity จาก session + gate menu CRUD ✅**: helper `merchantRestaurantId(state)` = ถ้าล็อกอินเป็น merchant → `actorId` ตัด `merchant:` ไม่งั้น fallback เดโม; หน้า MerchantMenu/MerchantRate ใช้แทน hardcode. api: menu CRUD ครอบ `requireMerchantOf` (admin หรือ merchant เจ้าของร้านนั้น). e2e: ไม่ล็อกอิน→401, customer→403, merchant ร้านอื่น→403, merchant เจ้าของ→200, admin→200. UI **66/66**.
 
-**store→API cutover — ครบทุกชั้นแล้ว** ✅ (read+write+create-adopt+auth+place-order+menu+rollback+merchant-identity). เหลือเฉพาะงานใหญ่กว่า: rider dispatch จริง (LIVE_RIDER ยังเป็น placeholder การจ่ายงาน — ต้อง persist การ claim ฝั่ง server), UX แจ้ง "ต้องล็อกอินเป็นร้าน" ตอนแก้เมนูไม่ล็อกอิน (ตอนนี้ optimistic แล้ว rollback).
+**rider dispatch จริง ✅ (ADR 0001 pull-based)**: ออเดอร์สร้างแบบ **ไม่มีไรเดอร์** (place ไม่ส่ง rider); ไรเดอร์คว้างานผ่าน `POST /orders/:id/claim` (ตัวตนจาก session — rider role; โดเมน `claimJob` ตรวจพักงาน + ใครกดก่อนได้ก่อน → assign `riderId=session.actorId`). web: `riderActorId(state)` (session rider / fallback), Rider page claim → action `claimLive` → mirror `/claim` + ตั้ง `state.liveRider`. e2e: ไม่ล็อกอิน→401, customer→403, rider→Claimed+riderId, claim ซ้ำ→409, rider พักงาน→409. UI **67/67**.
+
+**วงจรออเดอร์เต็ม persist ฝั่ง server ✅**: `POST /orders/:id/transition` {action} ครอบ transition ทั้งสอง rail — ราง ร้าน (accept/markReady/reject, auth=requireMerchantOf) + ราง ไรเดอร์ (arriveAtMerchant/pickup/arriveAtCustomer/confirmDelivery/declareFailed/release, auth=ไรเดอร์ที่ถือออเดอร์ riderId ตรง session). web: `setOrder` มี `txn?` (ชื่อ transition) — Merchant/Rider page ส่ง txn → mirror `/transition`; ไม่มี txn แต่ Completed (เดโม Track) → `/complete`. e2e: เดินครบ accept→ready→claim→arrive→pickup→arrive→confirm→**Completed** + auth ราง 403. UI **68/68**.
+
+**store→API cutover + วงจรออเดอร์เต็ม — ครบแล้ว** ✅ ทุก transition (ร้าน+ไรเดอร์) เดินผ่าน Postgres + auth ตามบทบาท. เหลือเฉพาะ polish เล็ก: UX แจ้ง "ต้องล็อกอิน" ตอนทำ action ที่ต้อง auth โดยยังไม่ล็อกอิน (ตอนนี้ optimistic→rollback เงียบ).
 
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 
