@@ -34,7 +34,9 @@ apps/api/          @app/api — Fastify + Postgres(Drizzle) + pg-boss(cron) + Lu
 
 e2e: place→complete→login customer→fileDispute → dispute.customer จาก session, merchant/rider จากออเดอร์. UI **63/63**.
 
-**store→API cutover tail ที่เหลือ**: menu CRUD endpoint (เพิ่ม/แก้/ลบเมนูฝั่งร้านยัง local), refetch/rollback เมื่อ server ปฏิเสธ (ตอนนี้ optimistic กลืน error), แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role. **โครงหลัก cutover (read+write+create-adopt+auth) ครบแล้ว**
+**menu CRUD ✅**: api `POST /restaurants/:id/menu` · `PUT /restaurants/:id/menu/:dishId` · `DELETE …` — ใช้ validation ชุดเดียวกับ web (โดเมน `addItem`/`updateItem`/`removeItem`) ผ่าน `applyMenu` (load dishes→fn→เขียนทับเมนูร้านใน transaction; 404 ไม่พบร้าน / 409 โดเมนปฏิเสธ). web mirror menuAddDish/Update/RemoveDish → endpoint (dish id เสถียร ไม่ต้อง adopt). e2e: add→GET เห็น→update→delete + validation 409/404. UI **64/64**.
+
+**store→API cutover tail ที่เหลือ**: refetch/rollback เมื่อ server ปฏิเสธ (ตอนนี้ optimistic กลืน error), แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role, gate menu CRUD ด้วย merchant role. **โครงหลัก cutover (read+write+create-adopt+auth+place-order+menu) ครบแล้ว**
 
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 

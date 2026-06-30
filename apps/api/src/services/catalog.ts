@@ -6,6 +6,7 @@
 import { eq } from 'drizzle-orm';
 import { restaurants as seedRestaurants } from '@app/domain/catalog/catalog.js';
 import type { Restaurant, Dish } from '@app/domain/catalog/catalog.js';
+import type { MenuResult } from '@app/domain/menu/menu.js';
 import { db, schema } from '../db/index.js';
 import type { Db } from '../db/index.js';
 
@@ -74,5 +75,33 @@ export async function seedCatalog(conn: Db = db): Promise<{ restaurants: number;
       }
     }
     return { restaurants: seedRestaurants.length, dishes };
+  });
+}
+
+/**
+ * ใช้การแก้เมนู (เพิ่ม/แก้/ลบ) ผ่านฟังก์ชันโดเมน menu — load dishes → fn → ถ้า ok เขียนทับเมนูของร้าน
+ * อะตอมมิกใน transaction; คืน code (404 ไม่พบร้าน / 409 โดเมนปฏิเสธ) เพื่อให้ route ตอบสถานะถูก
+ */
+export async function applyMenu(
+  restaurantId: string,
+  fn: (dishes: Dish[]) => MenuResult<Dish>,
+): Promise<{ ok: true; dishes: Dish[] } | { ok: false; code: number; reason: string }> {
+  return db.transaction(async (tx) => {
+    const [r] = await tx.select().from(schema.restaurants).where(eq(schema.restaurants.id, restaurantId));
+    if (!r) return { ok: false, code: 404, reason: 'ไม่พบร้าน' };
+
+    const rows = await tx.select().from(schema.menuItems).where(eq(schema.menuItems.restaurantId, restaurantId));
+    const res = fn(rows.map(toDish));
+    if (!res.ok) return { ok: false, code: 409, reason: res.reason };
+
+    const dishes = [...res.items];
+    await tx.delete(schema.menuItems).where(eq(schema.menuItems.restaurantId, restaurantId));
+    if (dishes.length > 0) {
+      await tx.insert(schema.menuItems).values(dishes.map((d) => ({
+        id: `${restaurantId}:${d.id}`, dishId: d.id, restaurantId, name: d.name, basePrice: d.basePrice,
+        description: d.desc, icon: d.icon, choice: d.choice ?? null, extras: d.extras ?? null,
+      })));
+    }
+    return { ok: true, dishes };
   });
 }

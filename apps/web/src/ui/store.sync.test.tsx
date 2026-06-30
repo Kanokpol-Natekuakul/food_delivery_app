@@ -29,6 +29,9 @@ function spySource() {
         rider: 'rider:somchai', category: input.category, hasPhoto: input.hasPhoto, status: 'open' as const, refund: 0,
       },
     })),
+    addMenuItem: vi.fn().mockResolvedValue(undefined),
+    updateMenuItem: vi.fn().mockResolvedValue(undefined),
+    removeMenuItem: vi.fn().mockResolvedValue(undefined),
   } satisfies MutationSource;
 }
 
@@ -136,5 +139,34 @@ describe('StoreProvider — place-order + fileDispute adopt server id (cutover t
     // local สร้าง dp2 → reconcile แทนด้วย disp-uuid จาก server
     await waitFor(() => expect(screen.getByTestId('disp')).toHaveTextContent('disp-uuid'));
     expect(screen.getByTestId('disp').textContent).not.toContain('dp2');
+  });
+});
+
+// menu CRUD → mirror ตรงๆ (dish id เสถียร ไม่ต้อง adopt)
+const newDish = { id: 'new1', name: 'เมนูใหม่', basePrice: 30, desc: 'อร่อย', icon: '🍴' };
+function MenuProbe() {
+  const { dispatch } = useStore();
+  return (
+    <>
+      <button onClick={() => dispatch({ type: 'menuAddDish', restaurantId: 'khao-man-kai', dish: newDish })}>add</button>
+      <button onClick={() => dispatch({ type: 'menuUpdateDish', restaurantId: 'khao-man-kai', dishId: 'kmk-tom', fields: { name: 'แก้ชื่อ', basePrice: 55, desc: 'x' } })}>upd</button>
+      <button onClick={() => dispatch({ type: 'menuRemoveDish', restaurantId: 'khao-man-kai', dishId: 'kmk-tom' })}>del</button>
+    </>
+  );
+}
+
+describe('StoreProvider — menu CRUD mirror ไป backend (cutover tail)', () => {
+  it('menuAdd/Update/Remove → ยิง endpoint เมนูตรง action + args', async () => {
+    const m = spySource();
+    render(<StoreProvider sync={m}><MenuProbe /></StoreProvider>);
+
+    await userEvent.click(screen.getByText('add'));
+    expect(m.addMenuItem).toHaveBeenCalledWith('khao-man-kai', newDish);
+
+    await userEvent.click(screen.getByText('upd'));
+    expect(m.updateMenuItem).toHaveBeenCalledWith('khao-man-kai', 'kmk-tom', { name: 'แก้ชื่อ', basePrice: 55, desc: 'x' });
+
+    await userEvent.click(screen.getByText('del'));
+    expect(m.removeMenuItem).toHaveBeenCalledWith('khao-man-kai', 'kmk-tom');
   });
 });

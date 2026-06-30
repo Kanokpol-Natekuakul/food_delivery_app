@@ -24,6 +24,7 @@ import {
   acceptCounterOffer as apiAcceptCounter, declineCounterOffer as apiDeclineCounter,
   login as apiLogin, logout as apiLogout, me as apiMe, submitRateRequest as apiSubmitRate,
   createOrder as apiCreateOrder, completeOrder as apiCompleteOrder, fileDispute as apiFileDispute,
+  addMenuItem as apiAddMenu, updateMenuItem as apiUpdateMenu, removeMenuItem as apiRemoveMenu,
 } from '../api/client';
 import type { ApiOrder, ApiModeration, AuthUser, SubmitRateInput, CreateOrderInput, FileDisputeInput } from '../api/client';
 
@@ -455,12 +456,16 @@ export type MutationSource = {
   createOrder: (input: CreateOrderInput) => Promise<{ id: string }>;   // วางออเดอร์สด → คืน id
   completeOrder: (id: string) => Promise<unknown>;                     // ดันสถานะ Completed (ปลดล็อกร้องเรียน)
   fileDispute: (input: FileDisputeInput) => Promise<{ dispute: Dispute }>; // ร้องเรียน → คืน entity ที่มี server id
+  addMenuItem: (restaurantId: string, dish: Dish) => Promise<unknown>;          // เมนู CRUD (dish id ฝั่ง client เสถียร ไม่ต้อง adopt)
+  updateMenuItem: (restaurantId: string, dishId: string, fields: ItemFields) => Promise<unknown>;
+  removeMenuItem: (restaurantId: string, dishId: string) => Promise<unknown>;
 };
 const liveMutations: MutationSource = {
   cancelOrder, resolveDispute: apiResolveDispute, suspendActor, unsuspendActor, runSettlement: apiRunSettlement,
   approveRateRequest: apiApproveRate, rejectRateRequest: apiRejectRate, counterRateRequest: apiCounterRate,
   acceptCounterOffer: apiAcceptCounter, declineCounterOffer: apiDeclineCounter, submitRateRequest: apiSubmitRate,
   createOrder: apiCreateOrder, completeOrder: apiCompleteOrder, fileDispute: apiFileDispute,
+  addMenuItem: apiAddMenu, updateMenuItem: apiUpdateMenu, removeMenuItem: apiRemoveMenu,
 };
 
 // auth client (login/logout/me) — inject ได้ในเทสต์; ดีฟอลต์ = client จริง
@@ -487,6 +492,9 @@ function mirror(m: MutationSource, action: Action, prev: State): Promise<unknown
     case 'counterRateRequest': return m.counterRateRequest(action.id, action.counter);
     case 'acceptCounterOffer': return m.acceptCounterOffer(action.id);
     case 'declineCounterOffer': return m.declineCounterOffer(action.id);
+    case 'menuAddDish': return m.addMenuItem(action.restaurantId, action.dish);
+    case 'menuUpdateDish': return m.updateMenuItem(action.restaurantId, action.dishId, action.fields);
+    case 'menuRemoveDish': return m.removeMenuItem(action.restaurantId, action.dishId);
     default: return undefined;
   }
 }

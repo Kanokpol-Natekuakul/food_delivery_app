@@ -12,7 +12,8 @@ import type { Dispute, DisputeCategory, AutoActionPlan } from '@app/domain/dispu
 import type { RateRequest } from '@app/domain/revenue/revenue.js';
 import type { Settlement } from '@app/domain/settlement/settlement.js';
 import type { LedgerEntry } from '@app/domain/wallet/wallet.js';
-import type { Restaurant } from '@app/domain/catalog/catalog.js';
+import type { Restaurant, Dish } from '@app/domain/catalog/catalog.js';
+import type { ItemFields } from '@app/domain/menu/menu.js';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
@@ -30,6 +31,11 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
 // ── catalog (ร้าน + เมนู) — ใช้ hydrate state.restaurants แทน hardcode ──
 export const getRestaurants = () => req<Restaurant[]>('GET', '/restaurants');
 export const getRestaurant = (id: string) => req<Restaurant>('GET', `/restaurants/${id}`);
+
+// ── จัดการเมนูฝั่งร้าน (Menu CRUD) ──
+export const addMenuItem = (restaurantId: string, dish: Dish) => req<{ ok: true; dishes: Dish[] }>('POST', `/restaurants/${restaurantId}/menu`, { dish });
+export const updateMenuItem = (restaurantId: string, dishId: string, fields: ItemFields) => req<{ ok: true; dishes: Dish[] }>('PUT', `/restaurants/${restaurantId}/menu/${dishId}`, { fields });
+export const removeMenuItem = (restaurantId: string, dishId: string) => req<{ ok: true; dishes: Dish[] }>('DELETE', `/restaurants/${restaurantId}/menu/${dishId}`);
 
 // ── ออเดอร์ ──
 export type ApiPlaced = { restaurantId: string | null; lines: OrderLine[] };
