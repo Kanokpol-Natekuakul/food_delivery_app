@@ -23,6 +23,15 @@ export async function requireAdmin(req: FastifyRequest, reply: FastifyReply): Pr
   return user;
 }
 
+/** ต้องเป็นแอดมิน หรือ merchant เจ้าของร้านนั้น (actorId === `merchant:<restaurantId>`) */
+export async function requireMerchantOf(req: FastifyRequest, reply: FastifyReply, restaurantId: string): Promise<SessionUser | null> {
+  const user = await requireUser(req, reply);
+  if (!user) return null;
+  if (user.role === 'admin' || (user.role === 'merchant' && user.actorId === `merchant:${restaurantId}`)) return user;
+  await reply.code(403).send({ error: 'แก้ได้เฉพาะเมนูร้านของตัวเอง' });
+  return null;
+}
+
 export async function authRoutes(app: FastifyInstance): Promise<void> {
   app.post<{ Body: { actorId: string; password: string } }>('/auth/login', async (req, reply) => {
     const { actorId, password } = req.body;

@@ -69,8 +69,13 @@ export type State = {
   liveOrderId?: string | null;
 };
 
-// ร้านที่ "ผู้ใช้ฝั่งร้าน" เป็นเจ้าของ (เดโม) — ใช้ในหน้าเจรจาอัตราคอม
+// ร้านที่ "ผู้ใช้ฝั่งร้าน" เป็นเจ้าของ (เดโม fallback เมื่อยังไม่ล็อกอิน) — ใช้ในหน้าฝั่งร้าน
 export const MERCHANT_RESTAURANT_ID = 'khao-man-kai';
+
+/** ร้านของผู้ใช้ฝั่งร้าน — จาก session ถ้าล็อกอินเป็น merchant (actorId `merchant:<id>`), ไม่งั้น fallback เดโม */
+export function merchantRestaurantId(state: State): string {
+  return state.auth?.role === 'merchant' ? state.auth.actorId.replace(/^merchant:/, '') : MERCHANT_RESTAURANT_ID;
+}
 
 // ตัวตนลูกค้าในเดโม (จริงมาจากเซสชันล็อกอิน) — ใช้ตอนยื่นร้องเรียนจากออเดอร์สด
 export const CUSTOMER_ID = 'customer:aon';

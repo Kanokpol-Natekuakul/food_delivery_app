@@ -38,7 +38,9 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **refetch/rollback ✅**: สกัด hydrate logic เป็น `rehydrate()` (useCallback) ใช้ทั้ง mount และตอน mutation ล้มเหลว — ทุก mirror error (`.catch(rollback)`) เรียก `rehydrate()` ดึง read จาก server ทับ optimistic = revert ให้ตรงความจริง (success ไม่ refetch → ไม่เพิ่มภาระ). เทสต์: suspend ล้มเหลว → getModeration ถูกเรียกซ้ำ → suspended กลับว่าง. UI **65/65**.
 
-**store→API cutover tail ที่เหลือ**: แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role, gate menu CRUD ด้วย merchant role. **โครงหลัก cutover (read+write+create-adopt+auth+place-order+menu+rollback) ครบแล้ว**
+**merchant identity จาก session + gate menu CRUD ✅**: helper `merchantRestaurantId(state)` = ถ้าล็อกอินเป็น merchant → `actorId` ตัด `merchant:` ไม่งั้น fallback เดโม; หน้า MerchantMenu/MerchantRate ใช้แทน hardcode. api: menu CRUD ครอบ `requireMerchantOf` (admin หรือ merchant เจ้าของร้านนั้น). e2e: ไม่ล็อกอิน→401, customer→403, merchant ร้านอื่น→403, merchant เจ้าของ→200, admin→200. UI **66/66**.
+
+**store→API cutover — ครบทุกชั้นแล้ว** ✅ (read+write+create-adopt+auth+place-order+menu+rollback+merchant-identity). เหลือเฉพาะงานใหญ่กว่า: rider dispatch จริง (LIVE_RIDER ยังเป็น placeholder การจ่ายงาน — ต้อง persist การ claim ฝั่ง server), UX แจ้ง "ต้องล็อกอินเป็นร้าน" ตอนแก้เมนูไม่ล็อกอิน (ตอนนี้ optimistic แล้ว rollback).
 
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 

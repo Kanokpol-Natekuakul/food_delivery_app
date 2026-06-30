@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore, MERCHANT_RESTAURANT_ID } from '../store';
+import { useStore, merchantRestaurantId } from '../store';
 import type { RateRequestStatus } from '@app/domain/revenue/revenue.js';
 import { findRestaurant, ratesFor, merchantOverrides } from '../data/catalog';
 import './MerchantRate.css';
@@ -11,20 +11,21 @@ const STATUS_LABEL: Record<RateRequestStatus, string> = {
 
 export function MerchantRate() {
   const { state, dispatch } = useStore();
-  const restaurant = findRestaurant(state.restaurants, MERCHANT_RESTAURANT_ID);
+  const merchantId = merchantRestaurantId(state); // จาก session ถ้าล็อกอินเป็น merchant ไม่งั้น fallback เดโม
+  const restaurant = findRestaurant(state.restaurants, merchantId);
   const rates = ratesFor(restaurant, merchantOverrides(state.rateOverrides));
   const currentPct = Math.round(rates.commissionRate * 100);
 
   const [proposed, setProposed] = useState(Math.max(1, currentPct - 5));
   const [reason, setReason] = useState('');
 
-  const myRequests = state.rateRequests.filter((q) => q.merchantId === MERCHANT_RESTAURANT_ID);
+  const myRequests = state.rateRequests.filter((q) => q.merchantId === merchantId);
   const valid = proposed > 0 && proposed < currentPct;
 
   const submit = () => {
     dispatch({
       type: 'submitRateRequest',
-      merchantId: MERCHANT_RESTAURANT_ID,
+      merchantId,
       currentRate: rates.commissionRate,
       proposedRate: proposed / 100,
       reason,

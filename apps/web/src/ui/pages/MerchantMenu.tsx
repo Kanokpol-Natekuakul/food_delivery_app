@@ -1,13 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, merchantRestaurantId } from '../store';
 import { validateItemFields } from '@app/domain/menu/menu.js';
 import { findRestaurant } from '../data/catalog';
 import type { Dish } from '../data/catalog';
 import './MerchantMenu.css';
-
-// V1: ร้านนี้คือร้านของ Merchant ที่ล็อกอินอยู่ (ในแอปจริงมาจากบัญชีร้าน)
-const MERCHANT_RESTAURANT_ID = 'khao-man-kai';
 
 type Fields = { name: string; price: string; desc: string };
 const emptyFields: Fields = { name: '', price: '', desc: '' };
@@ -15,7 +12,8 @@ const emptyFields: Fields = { name: '', price: '', desc: '' };
 export function MerchantMenu() {
   const { state } = useStore();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const restaurant = findRestaurant(state.restaurants, MERCHANT_RESTAURANT_ID);
+  // ร้านของผู้ใช้ฝั่งร้าน — จาก session ถ้าล็อกอินเป็น merchant ไม่งั้น fallback เดโม
+  const restaurant = findRestaurant(state.restaurants, merchantRestaurantId(state));
 
   if (!restaurant) {
     return (

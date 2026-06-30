@@ -2,8 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
-import { StoreProvider, useStore } from './store';
-import type { AuthClient } from './store';
+import { StoreProvider, useStore, merchantRestaurantId } from './store';
+import type { AuthClient, State } from './store';
 import { Login } from './pages/Login';
 
 // authClient ปลอม — me() ปฏิเสธ (ยังไม่ล็อกอิน) เว้นแต่ override
@@ -46,6 +46,13 @@ describe('auth ฝั่ง web (Lucia session)', () => {
     const auth = fakeAuth({ me: vi.fn(async () => ({ actorId: 'admin:root', role: 'admin' })) });
     render(<StoreProvider authClient={auth}><Probe /></StoreProvider>);
     await waitFor(() => expect(screen.getByTestId('who')).toHaveTextContent('admin:root'));
+  });
+
+  it('merchantRestaurantId: merchant ที่ล็อกอิน → ตัด prefix; ไม่งั้น fallback เดโม', () => {
+    const asState = (auth: State['auth']) => ({ auth } as unknown as State);
+    expect(merchantRestaurantId(asState({ actorId: 'merchant:somtam', role: 'merchant' }))).toBe('somtam');
+    expect(merchantRestaurantId(asState(null))).toBe('khao-man-kai'); // ไม่ล็อกอิน
+    expect(merchantRestaurantId(asState({ actorId: 'admin:root', role: 'admin' }))).toBe('khao-man-kai'); // ไม่ใช่ merchant
   });
 
   it('หน้า Login: รหัสผิด → โชว์ error ไม่ทำให้ล่ม', async () => {
