@@ -12,13 +12,17 @@ import { postGoodwill } from '@app/domain/wallet/wallet.js';
 import { db, schema } from '../db/index.js';
 import { loadLedger, persistAppended } from '../services/ledger.js';
 import { runAutoActions } from '../services/moderation.js';
+import { requireUser } from './auth.js';
 
 export async function disputeRoutes(app: FastifyInstance): Promise<void> {
   app.get('/disputes', async () => db.select().from(schema.disputes));
 
-  // เทียบ store action 'fileDispute' (+applyAutoActions): ลูกค้ายื่น → บันทึก → คำนวณ auto-action
-  app.post<{ Body: { orderId: string; customer: string; merchant: string; rider: string; category: DisputeCategory; hasPhoto: boolean } }>(
+  // เทียบ store action 'fileDispute': ลูกค้า (จาก session) ยื่น → บันทึก → คำนวณ auto-action
+  // ตัวตนผู้ร้อง = session.actorId; คู่กรณี (merchant/rider) = จากออเดอร์ ไม่เชื่อ body
+  app.post<{ Body: { orderId: string; category: DisputeCategory; hasPhoto: boolean } }>(
     '/disputes', async (req, reply) => {
+      const user = await requireUser(req, reply);
+      if (!user) return reply;
       const b = req.body;
       return db.transaction(async (tx) => {
         const [order] = await tx.select().from(schema.orders).where(eq(schema.orders.id, b.orderId));
@@ -26,7 +30,11 @@ export async function disputeRoutes(app: FastifyInstance): Promise<void> {
 
         const minutesSinceCompleted = (Date.now() - new Date(order.createdAt).getTime()) / 60_000;
         const result = fileComplaint(
-          { id: randomUUID(), orderId: b.orderId, customer: b.customer, merchant: b.merchant, rider: b.rider, category: b.category, hasPhoto: b.hasPhoto },
+          {
+            id: randomUUID(), orderId: b.orderId, customer: user.actorId,
+            merchant: `merchant:${order.restaurantId ?? 'unknown'}`, rider: order.riderId ?? '',
+            category: b.category, hasPhoto: b.hasPhoto,
+          },
           { orderKind: (order.state as OrderState).kind, minutesSinceCompleted },
         );
         if (!result.ok) return reply.code(409).send({ error: result.reason });

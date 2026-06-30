@@ -20,5 +20,8 @@ export async function settlementRoutes(app: FastifyInstance): Promise<void> {
     return accounts(ledger).map((account) => ({ account, balance: balance(ledger, account) }));
   });
 
+  // รายการบัญชีดิบ (append-only) — ฝั่ง web hydrate state.ledger จากนี่ (คิดยอด/payout ต่อเอง)
+  app.get('/ledger', async () => db.transaction((tx) => loadLedger(tx)));
+
   app.post('/settlement/run', async () => runSettlementOnce());
 }

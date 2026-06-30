@@ -5,7 +5,36 @@
 import { pgTable, text, integer, boolean, real, jsonb, timestamp } from 'drizzle-orm/pg-core';
 import type { OrderState } from '@app/domain/order/state.js';
 import type { Amounts } from '@app/domain/settlement/settlement.js';
+import type { Dish, Extra } from '@app/domain/catalog/catalog.js';
 import type { PlacedOrder } from './types.js';
+
+// ── Catalog (ร้าน + เมนู) — source of truth ฝั่ง server, seed จาก @app/domain/catalog ──
+export const restaurants = pgTable('restaurants', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  icon: text('icon').notNull(),
+  g: text('g').notNull(), // คลาส gradient พื้นหลัง (presentation hint ของ V1)
+  rating: text('rating').notNull(),
+  cat: text('cat').notNull(),
+  blurb: text('blurb').notNull(),
+  lat: real('lat').notNull(),
+  lng: real('lng').notNull(),
+  zone: text('zone'), // โซนจัดส่ง — null = อัตราตั้งต้น
+});
+
+export const menuItems = pgTable('menu_items', {
+  id: text('id').primaryKey(), // pk รวม = `${restaurantId}:${dishId}` (กันชนข้ามร้าน)
+  dishId: text('dish_id').notNull(), // id เดิมของจานในร้าน (เช่น 'kmk-tom') — ใช้คืนเป็น Dish.id
+  restaurantId: text('restaurant_id').notNull().references(() => restaurants.id),
+  name: text('name').notNull(),
+  basePrice: integer('base_price').notNull(),
+  description: text('description').notNull(),
+  icon: text('icon').notNull(),
+  // Option Group เลือก-1 บังคับ (เช่น ความเผ็ด) — null = ข้าม
+  choice: jsonb('choice').$type<Dish['choice']>(),
+  // Option Group เลือกหลายได้ (ท็อปปิ้ง) — null = ไม่มี
+  extras: jsonb('extras').$type<Extra[]>(),
+});
 
 // ออเดอร์ + ประวัติ (per-party order history aggregate)
 export const orders = pgTable('orders', {

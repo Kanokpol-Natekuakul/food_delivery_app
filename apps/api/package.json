@@ -5,16 +5,18 @@
   "type": "module",
   "description": "Backend API — โฮสต์โดเมน @app/domain บน Fastify + Postgres(Drizzle) + pg-boss(cron) + Lucia(auth)",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "start": "node dist/server.js",
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "start": "node --env-file=.env dist/server.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.typecheck.json",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "node --env-file=.env ./node_modules/drizzle-kit/bin.cjs migrate",
+    "db:seed": "tsx --env-file=.env src/db/seed.ts"
   },
   "dependencies": {
     "@app/domain": "workspace:*",
     "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^10.1.0",
     "@lucia-auth/adapter-drizzle": "^1.1.0",
     "drizzle-orm": "^0.38.3",
     "fastify": "^5.2.0",

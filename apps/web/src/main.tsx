@@ -10,7 +10,7 @@ if (!root) throw new Error('ไม่พบ #root');
 createRoot(root).render(
   <StrictMode>
     <BrowserRouter>
-      <StoreProvider persist>
+      <StoreProvider persist hydrate sync>
         <App />
       </StoreProvider>
     </BrowserRouter>

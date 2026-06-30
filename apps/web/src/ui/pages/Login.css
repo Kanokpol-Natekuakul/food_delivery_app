@@ -1,0 +1,23 @@
+.login { max-width: 480px; margin: 0 auto; padding: 16px; }
+
+.login-card {
+  display: flex; flex-direction: column; gap: 14px;
+  background: var(--surface, #fff); border: 1px solid var(--line, #eee);
+  border-radius: 16px; padding: 20px; margin-top: 12px;
+}
+
+.login-field { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--muted, #666); }
+.login-field input {
+  padding: 10px 12px; border: 1px solid var(--line, #ddd); border-radius: 10px;
+  font-size: 16px; color: var(--ink, #222);
+}
+
+.login-error { color: #c0392b; font-size: 14px; margin: 0; }
+
+.login-hello { font-size: 16px; margin: 0 0 12px; }
+.login-role { color: var(--muted, #888); }
+
+.login-demo { border-top: 1px dashed var(--line, #eee); padding-top: 12px; }
+.login-demo-h { font-size: 13px; color: var(--muted, #888); }
+.login-demo-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.login-demo-btn { font-size: 13px; padding: 6px 10px; }

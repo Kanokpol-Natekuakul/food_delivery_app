@@ -7,9 +7,12 @@
  *   แล้ว hydrate state จาก GET ตอนโหลด + ยิง mutation ตอนผู้ใช้ทำ action (ต้องมี apps/api รันจริง)
  */
 import type { OrderState } from '@app/domain/order/state.js';
+import type { OrderLine } from '@app/domain/cart/cart.js';
 import type { Dispute, DisputeCategory, AutoActionPlan } from '@app/domain/dispute/dispute.js';
 import type { RateRequest } from '@app/domain/revenue/revenue.js';
 import type { Settlement } from '@app/domain/settlement/settlement.js';
+import type { LedgerEntry } from '@app/domain/wallet/wallet.js';
+import type { Restaurant } from '@app/domain/catalog/catalog.js';
 
 const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3001';
 
@@ -24,13 +27,24 @@ async function req<T>(method: string, path: string, body?: unknown): Promise<T> 
   return res.json() as Promise<T>;
 }
 
+// ── catalog (ร้าน + เมนู) — ใช้ hydrate state.restaurants แทน hardcode ──
+export const getRestaurants = () => req<Restaurant[]>('GET', '/restaurants');
+export const getRestaurant = (id: string) => req<Restaurant>('GET', `/restaurants/${id}`);
+
 // ── ออเดอร์ ──
-export type ApiOrder = { id: string; restaurantId: string | null; riderId: string | null; customerId: string | null; state: OrderState };
+export type ApiPlaced = { restaurantId: string | null; lines: OrderLine[] };
+export type ApiOrder = { id: string; restaurantId: string | null; riderId: string | null; customerId: string | null; placed: ApiPlaced; state: OrderState };
 export const getOrders = () => req<ApiOrder[]>('GET', '/orders');
 export const cancelOrder = (id: string) => req<{ ok: true; state: OrderState; settlement: Settlement | null }>('POST', `/orders/${id}/cancel`);
 
-// ── ร้องเรียนหลังส่ง (ADR 0006) ──
-export type FileDisputeInput = { orderId: string; customer: string; merchant: string; rider: string; category: DisputeCategory; hasPhoto: boolean };
+// ── auth (Lucia) — ตัวตนจาก session cookie ──
+export type AuthUser = { actorId: string; role: string };
+export const login = (actorId: string, password: string) => req<AuthUser>('POST', '/auth/login', { actorId, password });
+export const logout = () => req<{ ok: true }>('POST', '/auth/logout');
+export const me = () => req<AuthUser>('GET', '/auth/me');
+
+// ── ร้องเรียนหลังส่ง (ADR 0006) — customer/merchant/rider มาจาก session+ออเดอร์ ฝั่ง server ──
+export type FileDisputeInput = { orderId: string; category: DisputeCategory; hasPhoto: boolean };
 export const getDisputes = () => req<Dispute[]>('GET', '/disputes');
 export const fileDispute = (input: FileDisputeInput) => req<{ dispute: Dispute; autoAction: AutoActionPlan }>('POST', '/disputes', input);
 export const resolveDispute = (id: string, amount: number) => req<{ ok: true; dispute: Dispute }>('POST', `/disputes/${id}/resolve`, { amount });
@@ -54,4 +68,8 @@ export const runAutoActions = () => req<AutoActionPlan>('POST', '/moderation/run
 
 // ── wallet / settlement (ADR 0004) ──
 export const getWallet = () => req<{ account: string; balance: number }[]>('GET', '/wallet');
+export const getLedger = () => req<LedgerEntry[]>('GET', '/ledger');
 export const runSettlement = () => req<{ posted: number }>('POST', '/settlement/run');
+
+// ── อัตราคอมที่เจรจาแล้ว (merchantId → rate) ──
+export const getRateOverrides = () => req<Record<string, number>>('GET', '/rate-overrides');

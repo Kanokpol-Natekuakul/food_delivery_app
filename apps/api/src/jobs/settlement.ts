@@ -10,6 +10,7 @@ const QUEUE = 'settlement-cycle';
 export async function startSettlementScheduler(): Promise<PgBoss> {
   const boss = new PgBoss(process.env.DATABASE_URL!);
   await boss.start();
+  await boss.createQueue(QUEUE); // pg-boss v10: ต้องสร้างคิวก่อน work/schedule
 
   await boss.work(QUEUE, async () => {
     const r = await runSettlementOnce();

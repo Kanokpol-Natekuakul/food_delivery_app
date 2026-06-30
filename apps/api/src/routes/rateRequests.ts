@@ -48,6 +48,12 @@ async function transition(
 export async function rateRequestRoutes(app: FastifyInstance): Promise<void> {
   app.get('/rate-requests', async () => db.select().from(schema.rateRequests));
 
+  // อัตราคอมที่เจรจาแล้วต่อร้าน (merchantId → rate) — ฝั่ง web hydrate state.rateOverrides จากนี่
+  app.get('/rate-overrides', async () => {
+    const rows = await db.select().from(schema.rateOverrides);
+    return Object.fromEntries(rows.map((r) => [r.merchantId, r.commissionRate]));
+  });
+
   // ร้านยื่นขอลด
   app.post<{ Body: { merchantId: string; currentRate: number; proposedRate: number; reason?: string } }>(
     '/rate-requests', async (req, reply) => {

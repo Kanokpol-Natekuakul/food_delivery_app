@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import { createContext, useContext, useEffect, useReducer, useRef, useCallback } from 'react';
 import type { Dispatch, ReactNode } from 'react';
 import { emptyCart, addLine, removeLine, setLineQty, foodTotal, SERVICE_FEE } from '@app/domain/cart/cart.js';
 import type { Cart, OrderLine } from '@app/domain/cart/cart.js';
@@ -17,6 +17,14 @@ import { addItem, updateItem, removeItem } from '@app/domain/menu/menu.js';
 import type { ItemFields } from '@app/domain/menu/menu.js';
 import { restaurants as seedRestaurants, findRestaurant, ratesFor, merchantOverrides, RATE_POLICY, CUSTOMER_LOCATION } from './data/catalog';
 import type { Dish, Restaurant } from './data/catalog';
+import { getRestaurants, getOrders, getDisputes, getRateRequests, getModeration, getLedger, getRateOverrides } from '../api/client';
+import {
+  cancelOrder, resolveDispute as apiResolveDispute, suspendActor, unsuspendActor, runSettlement as apiRunSettlement,
+  approveRateRequest as apiApproveRate, rejectRateRequest as apiRejectRate, counterRateRequest as apiCounterRate,
+  acceptCounterOffer as apiAcceptCounter, declineCounterOffer as apiDeclineCounter,
+  login as apiLogin, logout as apiLogout, me as apiMe,
+} from '../api/client';
+import type { ApiOrder, ApiModeration, AuthUser } from '../api/client';
 
 // สแนปช็อตสิ่งที่ลูกค้าสั่ง ณ ตอนจ่ายเงิน — OrderState เป็น state machine ล้วน ไม่ถือเมนู
 // ฝั่งร้าน/ไรเดอร์จึงอ้างจากตรงนี้เพื่อรู้ว่าออเดอร์นี้คือเมนูอะไร ร้านไหน
@@ -52,6 +60,9 @@ export type State = {
   // อัตราคอมที่เจรจาแล้วต่อร้าน (ADR 0003): merchantId → commissionRate; คำขอปรับอัตราที่รออนุมัติ
   rateOverrides: Record<string, number>;
   rateRequests: RateRequest[];
+  // ผู้ใช้ที่ล็อกอิน (Lucia session) — null/ไม่มี = ยังไม่ล็อกอิน; แทนตัวตนฮาร์ดโค้ดเดิมเมื่อมีค่า
+  // optional: เทสต์ที่สร้าง State เองไม่ต้องระบุ (ถือว่ายังไม่ล็อกอิน)
+  auth?: AuthUser | null;
 };
 
 // ร้านที่ "ผู้ใช้ฝั่งร้าน" เป็นเจ้าของ (เดโม) — ใช้ในหน้าเจรจาอัตราคอม
@@ -126,6 +137,8 @@ type Action =
   | { type: 'setOrder'; order: OrderState }
   | { type: 'reset' }           // เริ่มออเดอร์ใหม่ (เดโม)
   | { type: 'resetApp' }        // รีเซ็ตทั้งแอปกลับเป็น seed (คู่กับล้างข้อมูลที่ persist)
+  | { type: 'hydrate'; patch: Partial<State> } // เติม state จาก backend (cutover: read จาก API แทน seed)
+  | { type: 'setAuth'; user: AuthUser | null }  // ตั้ง/ล้างผู้ใช้ที่ล็อกอิน (Lucia session)
   // ── จัดการเมนูฝั่งร้าน (ใช้โดเมน menu CRUD; no-op ถ้าโดเมนปฏิเสธ) ──
   | { type: 'menuAddDish'; restaurantId: string; dish: Dish }
   | { type: 'menuUpdateDish'; restaurantId: string; dishId: string; fields: ItemFields }
@@ -191,6 +204,8 @@ function reducer(s: State, a: Action): State {
     }
     case 'reset': return { ...s, order: placeOrder() };
     case 'resetApp': return __seed;
+    case 'hydrate': return { ...s, ...a.patch };
+    case 'setAuth': return { ...s, auth: a.user };
     case 'menuAddDish': return mapDishes(s, a.restaurantId, (d) => addItem(d, a.dish));
     case 'menuUpdateDish': return mapDishes(s, a.restaurantId, (d) => updateItem(d, a.dishId, a.fields));
     case 'menuRemoveDish': return mapDishes(s, a.restaurantId, (d) => removeItem(d, a.dishId));
@@ -223,7 +238,7 @@ function reducer(s: State, a: Action): State {
         {
           id: `dp${s.disputes.length + 1}`,
           orderId: 'สด',
-          customer: CUSTOMER_ID,
+          customer: s.auth?.actorId ?? CUSTOMER_ID, // ตัวตนจาก session ถ้าล็อกอิน ไม่งั้น fallback เดโม
           merchant: merchantAccount(s.placed),
           rider: LIVE_RIDER,
           category: a.category,
@@ -294,7 +309,13 @@ function reducer(s: State, a: Action): State {
   }
 }
 
-const Ctx = createContext<{ state: State; dispatch: Dispatch<Action> } | null>(null);
+type StoreValue = {
+  state: State;
+  dispatch: Dispatch<Action>;
+  login: (actorId: string, password: string) => Promise<AuthUser>;
+  logout: () => Promise<void>;
+};
+const Ctx = createContext<StoreValue | null>(null);
 
 const __seedLines: OrderLine[] = [
   { id: 'd1', itemName: 'ข้าวมันไก่ต้ม', basePrice: 50, spice: 'เผ็ดน้อย', options: [{ label: 'เพิ่มไข่ต้ม', price: 10 }], qty: 2, note: 'ไม่ใส่ผักชี' },
@@ -347,6 +368,7 @@ const __seed: State = {
   disputes: __disputes,
   rateOverrides: __rateOverrides,
   rateRequests: [],
+  auth: null,
 };
 
 // คีย์เก็บ state ทั้งก้อนใน localStorage (เปิดใช้เมื่อ persist=true เท่านั้น — เทสต์จึงไม่แตะ)
@@ -372,11 +394,97 @@ export function clearPersistedState(): void {
   try { localStorage.removeItem(LS_STATE); } catch { /* ปิด/ไม่รองรับ */ }
 }
 
+// แหล่งข้อมูล read ฝั่ง backend (cutover) — inject ได้ในเทสต์; ดีฟอลต์ = API client จริง
+// Partial: เทสต์ inject เฉพาะบางตัวได้ (effect ดึงเฉพาะที่มี)
+export type HydrateSource = Partial<{
+  getRestaurants: () => Promise<Restaurant[]>;
+  getOrders: () => Promise<ApiOrder[]>;
+  getDisputes: () => Promise<Dispute[]>;
+  getRateRequests: () => Promise<RateRequest[]>;
+  getModeration: () => Promise<ApiModeration[]>;
+  getLedger: () => Promise<LedgerEntry[]>;
+  getRateOverrides: () => Promise<Record<string, number>>;
+}>;
+const liveSource: HydrateSource = { getRestaurants, getOrders, getDisputes, getRateRequests, getModeration, getLedger, getRateOverrides };
+
+// ── adapter: API shape → state shape ──
+/** ApiOrder → AdminOrder (rider/customer ใส่เฉพาะเมื่อมีค่า ตาม exactOptionalPropertyTypes) */
+function toAdminOrders(api: readonly ApiOrder[]): AdminOrder[] {
+  return api.map((o) => ({
+    id: o.id, placed: o.placed, state: o.state,
+    ...(o.riderId ? { rider: o.riderId } : {}),
+    ...(o.customerId ? { customer: o.customerId } : {}),
+  }));
+}
+
+/** ApiModeration[] (per-account booleans) → 3 ลิสต์บัญชีของ state */
+function toModeration(rows: readonly ApiModeration[]): Pick<State, 'suspended' | 'downranked' | 'notified'> {
+  return {
+    suspended: rows.filter((m) => m.suspended).map((m) => m.account),
+    downranked: rows.filter((m) => m.downranked).map((m) => m.account),
+    notified: rows.filter((m) => m.notified).map((m) => m.account),
+  };
+}
+
+// ── write path (cutover slice 3): mirror mutation ไป backend ──
+// ชุดฟังก์ชัน write ที่ใช้ (inject ได้ในเทสต์); ดีฟอลต์ = client จริง
+export type MutationSource = {
+  cancelOrder: (id: string) => Promise<unknown>;
+  resolveDispute: (id: string, amount: number) => Promise<unknown>;
+  suspendActor: (account: string) => Promise<unknown>;
+  unsuspendActor: (account: string) => Promise<unknown>;
+  runSettlement: () => Promise<unknown>;
+  approveRateRequest: (id: string) => Promise<unknown>;
+  rejectRateRequest: (id: string) => Promise<unknown>;
+  counterRateRequest: (id: string, counter: number) => Promise<unknown>;
+  acceptCounterOffer: (id: string) => Promise<unknown>;
+  declineCounterOffer: (id: string) => Promise<unknown>;
+};
+const liveMutations: MutationSource = {
+  cancelOrder, resolveDispute: apiResolveDispute, suspendActor, unsuspendActor, runSettlement: apiRunSettlement,
+  approveRateRequest: apiApproveRate, rejectRateRequest: apiRejectRate, counterRateRequest: apiCounterRate,
+  acceptCounterOffer: apiAcceptCounter, declineCounterOffer: apiDeclineCounter,
+};
+
+// auth client (login/logout/me) — inject ได้ในเทสต์; ดีฟอลต์ = client จริง
+export type AuthClient = {
+  login: (actorId: string, password: string) => Promise<AuthUser>;
+  logout: () => Promise<unknown>;
+  me: () => Promise<AuthUser>;
+};
+const liveAuth: AuthClient = { login: apiLogin, logout: apiLogout, me: apiMe };
+
+/**
+ * ส่ง mutation ไป backend ให้ตรงกับ action — เฉพาะ action ที่แก้ entity ที่ server รู้จัก (id ตรงกับ demo seed)
+ * create (submitRateRequest/fileDispute) + menu CRUD + cart/order ยัง local-only (ไม่มี endpoint / ต้อง adopt id)
+ * คืน undefined = ไม่ต้อง mirror (ทำแค่ local)
+ */
+function mirror(m: MutationSource, action: Action, prev: State): Promise<unknown> | undefined {
+  switch (action.type) {
+    case 'adminCancelOrder': return m.cancelOrder(action.id);
+    case 'resolveDispute': return m.resolveDispute(action.id, action.amount);
+    case 'toggleSuspend': return isSuspended(prev.suspended, action.actor) ? m.unsuspendActor(action.actor) : m.suspendActor(action.actor);
+    case 'walletRunSettlement': return m.runSettlement();
+    case 'approveRateRequest': return m.approveRateRequest(action.id);
+    case 'rejectRateRequest': return m.rejectRateRequest(action.id);
+    case 'counterRateRequest': return m.counterRateRequest(action.id, action.counter);
+    case 'acceptCounterOffer': return m.acceptCounterOffer(action.id);
+    case 'declineCounterOffer': return m.declineCounterOffer(action.id);
+    default: return undefined;
+  }
+}
+
 // initialState: override seed (เทสต์จำลองสถานการณ์); persist: จำ state ข้ามรีโหลดผ่าน localStorage
-export function StoreProvider({ children, initialState, persist }: {
+// hydrate: ดึงข้อมูลจาก backend ตอน mount (true=ใช้ API จริง, object=แหล่งที่ inject); ล้มเหลว→คงค่า seed (ออฟไลน์ได้)
+// sync: mirror mutation ไป backend หลัง dispatch (optimistic local + ยิง API; ล้มเหลว→ปัจจุบันคง local ไว้)
+// authClient: แหล่ง login/logout/me (inject ในเทสต์); ถ้าตั้ง หรือ hydrate → เช็ค me() ตอน mount
+export function StoreProvider({ children, initialState, persist, hydrate, sync, authClient }: {
   children: ReactNode;
   initialState?: State;
   persist?: boolean;
+  hydrate?: boolean | HydrateSource;
+  sync?: boolean | MutationSource;
+  authClient?: AuthClient;
 }) {
   const [state, dispatch] = useReducer(
     reducer,
@@ -390,7 +498,67 @@ export function StoreProvider({ children, initialState, persist }: {
     try { localStorage.setItem(LS_STATE, JSON.stringify({ v: STATE_VERSION, s: state })); } catch { /* เต็ม/ปิดอยู่ */ }
   }, [state, persist, initialState]);
 
-  return <Ctx.Provider value={{ state, dispatch }}>{children}</Ctx.Provider>;
+  // cutover: hydrate state จาก backend ตอน mount (slice 1 = ร้าน, slice 2 = admin reads)
+  // ดึงเฉพาะ read ที่ source มี → ประกอบ patch ก้อนเดียว; ล้มเหลว → คง seed (ออฟไลน์ได้)
+  useEffect(() => {
+    if (!hydrate) return;
+    const src = hydrate === true ? liveSource : hydrate;
+    let cancelled = false;
+    (async () => {
+      const patch: Partial<State> = {};
+      const tasks: Promise<void>[] = [];
+      if (src.getRestaurants) tasks.push(src.getRestaurants().then((r) => { if (r.length > 0) patch.restaurants = r; }));
+      if (src.getOrders) tasks.push(src.getOrders().then((o) => { patch.orders = toAdminOrders(o); }));
+      if (src.getDisputes) tasks.push(src.getDisputes().then((d) => { patch.disputes = d; }));
+      if (src.getRateRequests) tasks.push(src.getRateRequests().then((q) => { patch.rateRequests = q; }));
+      if (src.getModeration) tasks.push(src.getModeration().then((m) => { Object.assign(patch, toModeration(m)); }));
+      if (src.getLedger) tasks.push(src.getLedger().then((l) => { patch.ledger = l; }));
+      if (src.getRateOverrides) tasks.push(src.getRateOverrides().then((ro) => { patch.rateOverrides = ro; }));
+      try {
+        await Promise.all(tasks);
+        if (!cancelled && Object.keys(patch).length > 0) dispatch({ type: 'hydrate', patch });
+      } catch { /* ออฟไลน์/ API ล่ม → คง seed ไว้ */ }
+    })();
+    return () => { cancelled = true; };
+  }, [hydrate]);
+
+  // dispatch ที่ส่งออก: local optimistic (reducer) แล้ว mirror ไป backend เมื่อเปิด sync
+  // signature เท่า Dispatch<Action> เดิม → หน้า/เทสต์ไม่ต้องแก้; api-off (ไม่มี sync) = dispatch ล้วน
+  const stateRef = useRef(state);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  const dispatchWithSync = useCallback<Dispatch<Action>>((action) => {
+    const prev = stateRef.current;
+    dispatch(action);
+    if (sync) {
+      const m = sync === true ? liveMutations : sync;
+      mirror(m, action, prev)?.catch(() => { /* TODO slice ถัดไป: refetch/rollback เมื่อ server ปฏิเสธ */ });
+    }
+  }, [sync]);
+
+  // ── auth (Lucia session) ──
+  const auth = authClient ?? liveAuth;
+  // เช็คเซสชันที่ยังอยู่ตอน mount (เปิดเมื่อคุยกับ backend: hydrate หรือ authClient ถูก inject)
+  // me() ล้มเหลว (401 = ยังไม่ล็อกอิน) เป็นเรื่องปกติ → คง auth=null
+  useEffect(() => {
+    if (!hydrate && !authClient) return;
+    let cancelled = false;
+    auth.me().then((u) => { if (!cancelled) dispatch({ type: 'setAuth', user: u }); }).catch(() => { /* ยังไม่ล็อกอิน */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const login = useCallback(async (actorId: string, password: string): Promise<AuthUser> => {
+    const user = await auth.login(actorId, password);
+    dispatch({ type: 'setAuth', user });
+    return user;
+  }, [auth]);
+
+  const logout = useCallback(async (): Promise<void> => {
+    try { await auth.logout(); } catch { /* ล้าง local แม้ API ล่ม */ }
+    dispatch({ type: 'setAuth', user: null });
+  }, [auth]);
+
+  return <Ctx.Provider value={{ state, dispatch: dispatchWithSync, login, logout }}>{children}</Ctx.Provider>;
 }
 
 export function useStore() {
