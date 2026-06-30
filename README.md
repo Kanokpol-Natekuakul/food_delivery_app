@@ -36,7 +36,9 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **menu CRUD ✅**: api `POST /restaurants/:id/menu` · `PUT /restaurants/:id/menu/:dishId` · `DELETE …` — ใช้ validation ชุดเดียวกับ web (โดเมน `addItem`/`updateItem`/`removeItem`) ผ่าน `applyMenu` (load dishes→fn→เขียนทับเมนูร้านใน transaction; 404 ไม่พบร้าน / 409 โดเมนปฏิเสธ). web mirror menuAddDish/Update/RemoveDish → endpoint (dish id เสถียร ไม่ต้อง adopt). e2e: add→GET เห็น→update→delete + validation 409/404. UI **64/64**.
 
-**store→API cutover tail ที่เหลือ**: refetch/rollback เมื่อ server ปฏิเสธ (ตอนนี้ optimistic กลืน error), แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role, gate menu CRUD ด้วย merchant role. **โครงหลัก cutover (read+write+create-adopt+auth+place-order+menu) ครบแล้ว**
+**refetch/rollback ✅**: สกัด hydrate logic เป็น `rehydrate()` (useCallback) ใช้ทั้ง mount และตอน mutation ล้มเหลว — ทุก mirror error (`.catch(rollback)`) เรียก `rehydrate()` ดึง read จาก server ทับ optimistic = revert ให้ตรงความจริง (success ไม่ refetch → ไม่เพิ่มภาระ). เทสต์: suspend ล้มเหลว → getModeration ถูกเรียกซ้ำ → suspended กลับว่าง. UI **65/65**.
+
+**store→API cutover tail ที่เหลือ**: แทนตัวตนฮาร์ดโค้ดที่เหลือ (MERCHANT_RESTAURANT_ID/LIVE_RIDER) ด้วย session role, gate menu CRUD ด้วย merchant role. **โครงหลัก cutover (read+write+create-adopt+auth+place-order+menu+rollback) ครบแล้ว**
 
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 

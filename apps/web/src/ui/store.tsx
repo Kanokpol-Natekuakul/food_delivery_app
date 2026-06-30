@@ -501,7 +501,7 @@ function mirror(m: MutationSource, action: Action, prev: State): Promise<unknown
 
 // initialState: override seed (เทสต์จำลองสถานการณ์); persist: จำ state ข้ามรีโหลดผ่าน localStorage
 // hydrate: ดึงข้อมูลจาก backend ตอน mount (true=ใช้ API จริง, object=แหล่งที่ inject); ล้มเหลว→คงค่า seed (ออฟไลน์ได้)
-// sync: mirror mutation ไป backend หลัง dispatch (optimistic local + ยิง API; ล้มเหลว→ปัจจุบันคง local ไว้)
+// sync: mirror mutation ไป backend หลัง dispatch (optimistic local + ยิง API; ล้มเหลว→ rehydrate ทับ rollback)
 // authClient: แหล่ง login/logout/me (inject ในเทสต์); ถ้าตั้ง หรือ hydrate → เช็ค me() ตอน mount
 export function StoreProvider({ children, initialState, persist, hydrate, sync, authClient }: {
   children: ReactNode;
@@ -523,32 +523,31 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     try { localStorage.setItem(LS_STATE, JSON.stringify({ v: STATE_VERSION, s: state })); } catch { /* เต็ม/ปิดอยู่ */ }
   }, [state, persist, initialState]);
 
-  // cutover: hydrate state จาก backend ตอน mount (slice 1 = ร้าน, slice 2 = admin reads)
-  // ดึงเฉพาะ read ที่ source มี → ประกอบ patch ก้อนเดียว; ล้มเหลว → คง seed (ออฟไลน์ได้)
-  useEffect(() => {
+  // cutover: ดึง state จาก backend — ใช้ทั้งตอน mount และ refetch หลัง mutation ล้มเหลว (rollback)
+  // ดึงเฉพาะ read ที่ source มี → ประกอบ patch ก้อนเดียว → dispatch ทับ optimistic ให้ตรง server
+  const rehydrate = useCallback(async () => {
     if (!hydrate) return;
     const src = hydrate === true ? liveSource : hydrate;
-    let cancelled = false;
-    (async () => {
-      const patch: Partial<State> = {};
-      const tasks: Promise<void>[] = [];
-      if (src.getRestaurants) tasks.push(src.getRestaurants().then((r) => { if (r.length > 0) patch.restaurants = r; }));
-      if (src.getOrders) tasks.push(src.getOrders().then((o) => { patch.orders = toAdminOrders(o); }));
-      if (src.getDisputes) tasks.push(src.getDisputes().then((d) => { patch.disputes = d; }));
-      if (src.getRateRequests) tasks.push(src.getRateRequests().then((q) => { patch.rateRequests = q; }));
-      if (src.getModeration) tasks.push(src.getModeration().then((m) => { Object.assign(patch, toModeration(m)); }));
-      if (src.getLedger) tasks.push(src.getLedger().then((l) => { patch.ledger = l; }));
-      if (src.getRateOverrides) tasks.push(src.getRateOverrides().then((ro) => { patch.rateOverrides = ro; }));
-      try {
-        await Promise.all(tasks);
-        if (!cancelled && Object.keys(patch).length > 0) dispatch({ type: 'hydrate', patch });
-      } catch { /* ออฟไลน์/ API ล่ม → คง seed ไว้ */ }
-    })();
-    return () => { cancelled = true; };
+    const patch: Partial<State> = {};
+    const tasks: Promise<void>[] = [];
+    if (src.getRestaurants) tasks.push(src.getRestaurants().then((r) => { if (r.length > 0) patch.restaurants = r; }));
+    if (src.getOrders) tasks.push(src.getOrders().then((o) => { patch.orders = toAdminOrders(o); }));
+    if (src.getDisputes) tasks.push(src.getDisputes().then((d) => { patch.disputes = d; }));
+    if (src.getRateRequests) tasks.push(src.getRateRequests().then((q) => { patch.rateRequests = q; }));
+    if (src.getModeration) tasks.push(src.getModeration().then((mo) => { Object.assign(patch, toModeration(mo)); }));
+    if (src.getLedger) tasks.push(src.getLedger().then((l) => { patch.ledger = l; }));
+    if (src.getRateOverrides) tasks.push(src.getRateOverrides().then((ro) => { patch.rateOverrides = ro; }));
+    try {
+      await Promise.all(tasks);
+      if (Object.keys(patch).length > 0) dispatch({ type: 'hydrate', patch });
+    } catch { /* ออฟไลน์/ API ล่ม → คงค่าปัจจุบัน */ }
   }, [hydrate]);
+
+  useEffect(() => { void rehydrate(); }, [rehydrate]); // hydrate ตอน mount
 
   // dispatch ที่ส่งออก: local optimistic (reducer) แล้ว mirror ไป backend เมื่อเปิด sync
   // signature เท่า Dispatch<Action> เดิม → หน้า/เทสต์ไม่ต้องแก้; api-off (ไม่มี sync) = dispatch ล้วน
+  // mutation ล้มเหลว → rehydrate() ดึง server ทับ optimistic (rollback ให้ตรงความจริง)
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
   const dispatchWithSync = useCallback<Dispatch<Action>>((action) => {
@@ -556,26 +555,27 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     dispatch(action);
     if (!sync) return;
     const m = sync === true ? liveMutations : sync;
+    const rollback = () => { void rehydrate(); };
     // create → adopt server id: optimistic ใส่ local id แล้วแทนด้วย entity จาก server (id ตรง DB)
     // ทำนาย local id จาก prev (ตรงกับสูตรใน reducer) เพื่อรู้ว่าจะ reconcile ตัวไหน
     if (action.type === 'submitRateRequest') {
       const localId = `rr${prev.rateRequests.length + 1}`;
       m.submitRateRequest({ merchantId: action.merchantId, currentRate: action.currentRate, proposedRate: action.proposedRate, reason: action.reason })
         .then((request) => dispatch({ type: 'reconcileRateRequest', localId, request }))
-        .catch(() => { /* server ปฏิเสธ → คงคำขอ local (TODO: rollback) */ });
+        .catch(rollback);
       return;
     }
     // วางออเดอร์สด → สร้างฝั่ง server แล้ว adopt id (ใช้ร้องเรียนกับออเดอร์จริงภายหลัง)
     if (action.type === 'place') {
       m.createOrder({ restaurantId: prev.restaurantId, lines: prev.cart.lines, customer: prev.auth?.actorId ?? CUSTOMER_ID, rider: LIVE_RIDER })
         .then(({ id }) => dispatch({ type: 'reconcileLiveOrder', id }))
-        .catch(() => { /* ออฟไลน์ → ออเดอร์อยู่ local อย่างเดียว (ร้องเรียนผ่าน server ไม่ได้) */ });
+        .catch(rollback);
       return;
     }
     // ออเดอร์สดสำเร็จครั้งแรก → ดันสถานะ Completed ฝั่ง server (ปลดล็อกร้องเรียน)
     if (action.type === 'setOrder') {
       if (action.order.kind === 'Completed' && prev.order?.kind !== 'Completed' && prev.liveOrderId) {
-        m.completeOrder(prev.liveOrderId).catch(() => { /* คง local */ });
+        m.completeOrder(prev.liveOrderId).catch(rollback);
       }
       return;
     }
@@ -585,12 +585,12 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
         const localId = `dp${prev.disputes.length + 1}`;
         m.fileDispute({ orderId: prev.liveOrderId, category: action.category, hasPhoto: action.hasPhoto })
           .then(({ dispute }) => dispatch({ type: 'reconcileDispute', localId, dispute }))
-          .catch(() => { /* server ปฏิเสธ → คงร้องเรียน local */ });
+          .catch(rollback);
       }
       return;
     }
-    mirror(m, action, prev)?.catch(() => { /* TODO: refetch/rollback เมื่อ server ปฏิเสธ */ });
-  }, [sync]);
+    mirror(m, action, prev)?.catch(rollback);
+  }, [sync, rehydrate]);
 
   // ── auth (Lucia session) ──
   const auth = authClient ?? liveAuth;

@@ -170,3 +170,32 @@ describe('StoreProvider — menu CRUD mirror ไป backend (cutover tail)', () 
     expect(m.removeMenuItem).toHaveBeenCalledWith('khao-man-kai', 'kmk-tom');
   });
 });
+
+function SuspendProbe() {
+  const { state, dispatch } = useStore();
+  return (
+    <>
+      <span data-testid="suspended">{state.suspended.join(',')}</span>
+      <button onClick={() => dispatch({ type: 'toggleSuspend', actor: 'rider:nid' })}>toggle</button>
+    </>
+  );
+}
+
+describe('StoreProvider — rollback: mutation ล้มเหลว → refetch ทับ optimistic', () => {
+  it('suspend ล้มเหลว → rehydrate ดึง server (ว่าง) ทับ → suspended กลับเป็นว่าง', async () => {
+    const getModeration = vi.fn(async () => [] as { account: string; suspended: boolean; downranked: boolean; notified: boolean }[]);
+    const m = { ...spySource(), suspendActor: vi.fn(async () => { throw new Error('500'); }) };
+    const noAuth = {
+      login: vi.fn(async () => ({ actorId: 'x', role: 'x' })),
+      logout: vi.fn(async () => undefined),
+      me: vi.fn(async () => { throw new Error('401'); }),
+    };
+
+    render(<StoreProvider hydrate={{ getModeration }} sync={m} authClient={noAuth}><SuspendProbe /></StoreProvider>);
+    await waitFor(() => expect(getModeration).toHaveBeenCalledTimes(1)); // hydrate ตอน mount
+
+    await userEvent.click(screen.getByText('toggle')); // optimistic: suspended=['rider:nid'] แล้ว suspendActor reject
+    await waitFor(() => expect(getModeration).toHaveBeenCalledTimes(2)); // refetch หลัง error
+    expect(screen.getByTestId('suspended').textContent).toBe(''); // rollback: server ว่าง → revert
+  });
+});

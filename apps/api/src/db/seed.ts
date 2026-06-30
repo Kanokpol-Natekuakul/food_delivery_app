@@ -1,3 +1,4 @@
+
 /**
  * Seed runner — `tsx src/db/seed.ts` (หรือ `npm run db:seed`)
  * ใส่ร้าน+เมนูจาก @app/domain/catalog ลง DB (idempotent)
