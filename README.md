@@ -44,7 +44,9 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **วงจรออเดอร์เต็ม persist ฝั่ง server ✅**: `POST /orders/:id/transition` {action} ครอบ transition ทั้งสอง rail — ราง ร้าน (accept/markReady/reject, auth=requireMerchantOf) + ราง ไรเดอร์ (arriveAtMerchant/pickup/arriveAtCustomer/confirmDelivery/declareFailed/release, auth=ไรเดอร์ที่ถือออเดอร์ riderId ตรง session). web: `setOrder` มี `txn?` (ชื่อ transition) — Merchant/Rider page ส่ง txn → mirror `/transition`; ไม่มี txn แต่ Completed (เดโม Track) → `/complete`. e2e: เดินครบ accept→ready→claim→arrive→pickup→arrive→confirm→**Completed** + auth ราง 403. UI **68/68**.
 
-**store→API cutover + วงจรออเดอร์เต็ม — ครบแล้ว** ✅ ทุก transition (ร้าน+ไรเดอร์) เดินผ่าน Postgres + auth ตามบทบาท. เหลือเฉพาะ polish เล็ก: UX แจ้ง "ต้องล็อกอิน" ตอนทำ action ที่ต้อง auth โดยยังไม่ล็อกอิน (ตอนนี้ optimistic→rollback เงียบ).
+**UX แจ้งเมื่อ mirror ล้มเหลว ✅**: `state.notice` + แถบ `<Notice>` บนสุด (auto-dismiss 4 วิ / กดปิด) — mirror ล้ม (เช่น 401 "ต้องเข้าสู่ระบบก่อน", 403 "ไม่ใช่งานของคุณ") → ดึงข้อความจาก server มาโชว์ + rollback (refetch). UI **69/69**.
+
+**🏁 store→API cutover + วงจรออเดอร์เต็ม — ครบสมบูรณ์** ✅ ทุก transition (ร้าน+ไรเดอร์) เดินผ่าน Postgres + auth ตามบทบาท + แจ้งผู้ใช้เมื่อล้มเหลว. fullstack จริงครบวงจร.
 
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 

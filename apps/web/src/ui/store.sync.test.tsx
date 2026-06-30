@@ -211,6 +211,25 @@ function SuspendProbe() {
   );
 }
 
+function NoticeProbe() {
+  const { state, dispatch } = useStore();
+  return (
+    <>
+      <span data-testid="notice">{state.notice ?? 'none'}</span>
+      <button onClick={() => dispatch({ type: 'adminCancelOrder', id: '1041' })}>cancel</button>
+    </>
+  );
+}
+
+describe('StoreProvider — แจ้งผู้ใช้เมื่อ mirror ล้มเหลว', () => {
+  it('mirror reject → ตั้ง state.notice ด้วยข้อความจาก server', async () => {
+    const m = { ...spySource(), cancelOrder: vi.fn(async () => { throw new Error('ต้องเข้าสู่ระบบก่อน'); }) };
+    render(<StoreProvider sync={m}><NoticeProbe /></StoreProvider>);
+    await userEvent.click(screen.getByText('cancel'));
+    await waitFor(() => expect(screen.getByTestId('notice')).toHaveTextContent('ต้องเข้าสู่ระบบก่อน'));
+  });
+});
+
 describe('StoreProvider — rollback: mutation ล้มเหลว → refetch ทับ optimistic', () => {
   it('suspend ล้มเหลว → rehydrate ดึง server (ว่าง) ทับ → suspended กลับเป็นว่าง', async () => {
     const getModeration = vi.fn(async () => [] as { account: string; suspended: boolean; downranked: boolean; notified: boolean }[]);

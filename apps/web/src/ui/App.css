@@ -9,3 +9,12 @@
   color: var(--mango, #e67e22); font-size: 13px; text-decoration: none;
 }
 .authbar-link:hover { text-decoration: underline; }
+
+.notice {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 10px 16px; font-size: 14px;
+  background: #fff4e5; color: #8a4b00; border-bottom: 1px solid #ffd9a8;
+}
+.notice-x {
+  background: none; border: none; cursor: pointer; color: #8a4b00; font-size: 14px; padding: 0 4px;
+}

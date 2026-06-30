@@ -70,6 +70,8 @@ export type State = {
   liveOrderId?: string | null;
   // ไรเดอร์ที่คว้างานออเดอร์สด (pull-based dispatch ADR 0001) — ตั้งตอน claim; null/ไม่มี = ยังไม่มีใครคว้า
   liveRider?: string | null;
+  // ข้อความแจ้งผู้ใช้ชั่วคราว (เช่น mirror ไป backend ล้มเหลว/ต้องล็อกอิน) — null/ไม่มี = ไม่มีแจ้ง
+  notice?: string | null;
 };
 
 // ไรเดอร์ที่ล็อกอินอยู่ฝั่ง rider console — จาก session ถ้าล็อกอินเป็น rider ไม่งั้น fallback เดโม
@@ -156,6 +158,7 @@ type Action =
   | { type: 'resetApp' }        // รีเซ็ตทั้งแอปกลับเป็น seed (คู่กับล้างข้อมูลที่ persist)
   | { type: 'hydrate'; patch: Partial<State> } // เติม state จาก backend (cutover: read จาก API แทน seed)
   | { type: 'setAuth'; user: AuthUser | null }  // ตั้ง/ล้างผู้ใช้ที่ล็อกอิน (Lucia session)
+  | { type: 'setNotice'; text: string | null }  // ข้อความแจ้งผู้ใช้ชั่วคราว (mirror ล้ม/ต้องล็อกอิน)
   // ── จัดการเมนูฝั่งร้าน (ใช้โดเมน menu CRUD; no-op ถ้าโดเมนปฏิเสธ) ──
   | { type: 'menuAddDish'; restaurantId: string; dish: Dish }
   | { type: 'menuUpdateDish'; restaurantId: string; dishId: string; fields: ItemFields }
@@ -228,6 +231,7 @@ function reducer(s: State, a: Action): State {
     case 'resetApp': return __seed;
     case 'hydrate': return { ...s, ...a.patch };
     case 'setAuth': return { ...s, auth: a.user };
+    case 'setNotice': return { ...s, notice: a.text };
     case 'menuAddDish': return mapDishes(s, a.restaurantId, (d) => addItem(d, a.dish));
     case 'menuUpdateDish': return mapDishes(s, a.restaurantId, (d) => updateItem(d, a.dishId, a.fields));
     case 'menuRemoveDish': return mapDishes(s, a.restaurantId, (d) => removeItem(d, a.dishId));
@@ -578,7 +582,11 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     dispatch(action);
     if (!sync) return;
     const m = sync === true ? liveMutations : sync;
-    const rollback = () => { void rehydrate(); };
+    // mirror ล้มเหลว → แจ้งผู้ใช้ (ข้อความจาก server เช่น "ต้องเข้าสู่ระบบก่อน"/"ไม่ใช่งานของคุณ") + rollback ด้วย refetch
+    const rollback = (e: unknown) => {
+      dispatch({ type: 'setNotice', text: e instanceof Error ? e.message : 'ทำรายการไม่สำเร็จ' });
+      void rehydrate();
+    };
     // create → adopt server id: optimistic ใส่ local id แล้วแทนด้วย entity จาก server (id ตรง DB)
     // ทำนาย local id จาก prev (ตรงกับสูตรใน reducer) เพื่อรู้ว่าจะ reconcile ตัวไหน
     if (action.type === 'submitRateRequest') {
