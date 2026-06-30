@@ -1,8 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, deliveryCoord } from '../store';
 import { priceBreakdown, lineTotal, cartItemCount, isEmpty } from '@app/domain/cart/cart.js';
 import { checkServiceability, SERVICE_ZONE_KM } from '@app/domain/delivery/delivery.js';
-import { findRestaurant, CUSTOMER_LOCATION } from '../data/catalog';
+import { findRestaurant } from '../data/catalog';
 import './Cart.css';
 
 export function Cart() {
@@ -26,7 +26,7 @@ export function Cart() {
   }
 
   // ค่าส่ง + ขอบเขตบริการจากระยะส่งจริง (haversine ร้าน→ลูกค้า, ADR 0005); ไม่รู้ร้าน = fallback คงที่
-  const service = restaurant ? checkServiceability(CUSTOMER_LOCATION, restaurant.coord) : undefined;
+  const service = restaurant ? checkServiceability(deliveryCoord(state), restaurant.coord) : undefined;
   const distanceKm = service?.distanceKm;
   const fee = service?.orderable ? service.fee : undefined;
   const offZone = service !== undefined && !service.orderable;

@@ -6,6 +6,7 @@ import { placeOrder, adminCancel, claimJob } from '@app/domain/order/transitions
 import type { OrderState } from '@app/domain/order/state.js';
 import { suspend, unsuspend, isSuspended } from '@app/domain/moderation/moderation.js';
 import { haversineKm, deliveryFee } from '@app/domain/delivery/delivery.js';
+import type { LatLng } from '@app/domain/delivery/delivery.js';
 import { settle } from '@app/domain/settlement/settlement.js';
 import { postSettlement, postGoodwill, payout, runSettlement } from '@app/domain/wallet/wallet.js';
 import type { LedgerEntry, Ledger } from '@app/domain/wallet/wallet.js';
@@ -72,7 +73,15 @@ export type State = {
   liveRider?: string | null;
   // ข้อความแจ้งผู้ใช้ชั่วคราว (เช่น mirror ไป backend ล้มเหลว/ต้องล็อกอิน) — null/ไม่มี = ไม่มีแจ้ง
   notice?: string | null;
+  // ที่อยู่จัดส่งที่ผู้ใช้ปักหมุด (LatLng) + ป้ายชื่อ — ไม่มี = ใช้ค่าตั้งต้น (ลาดพร้าว ซ.1)
+  deliveryCoord?: LatLng;
+  deliveryLabel?: string;
 };
+
+export const DEFAULT_DELIVERY_LABEL = 'ลาดพร้าว ซ.1';
+/** พิกัดจัดส่งปัจจุบัน (ปักหมุดแล้ว หรือค่าตั้งต้น) — ใช้คิดระยะ/ค่าส่ง/Service Zone */
+export const deliveryCoord = (s: State): LatLng => s.deliveryCoord ?? CUSTOMER_LOCATION;
+export const deliveryLabel = (s: State): string => s.deliveryLabel ?? DEFAULT_DELIVERY_LABEL;
 
 // ไรเดอร์ที่ล็อกอินอยู่ฝั่ง rider console — จาก session ถ้าล็อกอินเป็น rider ไม่งั้น fallback เดโม
 export function riderActorId(state: State): string {
@@ -133,17 +142,17 @@ function applyAutoActions(s: State): State {
 // ── ตัวช่วยคิดยอด/บัญชี wallet จากออเดอร์ ──
 const merchantAccount = (placed: PlacedOrder): string => `merchant:${placed.restaurantId ?? 'unknown'}`;
 
-function orderAmounts(restaurants: Restaurant[], placed: PlacedOrder): { food: number; delivery: number; service: number } {
+function orderAmounts(restaurants: Restaurant[], placed: PlacedOrder, coord: LatLng): { food: number; delivery: number; service: number } {
   const r = findRestaurant(restaurants, placed.restaurantId ?? undefined);
   const food = foodTotal({ lines: placed.lines });
-  const delivery = r ? deliveryFee(haversineKm(CUSTOMER_LOCATION, r.coord)) : 0;
+  const delivery = r ? deliveryFee(haversineKm(coord, r.coord)) : 0;
   return { food, delivery, service: SERVICE_FEE };
 }
 
-/** ลงบัญชีของออเดอร์หนึ่งเข้า ledger (ถ้าจบแล้ว) — ใช้อัตราของร้านนั้น (override ต่อร้าน/โซน ที่เจรจาแล้ว) */
-function postOrder(ledger: Ledger, restaurants: Restaurant[], overrides: Record<string, number>, o: AdminOrder): Ledger {
+/** ลงบัญชีของออเดอร์หนึ่งเข้า ledger (ถ้าจบแล้ว) — ใช้อัตราของร้านนั้น + ที่อยู่จัดส่งที่เลือก */
+function postOrder(ledger: Ledger, restaurants: Restaurant[], overrides: Record<string, number>, o: AdminOrder, coord: LatLng): Ledger {
   const r = findRestaurant(restaurants, o.placed.restaurantId ?? undefined);
-  const s = settle(o.state, orderAmounts(restaurants, o.placed), ratesFor(r, merchantOverrides(overrides)));
+  const s = settle(o.state, orderAmounts(restaurants, o.placed, coord), ratesFor(r, merchantOverrides(overrides)));
   return s ? postSettlement(ledger, o.id, merchantAccount(o.placed), s) : ledger;
 }
 
@@ -159,6 +168,7 @@ type Action =
   | { type: 'hydrate'; patch: Partial<State> } // เติม state จาก backend (cutover: read จาก API แทน seed)
   | { type: 'setAuth'; user: AuthUser | null }  // ตั้ง/ล้างผู้ใช้ที่ล็อกอิน (Lucia session)
   | { type: 'setNotice'; text: string | null }  // ข้อความแจ้งผู้ใช้ชั่วคราว (mirror ล้ม/ต้องล็อกอิน)
+  | { type: 'setDeliveryLocation'; coord: LatLng; label: string } // ปักหมุดที่อยู่จัดส่ง
   // ── จัดการเมนูฝั่งร้าน (ใช้โดเมน menu CRUD; no-op ถ้าโดเมนปฏิเสธ) ──
   | { type: 'menuAddDish'; restaurantId: string; dish: Dish }
   | { type: 'menuUpdateDish'; restaurantId: string; dishId: string; fields: ItemFields }
@@ -222,7 +232,7 @@ function reducer(s: State, a: Action): State {
           id: `LV${s.orders.length + 1}`, placed: s.placed, state: order,
           rider: s.liveRider ?? LIVE_RIDER, customer: s.auth?.actorId ?? CUSTOMER_ID,
         };
-        const ledger = [...postOrder(s.ledger, s.restaurants, s.rateOverrides, record)];
+        const ledger = [...postOrder(s.ledger, s.restaurants, s.rateOverrides, record, deliveryCoord(s))];
         return { ...s, order, orders: [...s.orders, record], ledger };
       }
       return { ...s, order };
@@ -232,6 +242,7 @@ function reducer(s: State, a: Action): State {
     case 'hydrate': return { ...s, ...a.patch };
     case 'setAuth': return { ...s, auth: a.user };
     case 'setNotice': return { ...s, notice: a.text };
+    case 'setDeliveryLocation': return { ...s, deliveryCoord: a.coord, deliveryLabel: a.label };
     case 'menuAddDish': return mapDishes(s, a.restaurantId, (d) => addItem(d, a.dish));
     case 'menuUpdateDish': return mapDishes(s, a.restaurantId, (d) => updateItem(d, a.dishId, a.fields));
     case 'menuRemoveDish': return mapDishes(s, a.restaurantId, (d) => removeItem(d, a.dishId));
@@ -243,7 +254,7 @@ function reducer(s: State, a: Action): State {
       const cancelled = { ...target, state: r.state };
       const orders = s.orders.map((o) => (o.id === a.id ? cancelled : o));
       // ยกเลิกแล้วออเดอร์จบ → ลงบัญชี wallet (คืนลูกค้า + แพลตฟอร์มแบกค่าอาหาร)
-      const ledger = [...postOrder(s.ledger, s.restaurants, s.rateOverrides, cancelled)];
+      const ledger = [...postOrder(s.ledger, s.restaurants, s.rateOverrides, cancelled, deliveryCoord(s))];
       return { ...s, orders, ledger };
     }
     case 'toggleSuspend':
@@ -381,7 +392,7 @@ const __rateOverrides: Record<string, number> = Object.fromEntries(
 
 // ledger เริ่มต้น = ลงบัญชีออเดอร์ที่จบแล้วใน seed (สำเร็จ/ส่งไม่ได้)
 const __ledger: LedgerEntry[] = [...__orders.reduce<Ledger>(
-  (l, o) => postOrder(l, seedRestaurants, __rateOverrides, o), [],
+  (l, o) => postOrder(l, seedRestaurants, __rateOverrides, o, CUSTOMER_LOCATION), [],
 )];
 
 // ร้องเรียนค้างรอแอดมินจัดการ (ผูกกับออเดอร์ #1039 ที่ส่งสำเร็จแล้ว)

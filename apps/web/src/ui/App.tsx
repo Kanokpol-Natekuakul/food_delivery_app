@@ -30,6 +30,7 @@ import { MerchantRate } from './pages/MerchantRate';
 import { Rider } from './pages/Rider';
 import { Admin } from './pages/Admin';
 import { Login } from './pages/Login';
+import { AllRestaurants } from './pages/AllRestaurants';
 
 /** แถบบนสุด: สถานะล็อกอิน (ตัวตนจาก Lucia session) + ลิงก์เข้า/ออกระบบ */
 function AuthBar() {
@@ -49,6 +50,18 @@ function AuthBar() {
 }
 
 export function App() {
+  // เดสก์ท็อป: หมุน wheel แนวตั้งเหนือแถวเลื่อนแนวนอน (.hscroll) → เลื่อนแนวนอนแทน
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      const el = (e.target as HTMLElement | null)?.closest?.('.hscroll') as HTMLElement | null;
+      if (!el || e.deltaY === 0 || el.scrollWidth <= el.clientWidth) return;
+      el.scrollLeft += e.deltaY;
+      e.preventDefault();
+    };
+    window.addEventListener('wheel', onWheel, { passive: false });
+    return () => window.removeEventListener('wheel', onWheel);
+  }, []);
+
   return (
     <>
       <AuthBar />
@@ -65,6 +78,7 @@ export function App() {
         <Route path="/rider" element={<Rider />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/all" element={<AllRestaurants />} />
       </Routes>
     </>
   );

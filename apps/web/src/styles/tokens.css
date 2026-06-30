@@ -94,11 +94,13 @@ img{max-width:100%; display:block}
 .empty .big{font-size:56px; margin-bottom:12px}
 .empty p{margin:0 0 18px}
 
-/* แถบเลื่อนแนวนอน (แผงร้าน) */
+/* แถบเลื่อนแนวนอน (แผงร้าน) — scrollbar บางๆ ให้รู้ว่าเลื่อนได้ + wheel→แนวนอน (ดู App.tsx) */
 .hscroll{display:flex; gap:var(--sp-3); overflow-x:auto; scroll-snap-type:x mandatory;
   padding-bottom:var(--sp-2); margin-inline:calc(-1*var(--gutter)); padding-inline:var(--gutter);
-  scrollbar-width:none}
-.hscroll::-webkit-scrollbar{display:none}
+  scrollbar-width:thin; scrollbar-color:var(--ink-line) transparent; overscroll-behavior-x:contain}
+.hscroll::-webkit-scrollbar{height:6px}
+.hscroll::-webkit-scrollbar-thumb{background:var(--ink-line); border-radius:3px}
+.hscroll::-webkit-scrollbar-track{background:transparent}
 .hscroll>*{scroll-snap-align:start; flex:0 0 auto}
 
 /* ปิด motion ถ้าผู้ใช้ขอ */

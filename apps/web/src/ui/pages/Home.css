@@ -43,6 +43,8 @@
 .home .sec-head{display:flex; align-items:baseline; justify-content:space-between; margin:0 0 var(--sp-4)}
 .home .sec-head h2{font-family:var(--display); font-weight:700; font-size:var(--fs-display-l); margin:0}
 .home .sec-head a{color:var(--mango); font-size:var(--fs-label); text-decoration:none}
+.home .sec-head .link-btn{background:none; border:none; cursor:pointer; padding:0;
+  color:var(--mango); font-size:var(--fs-label); font-family:var(--ui)}
 
 /* หมวดหมู่ */
 .home .cats{margin-bottom:var(--sp-6)}

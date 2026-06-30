@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, deliveryCoord, deliveryLabel } from '../store';
 import { cartItemCount, foodTotal } from '@app/domain/cart/cart.js';
 import { checkServiceability } from '@app/domain/delivery/delivery.js';
+import type { LatLng } from '@app/domain/delivery/delivery.js';
 import { rankByStanding } from '@app/domain/moderation/moderation.js';
-import { findRestaurant, CUSTOMER_LOCATION } from '../data/catalog';
+import { findRestaurant } from '../data/catalog';
 import type { Restaurant } from '../data/catalog';
+import { LocationPicker } from '../components/LocationPicker';
 import './Home.css';
 
-/** ร้านนี้อยู่นอกพื้นที่จัดส่งไหม (คิดจากพิกัดร้านใน store) */
-const isOffZone = (list: readonly Restaurant[], id: string): boolean => {
+/** ร้านนี้อยู่นอกพื้นที่จัดส่งไหม (คิดจากพิกัดร้าน + ที่อยู่จัดส่งที่เลือก) */
+const isOffZone = (list: readonly Restaurant[], id: string, coord: LatLng): boolean => {
   const r = findRestaurant(list, id);
-  return r ? !checkServiceability(CUSTOMER_LOCATION, r.coord).orderable : false;
+  return r ? !checkServiceability(coord, r.coord).orderable : false;
 };
 
 const stalls = [
@@ -42,6 +44,8 @@ export function Home() {
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [locOpen, setLocOpen] = useState(false);
+  const coord = deliveryCoord(state);
 
   const q = query.trim().toLowerCase();
   const matches = (name: string, cat: string) =>
@@ -63,8 +67,8 @@ export function Home() {
   return (
     <div className="home">
       <div className="topbar">
-        <button className="loc" aria-label="เปลี่ยนที่อยู่จัดส่ง">
-          <span className="pin">📍</span> <b>ลาดพร้าว ซ.1</b> <span aria-hidden="true">▾</span>
+        <button className="loc" aria-label="เปลี่ยนที่อยู่จัดส่ง" onClick={() => setLocOpen(true)}>
+          <span className="pin">📍</span> <b>{deliveryLabel(state)}</b> <span aria-hidden="true">▾</span>
         </button>
         <span className="spacer" />
         <button className="icon-btn" aria-label="เปิดเมนู" aria-expanded={menuOpen}
@@ -114,7 +118,7 @@ export function Home() {
                 <h2>{filtering ? 'ผลการค้นหา' : 'เปิดอยู่ตอนนี้'}</h2>
                 {filtering
                   ? <a href="#" onClick={(e) => { e.preventDefault(); clearFilters(); }}>ล้างตัวกรอง</a>
-                  : <a href="#" onClick={(e) => e.preventDefault()}>ดูทั้งหมด</a>}
+                  : <Link to="/all">ดูทั้งหมด</Link>}
               </div>
               <div className="hscroll">
                 {fStalls.map((s) => (
@@ -132,7 +136,7 @@ export function Home() {
             <section aria-label="ร้านใกล้คุณ">
               <div className="sec-head">
                 <h2>{filtering ? 'ร้านใกล้คุณ' : 'ใกล้คุณที่สุด'}</h2>
-                <a href="#" onClick={(e) => e.preventDefault()}>ดูแผนที่</a>
+                <button type="button" className="link-btn" onClick={() => setLocOpen(true)}>ดูแผนที่</button>
               </div>
               <div className="near">
                 {fNear.map((r) => (
@@ -144,7 +148,7 @@ export function Home() {
                       <div className="meta">
                         {r.meta.map((m, i) => <span className={i === 0 ? 'rate' : undefined} key={i}>{m}</span>)}
                         {r.closed && <span className="closed">{r.closed}</span>}
-                        {isOffZone(state.restaurants, r.id) && <span className="offzone">นอกพื้นที่</span>}
+                        {isOffZone(state.restaurants, r.id, coord) && <span className="offzone">นอกพื้นที่</span>}
                       </div>
                     </div>
                   </Link>
@@ -171,14 +175,14 @@ export function Home() {
                 <span className="drawer__avatar">😋</span>
                 <div>
                   <b>สวัสดี, หิวแล้ว</b>
-                  <span className="drawer__loc">📍 ลาดพร้าว ซ.1</span>
+                  <span className="drawer__loc">📍 {deliveryLabel(state)}</span>
                 </div>
               </div>
               <button className="icon-btn" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)}>✕</button>
             </div>
             <nav className="drawer__nav" onClick={() => setMenuOpen(false)}>
               <Link to="/"><span className="di">🏠</span> หน้าแรก</Link>
-              <Link to="/"><span className="di">🍽️</span> ร้านอาหารทั้งหมด</Link>
+              <Link to="/all"><span className="di">🍽️</span> ร้านอาหารทั้งหมด</Link>
               <Link to="/cart">
                 <span className="di">🛒</span> ตะกร้า
                 {count > 0 && <span className="drawer__badge">{count}</span>}
@@ -191,6 +195,8 @@ export function Home() {
           </aside>
         </div>
       )}
+
+      {locOpen && <LocationPicker onClose={() => setLocOpen(false)} />}
     </div>
   );
 }

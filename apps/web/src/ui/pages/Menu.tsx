@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, deliveryCoord } from '../store';
 import type { OrderLine } from '@app/domain/cart/cart.js';
 import { tryAddLine } from '@app/domain/cart/cart.js';
 import { checkServiceability, SERVICE_ZONE_KM } from '@app/domain/delivery/delivery.js';
-import { findDish, findRestaurant, CUSTOMER_LOCATION } from '../data/catalog';
+import { findDish, findRestaurant } from '../data/catalog';
 import type { Dish, Restaurant } from '../data/catalog';
 import './Menu.css';
 
@@ -37,7 +37,7 @@ function DishCustomize({ restaurant, dish }: { restaurant: Restaurant; dish: Dis
   const [qty, setQty] = useState(1);
   const [note, setNote] = useState('');
 
-  const blocked = !checkServiceability(CUSTOMER_LOCATION, restaurant.coord).orderable;
+  const blocked = !checkServiceability(deliveryCoord(state), restaurant.coord).orderable;
   const each = dish.basePrice + extras.filter((e) => picked.has(e.id)).reduce((s, e) => s + e.price, 0);
   const total = each * qty;
   const toggle = (id: string) =>

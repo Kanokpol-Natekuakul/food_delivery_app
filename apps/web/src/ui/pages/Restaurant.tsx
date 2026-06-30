@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useStore } from '../store';
+import { useStore, deliveryCoord } from '../store';
 import { cartItemCount, foodTotal } from '@app/domain/cart/cart.js';
 import { checkServiceability, SERVICE_ZONE_KM } from '@app/domain/delivery/delivery.js';
-import { findRestaurant, CUSTOMER_LOCATION } from '../data/catalog';
+import { findRestaurant } from '../data/catalog';
 import './Restaurant.css';
 
 export function Restaurant() {
@@ -27,7 +27,7 @@ export function Restaurant() {
   }
 
   // นอกเขตบริการ = สั่งไม่ได้ (ADR 0005); คิดจากระยะร้าน→ลูกค้าในโดเมน
-  const service = checkServiceability(CUSTOMER_LOCATION, r.coord);
+  const service = checkServiceability(deliveryCoord(state), r.coord);
   const blocked = !service.orderable;
 
   return (

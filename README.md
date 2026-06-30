@@ -48,6 +48,13 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **🏁 store→API cutover + วงจรออเดอร์เต็ม — ครบสมบูรณ์** ✅ ทุก transition (ร้าน+ไรเดอร์) เดินผ่าน Postgres + auth ตามบทบาท + แจ้งผู้ใช้เมื่อล้มเหลว. fullstack จริงครบวงจร.
 
+## หน้า Home / UX (ต่อ placeholder V1 ให้ใช้งานจริง)
+- **ดูทั้งหมด / ร้านอาหารทั้งหมด** → หน้า `/all` (`AllRestaurants`) render จาก `state.restaurants` (ข้อมูล hydrate จาก API จริง — เดิม Home ใช้ array ฮาร์ดโค้ด)
+- **ปักหมุดที่อยู่ + แผนที่จริง** → `components/LocationPicker` (Leaflet + OpenStreetMap): หมุดร้านจาก state + หมุดที่อยู่ลากได้/คลิกแผนที่ + presets → `setDeliveryLocation` ตั้ง `state.deliveryCoord`/`deliveryLabel`. ปุ่ม 📍 ซ้ายบน + "ดูแผนที่" เปิด picker. ที่อยู่นี้ feed `checkServiceability`/ค่าส่ง (haversine) ทุกหน้า (Home/Restaurant/Menu/Cart/All) → เปลี่ยนหมุดแล้ว "นอกพื้นที่"/ค่าส่งอัปเดตจริง
+- **เลื่อนแถวร้านบนเดสก์ท็อป** → wheel แนวตั้งเหนือ `.hscroll` เลื่อนแนวนอน (handler ใน App) + scrollbar บางให้เห็น
+- dep ใหม่: `leaflet` (+ @types) ใน root package.json; เพิ่ม react/react-dom/react-router-dom เข้า root deps ด้วย (กัน `npm install` ที่ root prune ทิ้ง)
+> ตรวจแล้ว: typecheck + UI **71/71** + `vite build` ผ่าน (leaflet bundle ได้) — *แต่ผลเรนเดอร์แผนที่ยังไม่ได้ดูในเบราว์เซอร์จริง (Chrome extension ไม่เชื่อมต่อ)*
+
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 
 ## การรัน (เว็บ — ที่ root)

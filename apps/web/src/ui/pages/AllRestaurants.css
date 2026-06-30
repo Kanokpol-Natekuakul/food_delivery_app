@@ -1,0 +1,20 @@
+.allr { max-width: 600px; margin-inline: auto; padding: var(--gutter); }
+.allr-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.allr-title { font-family: var(--display); font-weight: 700; font-size: var(--fs-display-l); }
+.allr-loc { color: var(--paper-dim, #999); font-size: var(--fs-label); margin: 0 0 16px; }
+
+.allr-list { display: grid; gap: var(--sp-3); }
+.allr-row {
+  display: flex; gap: var(--sp-4); align-items: center; text-decoration: none; color: inherit;
+  background: var(--ink-card); border: 1px solid var(--ink-line); border-radius: var(--r); padding: var(--sp-3);
+}
+.allr-thumb { flex: 0 0 72px; height: 72px; border-radius: var(--r-sm); display: grid; place-items: center; font-size: 32px; }
+.allr-info { min-width: 0; flex: 1; }
+.allr-info h3 { font-size: var(--fs-h); font-weight: 600; margin: 0 0 4px; }
+.allr-blurb {
+  font-size: var(--fs-label); color: var(--paper-dim); margin: 0 0 6px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.allr-meta { font-family: var(--mono); font-size: .78rem; color: var(--paper-dim); display: flex; gap: 12px; align-items: center; }
+.allr-meta .rate { color: var(--mango); }
+.allr-meta .offzone { color: var(--chili); border: 1px solid rgba(255,77,61,.4); border-radius: var(--r-pill); padding: 1px 8px; font-size: .72rem; }

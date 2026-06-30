@@ -1,0 +1,28 @@
+.lp-scrim {
+  position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .55);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.lp {
+  width: min(560px, 100%); max-height: 92vh; overflow-y: auto;
+  background: var(--ink-card, #1b1b1f); color: var(--paper, #f5f5f0);
+  border: 1px solid var(--ink-line, #333); border-radius: 18px 18px 0 0;
+  padding: 16px; display: flex; flex-direction: column; gap: 12px;
+}
+.lp-head { display: flex; align-items: center; justify-content: space-between; }
+.lp-map { height: 300px; border-radius: 12px; overflow: hidden; background: #2a2a2e; }
+.lp-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp-presets .btn { font-size: 13px; padding: 6px 10px; }
+.lp-field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--paper-dim, #aaa); }
+.lp-field input {
+  padding: 10px 12px; border-radius: 10px; border: 1px solid var(--ink-line, #333);
+  background: var(--ink, #111); color: var(--paper, #f5f5f0); font-size: 15px;
+}
+.lp-coord { font-family: var(--mono, monospace); font-size: 12px; color: var(--paper-dim, #999); margin: 0; }
+.lp-confirm { width: 100%; }
+
+/* หมุดบนแผนที่ */
+.lp-pin { font-size: 26px; line-height: 1; text-align: center; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+.lp-shop {
+  display: grid; place-items: center; font-size: 16px;
+  background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.4);
+}
