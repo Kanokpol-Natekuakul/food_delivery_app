@@ -74,3 +74,13 @@
   .menu{max-width:760px}
   .menu .dish{height:280px}
 }
+
+/* ── Feedback layer (micro-interactions) ── */
+/* ตัวเลือกเมนู: ยุบเล็กน้อยตอนกด; เครื่องหมายถูก scale-in ตอนติ๊ก */
+.menu .opt{transition:border-color var(--dur) var(--ease-out-quart), transform var(--dur-fast) var(--ease-out-quart)}
+.menu .opt:active{transform:scale(.99)}
+.menu .opt input:checked ~ .ind::after{animation:checkIn var(--dur) var(--ease-out-quint) both}
+@keyframes checkIn{from{transform:scale(0); opacity:0} to{transform:scale(1); opacity:1}}
+/* ปุ่มจำนวน: ยุบตอนกด (เฉพาะที่ยังกดได้) */
+.menu .qty button{transition:transform var(--dur-fast) var(--ease-out-quart), opacity var(--dur) var(--ease-out-quart)}
+.menu .qty button:not(:disabled):active{transform:scale(.88)}

@@ -45,3 +45,7 @@
   .cart .summary{grid-column:2; position:sticky; top:var(--sp-5); border-top:none;
     background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r); padding:var(--sp-5)}
 }
+
+/* ── Feedback layer (micro-interactions) — ปุ่มปรับจำนวนยุบตอนกด ── */
+.cart .line-qty button{transition:transform var(--dur-fast) var(--ease-out-quart)}
+.cart .line-qty button:active{transform:scale(.88)}

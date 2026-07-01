@@ -86,7 +86,7 @@ export function Restaurant() {
 
       {count > 0 && (
         <Link className="cartbar" to="/cart">
-          <span className="count">{count} รายการ</span>
+          <span className="count" key={count}>{count} รายการ</span>
           <span>ดูตะกร้า</span>
           <span className="total">฿{total} ›</span>
         </Link>

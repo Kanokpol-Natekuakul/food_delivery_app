@@ -84,3 +84,15 @@
   .resto{max-width:1000px}
   .resto-hero{height:240px}
 }
+
+/* ── Feedback layer (micro-interactions) ── */
+.resto .cartbar{animation:cartbarIn var(--dur-slow) var(--ease-out-expo) both}
+.resto .cartbar:hover{filter:brightness(1.05)}
+.resto .cartbar .count{display:inline-block; animation:countPop var(--dur) var(--ease-out-quint) both}
+/* การ์ดเมนู: ยกตัวตอน hover, ยุบตอนกด; ปุ่ม + โตตอน hover ยุบตอนกด (เว้นเมนูนอกเขต) */
+.dish-row{transition:border-color var(--dur) var(--ease-out-quart), transform var(--dur) var(--ease-out-quart)}
+.dish-row:not(.dish-row--off):hover{transform:translateY(-2px)}
+.dish-row:not(.dish-row--off):active{transform:scale(.99)}
+.dish-add{transition:transform var(--dur-fast) var(--ease-out-quart)}
+.dish-row:not(.dish-row--off):hover .dish-add{transform:scale(1.12)}
+.dish-row:not(.dish-row--off):active .dish-add{transform:scale(.9)}

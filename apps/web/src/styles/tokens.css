@@ -41,6 +41,12 @@
 
   /* ── รัศมีมุม ────────────────────────────────────────── */
   --r:16px; --r-sm:10px; --r-pill:999px;
+
+  /* ── motion (feedback layer) — easing แบบ decelerate ไม่ใช้ bounce/elastic ── */
+  --ease-out-quart:cubic-bezier(0.25,1,0.5,1);
+  --ease-out-quint:cubic-bezier(0.22,1,0.36,1);
+  --ease-out-expo:cubic-bezier(0.16,1,0.3,1);
+  --dur-fast:130ms; --dur:200ms; --dur-slow:320ms;
 }
 
 /* ── base ─────────────────────────────────────────────── */
@@ -68,8 +74,10 @@ img{max-width:100%; display:block}
 /* ปุ่ม */
 .btn{appearance:none; cursor:pointer; font-family:var(--ui); font-weight:600;
   font-size:var(--fs-body); border:none; border-radius:var(--r-sm);
-  padding:13px 20px; color:var(--ink); transition:transform .12s ease, filter .2s}
-.btn:active{transform:translateY(1px)}
+  padding:13px 20px; color:var(--ink);
+  transition:transform var(--dur-fast) var(--ease-out-quart), filter var(--dur) var(--ease-out-quart)}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:scale(.97)}          /* กดแล้วยุบเข้า — tactile feedback */
 .btn--chili{background:var(--chili); box-shadow:var(--glow-chili)}
 .btn--mango{background:var(--mango); box-shadow:var(--glow-mango)}
 .btn--ghost{background:var(--ink-card); color:var(--paper); border:1px solid var(--ink-line);
@@ -79,7 +87,8 @@ img{max-width:100%; display:block}
 .chip{display:inline-flex; align-items:center; gap:var(--sp-2);
   font-size:var(--fs-label); color:var(--paper); background:var(--ink-card);
   border:1px solid var(--ink-line); padding:8px 14px; border-radius:var(--r-pill);
-  white-space:nowrap}
+  white-space:nowrap; transition:border-color var(--dur) var(--ease-out-quart), transform var(--dur-fast) var(--ease-out-quart)}
+button.chip:active{transform:scale(.96)}
 .chip--mango{color:var(--mango); background:rgba(255,182,39,.08); border-color:rgba(255,182,39,.3)}
 .chip--pandan{color:var(--pandan); background:rgba(87,179,104,.10); border-color:rgba(87,179,104,.3)}
 
@@ -102,6 +111,10 @@ img{max-width:100%; display:block}
 .hscroll::-webkit-scrollbar-thumb{background:var(--ink-line); border-radius:3px}
 .hscroll::-webkit-scrollbar-track{background:transparent}
 .hscroll>*{scroll-snap-align:start; flex:0 0 auto}
+
+/* keyframes ใช้ร่วม — feedback layer ฝั่งลูกค้า (cartbar เด้งขึ้น + ตัวเลขจำนวน pop) */
+@keyframes cartbarIn{from{opacity:0; transform:translateX(-50%) translateY(120%)} to{opacity:1; transform:translateX(-50%) translateY(0)}}
+@keyframes countPop{from{transform:scale(.6); opacity:.3} to{transform:scale(1); opacity:1}}
 
 /* ปิด motion ถ้าผู้ใช้ขอ */
 @media (prefers-reduced-motion:reduce){
