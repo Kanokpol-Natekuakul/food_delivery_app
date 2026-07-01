@@ -1,8 +1,6 @@
 .app{max-width:560px; margin-inline:auto; padding:var(--gutter) var(--gutter) 48px}
 
-.track-back{display:inline-block; margin-bottom:var(--sp-4); color:var(--paper-dim);
-  text-decoration:none; font-size:var(--fs-label)}
-.track-back:hover{color:var(--paper)}
+.track-back{margin-bottom:var(--sp-4)}
 
 .panel{margin-top:32px; border-top:1px solid var(--ink-line); padding-top:20px}
 .panel__label{font-size:.8rem; color:var(--paper-dim); margin-bottom:10px}

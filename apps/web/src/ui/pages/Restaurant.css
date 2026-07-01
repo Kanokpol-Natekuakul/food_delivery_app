@@ -19,7 +19,7 @@
 .resto-head{margin-top:-8px; position:relative; z-index:1; margin-bottom:var(--sp-6)}
 .resto-cat{display:inline-block; font-family:var(--mono); font-size:var(--fs-label); color:var(--mango);
   border:1px solid rgba(255,182,39,.35); border-radius:var(--r-pill); padding:3px 10px; margin-bottom:var(--sp-3)}
-.resto-name{font-family:var(--display); font-weight:800; font-size:var(--fs-display-l); margin:0 0 8px; line-height:1.1}
+.resto-name{font-family:var(--display); font-weight:800; font-size:2.1rem; margin:0 0 8px; line-height:1.05}
 .resto-meta{font-family:var(--mono); font-size:.82rem; color:var(--paper-dim)}
 .resto-meta .rate{color:var(--mango)}
 .resto-blurb{color:var(--paper-dim); font-size:var(--fs-data); margin:10px 0 0}
@@ -33,7 +33,7 @@
 .resto-offzone__text b{color:var(--chili); font-weight:700}
 .resto-offzone__text span{font-size:var(--fs-label); color:var(--paper-dim)}
 
-.resto-sec{font-family:var(--display); font-weight:700; font-size:var(--fs-display-l); margin:0 0 var(--sp-4)}
+.resto-sec{font-family:var(--display); font-weight:700; font-size:1.35rem; margin:0 0 var(--sp-4)}
 
 /* เมนูที่สั่งไม่ได้ (ร้านนอกเขต) */
 .dish-row--off{opacity:.5; cursor:not-allowed}

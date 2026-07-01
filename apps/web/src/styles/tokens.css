@@ -85,6 +85,21 @@ img{max-width:100%; display:block}
 .btn--ghost{background:var(--ink-card); color:var(--paper); border:1px solid var(--ink-line);
   box-shadow:none}
 
+/* ลิงก์ย้อนกลับ (Back links) สไตล์เสมอกันและขนาด tap target ดีขึ้น */
+.m-back, .r-back, .track-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--paper-dim);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color var(--dur) var(--ease-out-quart);
+}
+.m-back:hover, .r-back:hover, .track-back:hover {
+  color: var(--paper);
+}
+
 /* ชิป */
 .chip{display:inline-flex; align-items:center; gap:var(--sp-2);
   font-size:var(--fs-label); color:var(--paper); background:var(--ink-card);

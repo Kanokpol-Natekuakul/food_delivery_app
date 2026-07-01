@@ -4,8 +4,8 @@
   margin-bottom:var(--sp-5)}
 .m-who{font-family:var(--display); font-weight:700; font-size:var(--fs-h); min-width:0;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.m-back, .m-forward{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
-.m-back:hover, .m-forward:hover{color:var(--paper)}
+.m-forward{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
+.m-forward:hover{color:var(--paper)}
 .m-links{display:flex; gap:var(--sp-3); flex:0 0 auto}
 
 /* ใบออเดอร์ (order ticket) */
