@@ -128,7 +128,7 @@ export function Admin() {
 
       <section className="a-mod">
         <h2 className="a-h2">กำกับดูแลผู้ใช้</h2>
-        <p className="a-wnote">auto-action ขั้นบันได: ระดับ "จับตา" → <strong>แจ้งเตือน</strong>; "ดำเนินการ" → <strong>ลดอันดับ + ระงับ</strong> อัตโนมัติ (แอดมินรีวิวแล้วปลดเองได้) — ADR 0006</p>
+        <p className="a-wnote">ระบบยกระดับให้เองตามสถิติร้องเรียน — "จับตา": <strong>แจ้งเตือน</strong> · "ดำเนินการ": <strong>ลดอันดับ + พักงาน</strong> (รีวิวแล้วปลดเองได้)</p>
         {ACTORS.map((act) => {
           const suspended = isSuspended(state.suspended, act.id);
           const complaints = complaintsAgainst(state.disputes, act.id);
@@ -158,7 +158,7 @@ export function Admin() {
 
       <section className="a-wallet" id="a-wallet">
         <h2 className="a-h2">Wallet &amp; Settlement</h2>
-        <p className="a-wnote">เงินเครดิตเข้า wallet ภายในเมื่อออเดอร์จบ (escrow) — จ่ายออกเป็นรอบ เฉพาะบัญชีที่ถึงยอดถอนขั้นต่ำ ฿{MIN_PAYOUT} (ADR 0004)</p>
+        <p className="a-wnote">เงินเข้า wallet เมื่อออเดอร์จบ แล้วจ่ายออกเป็นรอบ — เฉพาะบัญชีที่ยอดถึงขั้นต่ำ ฿{MIN_PAYOUT}</p>
         <SettlementScheduler onRun={() => dispatch({ type: 'walletRunSettlement' })} />
         {payableAccounts(state.ledger).length > 0 && (
           <button className="btn btn--mango a-wrun" aria-label="รันรอบ settlement"
@@ -188,7 +188,7 @@ export function Admin() {
 
       <section className="a-disputes" id="a-disputes">
         <h2 className="a-h2">ร้องเรียนหลังส่ง ({state.disputes.length})</h2>
-        <p className="a-wnote">เกิดหลังออเดอร์สำเร็จ พิสูจน์ความผิดรายครั้งไม่ได้ → คืน goodwill จากแพลตฟอร์ม; เก็บสถิติรายฝ่ายไว้จัดการระยะยาว (ADR 0006)</p>
+        <p className="a-wnote">ลูกค้าร้องเรียนหลังรับของ พิสูจน์รายครั้งไม่ได้ → เลือกคืน goodwill (แพลตฟอร์มออกเอง) หรือปฏิเสธ; สถิติรายฝ่ายสะสมไว้จัดการระยะยาว</p>
         {state.disputes.length === 0 && <p className="a-wempty">ยังไม่มีคำร้อง — ลูกค้ายื่นได้ภายใน 2 ชม. หลังรับของ</p>}
         {sortedDisputes.map((d) => (
           <DisputeRow key={d.id} d={d} restaurants={state.restaurants} disputes={state.disputes}
@@ -200,7 +200,7 @@ export function Admin() {
 
       <section className="a-rates" id="a-rates">
         <h2 className="a-h2">คำขอปรับอัตราคอมมิชชัน ({state.rateRequests.length})</h2>
-        <p className="a-wnote">ร้านเจรจาขอลดคอม — แอดมิน อนุมัติ/ปฏิเสธ/<strong>เสนอแย้ง</strong> (ร้านตอบรับเอง); ตกลงแล้วมีผลรอบถัดไป (ADR 0003)</p>
+        <p className="a-wnote">ร้านขอลดค่าคอม — <strong>อนุมัติ / เสนอแย้ง</strong> (ร้านตอบรับเอง) / ปฏิเสธ; ที่ตกลงแล้วมีผลรอบถัดไป</p>
         {state.rateRequests.length === 0 && <p className="a-wempty">ยังไม่มีคำขอ — ร้านยื่นขอลดคอมได้จากคอนโซลร้าน</p>}
         {sortedRates.map((q) => (
           <RateRequestRow key={q.id} q={q} name={accountLabel(`merchant:${q.merchantId}`, state.restaurants)}
