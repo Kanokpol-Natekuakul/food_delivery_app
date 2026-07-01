@@ -9,6 +9,7 @@ import { riderView } from '@app/domain/order/riderView.js';
 import { settle } from '@app/domain/settlement/settlement.js';
 import type { Fault } from '@app/domain/settlement/settlement.js';
 import { isSuspended } from '@app/domain/moderation/moderation.js';
+import { isTerminal } from '@app/domain/order/state.js';
 import { balance, accounts, isPayable, payableAccounts, isSettlementDueAt, nextSettlementAt, MIN_PAYOUT, PLATFORM, RIDER_POOL, REFUNDS } from '@app/domain/wallet/wallet.js';
 import type { SettlementCadence } from '@app/domain/wallet/wallet.js';
 import { complaintsAgainst, complaintsBy, flagParty, flagCustomer } from '@app/domain/dispute/dispute.js';
@@ -99,6 +100,28 @@ export function Admin() {
   const sortedRates = [...state.rateRequests].sort(
     (a, b) => Number(b.status === 'pending') - Number(a.status === 'pending'),
   );
+
+  const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'cancelled'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+
+  const parseOrderId = (id: string) => {
+    const num = id.replace('order-', '');
+    return parseInt(num, 10) || 0;
+  };
+
+  const activeOrdersCount = state.orders.filter((o) => !isTerminal(o.state)).length;
+
+  const filteredOrders = state.orders.filter((o) => {
+    if (filter === 'active') return !isTerminal(o.state);
+    if (filter === 'completed') return o.state.kind === 'Completed';
+    if (filter === 'cancelled') return isTerminal(o.state) && o.state.kind !== 'Completed';
+    return true;
+  });
+
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    if (sortBy === 'newest') return parseOrderId(b.id) - parseOrderId(a.id);
+    return parseOrderId(a.id) - parseOrderId(b.id);
+  });
 
   return (
     <div className="admin">
@@ -211,9 +234,33 @@ export function Admin() {
       </section>
 
       <section className="a-orders">
-        <h2 className="a-h2">ออเดอร์ในระบบ ({state.orders.length})</h2>
-        {state.orders.length === 0 && <p className="a-wempty">ยังไม่มีออเดอร์ — จะปรากฏเมื่อลูกค้าสั่งและออเดอร์เริ่มเดินวงจร</p>}
-        {state.orders.map((o) => (
+        <h2 className="a-h2">ออเดอร์ในระบบ ({filteredOrders.length})</h2>
+
+        <div className="a-ocontrols">
+          <div className="a-ofilters">
+            <button className={`chip ${filter === 'all' ? 'chip--mango' : ''}`} onClick={() => setFilter('all')}>ทั้งหมด</button>
+            <button className={`chip ${filter === 'active' ? 'chip--mango' : ''}`} onClick={() => setFilter('active')}>กำลังดำเนินการ</button>
+            <button className={`chip ${filter === 'completed' ? 'chip--mango' : ''}`} onClick={() => setFilter('completed')}>สำเร็จแล้ว</button>
+            <button className={`chip ${filter === 'cancelled' ? 'chip--mango' : ''}`} onClick={() => setFilter('cancelled')}>ยกเลิก/ล้มเหลว</button>
+          </div>
+          <div className="a-osorts">
+            <select aria-label="เรียงลำดับออเดอร์" value={sortBy} onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest')} className="a-select">
+              <option value="newest">ออเดอร์ล่าสุด</option>
+              <option value="oldest">ออเดอร์เก่าสุด</option>
+            </select>
+          </div>
+          {activeOrdersCount > 0 && (
+            <div className="a-obulk">
+              <ConfirmButton className="btn btn--ghost a-cancel-all"
+                triggerAria="ยกเลิกออเดอร์ที่กำลังดำเนินการทั้งหมด" label={`ยกเลิกทั้งหมด (${activeOrdersCount})`}
+                confirmAria="ยืนยันยกเลิกทั้งหมด" confirmLabel="ยืนยันยกเลิกทั้งหมด"
+                onConfirm={() => dispatch({ type: 'adminCancelAllActive' })} />
+            </div>
+          )}
+        </div>
+
+        {sortedOrders.length === 0 && <p className="a-wempty">ยังไม่มีออเดอร์ — จะปรากฏเมื่อลูกค้าสั่งและออเดอร์เริ่มเดินวงจร</p>}
+        {sortedOrders.map((o) => (
           <OrderRow key={o.id} o={o} restaurants={state.restaurants} rateOverrides={state.rateOverrides}
             onCancel={() => dispatch({ type: 'adminCancelOrder', id: o.id })} />
         ))}

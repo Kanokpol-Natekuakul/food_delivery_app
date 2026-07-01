@@ -31,16 +31,16 @@
 .a-actor__name{flex:1; min-width:0; font-size:var(--fs-data)}
 .a-actor--off .a-actor__name{color:var(--paper-dim); text-decoration:line-through}
 .a-actor__status{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2)}
-.a-actor__stat{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); flex:0 0 auto}
+.a-actor__stat{font-family:var(--mono); font-size:.78rem; color:var(--paper); opacity:0.85; flex:0 0 auto}
 
 /* ป้ายระดับการจัดการจากสถิติร้องเรียน (ADR 0006) */
-.a-flag{font-family:var(--mono); font-size:.7rem; border-radius:var(--r-pill); padding:2px 8px; flex:0 0 auto}
+.a-flag{font-family:var(--mono); font-size:.76rem; border-radius:var(--r-pill); padding:2px 8px; flex:0 0 auto}
 .a-flag--ok{color:var(--pandan); border:1px solid rgba(87,179,104,.4)}
 .a-flag--watch{color:var(--mango); border:1px solid rgba(255,182,39,.4)}
 .a-flag--action{color:var(--chili); border:1px solid rgba(255,77,61,.4)}
-.a-susp{font-family:var(--mono); font-size:.72rem; color:var(--chili);
-  border:1px solid rgba(255,77,61,.4); border-radius:var(--r-pill); padding:2px 8px}
-.a-act{font-family:var(--mono); font-size:.7rem; border-radius:var(--r-pill); padding:2px 8px; flex:0 0 auto}
+.a-susp{font-family:var(--mono); font-size:.78rem; color:var(--ink);
+  background:var(--chili); font-weight:700; border-radius:var(--r-pill); padding:2px 8px}
+.a-act{font-family:var(--mono); font-size:.76rem; border-radius:var(--r-pill); padding:2px 8px; flex:0 0 auto}
 .a-act--notify{color:var(--mango); border:1px solid rgba(255,182,39,.4)}
 .a-act--downrank{color:var(--chili); border:1px solid rgba(255,77,61,.4)}
 .a-actor__btn{font-size:var(--fs-label); padding:6px 12px; flex:0 0 auto}
@@ -63,8 +63,8 @@
 .a-schedinfo b{font-family:var(--mono)}
 .a-schedbtns{display:flex; flex-wrap:wrap; gap:var(--sp-2)}
 .a-schedbtns .btn{font-size:var(--fs-label); padding:6px 12px}
-.a-schedmsg{margin:var(--sp-2) 0 0; color:var(--pandan); font-family:var(--mono); font-size:.74rem}
-.a-waccrue{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); flex:0 0 auto}
+.a-schedmsg{margin:var(--sp-2) 0 0; color:var(--pandan); font-family:var(--mono); font-size:.78rem}
+.a-waccrue{font-family:var(--mono); font-size:.78rem; color:var(--paper); opacity:0.85; flex:0 0 auto}
 
 /* ส่วนท้าย: รีเซ็ตข้อมูล */
 .a-footer{margin-top:var(--sp-6); padding-top:var(--sp-4); border-top:1px solid var(--ink-line)}
@@ -75,7 +75,7 @@
 .a-disputes{margin-bottom:var(--sp-6)}
 .a-dispute{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
   padding:var(--sp-4); margin-bottom:var(--sp-3)}
-.a-dstat{color:var(--paper-dim); font-family:var(--mono); font-size:.72rem}
+.a-dstat{color:var(--paper); opacity:0.85; font-family:var(--mono); font-size:.78rem}
 .a-dactions{display:flex; gap:var(--sp-3)}
 .a-dgood{flex:1; justify-content:center}
 .a-dreject{flex:0 0 auto; color:var(--chili)}
@@ -86,7 +86,7 @@
   background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r-sm)}
 .a-rinfo{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
 .a-rname{font-size:var(--fs-data)}
-.a-rmove{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim)}
+.a-rmove{font-family:var(--mono); font-size:.78rem; color:var(--paper); opacity:0.85}
 .a-ractions{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); flex:0 0 auto}
 .a-rapprove,.a-rreject{font-size:var(--fs-label); padding:6px 12px}
 .a-rreject{color:var(--chili)}
@@ -114,13 +114,13 @@
 .a-confirm__no{flex:0 0 auto}
 
 .a-settle{display:flex; flex-direction:column; gap:4px}
-.a-fault{align-self:flex-start; font-family:var(--mono); font-size:.72rem;
+.a-fault{align-self:flex-start; font-family:var(--mono); font-size:.78rem;
   border-radius:var(--r-pill); padding:3px 10px}
 .a-fault--none{color:var(--pandan); border:1px solid rgba(87,179,104,.4)}
 .a-fault--customer{color:var(--mango); border:1px solid rgba(255,182,39,.4)}
 .a-fault--merchant{color:var(--chili); border:1px solid rgba(255,77,61,.4)}
 .a-money{font-family:var(--mono); font-size:var(--fs-label); color:var(--paper)}
-.a-split{font-family:var(--mono); font-size:.72rem; color:var(--paper-dim); line-height:1.5}
+.a-split{font-family:var(--mono); font-size:.78rem; color:var(--paper); opacity:0.85; line-height:1.5}
 .a-note{font-size:var(--fs-label); color:var(--paper-dim); line-height:1.5}
 
 /* ── Responsive: tablet/desktop — แอดมินกว้างขึ้น, รายการออเดอร์กาง grid ── */
@@ -133,4 +133,81 @@
   .a-disputes{display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-3)}
   .a-disputes .a-h2{grid-column:1 / -1; margin-bottom:0}
   .a-disputes .a-dispute{margin-bottom:0}
+}
+
+/* ── คอนโทรลออเดอร์: ฟิลเตอร์ เรียงลำดับ และยกเลิกทั้งหมด ── */
+.a-ocontrols {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+  background: var(--ink-card);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--r-sm);
+  padding: var(--sp-3);
+}
+.a-ofilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.a-ofilters .chip {
+  font-size: var(--fs-label);
+  padding: 6px 12px;
+  cursor: pointer;
+  background: var(--ink);
+  border: 1px solid var(--ink-line);
+  color: var(--paper-dim);
+  transition: all var(--dur) var(--ease-out-quart);
+}
+.a-ofilters .chip:hover {
+  color: var(--paper);
+  border-color: var(--paper-dim);
+}
+.a-ofilters .chip--mango {
+  background: rgba(255,182,39,.08);
+  border-color: rgba(255,182,39,.3);
+  color: var(--mango);
+}
+.a-ofilters .chip--mango:hover {
+  color: var(--mango);
+  border-color: var(--mango);
+}
+.a-osorts {
+  display: flex;
+  align-items: center;
+}
+.a-select {
+  font-family: var(--body);
+  font-size: var(--fs-label);
+  background: var(--ink);
+  color: var(--paper);
+  border: 1px solid var(--ink-line);
+  border-radius: var(--r-sm);
+  padding: 6px 28px 6px 12px;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239C8FA6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 14px;
+}
+.a-select:focus {
+  border-color: var(--mango);
+}
+.a-obulk {
+  display: flex;
+  align-items: center;
+}
+.a-cancel-all button {
+  color: var(--chili) !important;
+  font-size: var(--fs-label);
+  padding: 6px 12px;
+}
+.a-cancel-all button:hover {
+  background: rgba(255,77,61,.08) !important;
+  border-color: rgba(255,77,61,.3) !important;
 }

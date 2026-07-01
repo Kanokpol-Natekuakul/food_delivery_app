@@ -15,6 +15,7 @@ dist/
 .idea/
 *.swp
 *.swo
+*.local
 
 # OS files
 Thumbs.db
@@ -23,6 +24,7 @@ Desktop.ini
 
 # AI tools (local settings)
 .claude/settings.local.json
+.impeccable/
 
 # Logs
 *.log
@@ -31,3 +33,9 @@ pnpm-debug.log*
 
 # Testing
 coverage/
+
+# Vite
+.vite/
+
+# pnpm (lock ใช้ pnpm-lock.yaml แทน)
+package-lock.json

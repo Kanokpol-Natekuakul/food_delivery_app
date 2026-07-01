@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { screen } from '@testing-library/react';
+import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Admin } from './Admin';
 import { Track } from './Track';
@@ -208,5 +208,53 @@ describe('Admin — หลายออเดอร์ + suspend + force-cancel',
     expect(screen.getByText('⚠️ แจ้งเตือน')).toBeInTheDocument();
     expect(screen.queryByText('⬇️ ลดอันดับ')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ระงับ สมชาย (ไรเดอร์)' })).toBeInTheDocument(); // ยังไม่ถูกระงับ
+  });
+
+  it('ตัวควบคุมออเดอร์: ฟิลเตอร์และจัดเรียงตามสถานะ/วันที่ และการยกเลิก bulk', async () => {
+    renderWithProviders(<Admin />);
+    expect(screen.getByText('ทั้งหมด')).toBeInTheDocument();
+    expect(screen.getByText('กำลังดำเนินการ')).toBeInTheDocument();
+    expect(screen.getByText('สำเร็จแล้ว')).toBeInTheDocument();
+    expect(screen.getByText('ยกเลิก/ล้มเหลว')).toBeInTheDocument();
+
+    const getOrdersArea = () => within(document.querySelector('.a-orders') as HTMLElement);
+
+    expect(getOrdersArea().getByText(/#1042/)).toBeInTheDocument();
+    expect(getOrdersArea().getByText(/#1041/)).toBeInTheDocument();
+    expect(getOrdersArea().getByText(/#1039/)).toBeInTheDocument();
+    expect(getOrdersArea().getByText(/#1038/)).toBeInTheDocument();
+
+    // กรองเอาเฉพาะกำลังดำเนินการ
+    await userEvent.click(screen.getByRole('button', { name: 'กำลังดำเนินการ' }));
+    expect(getOrdersArea().getByText(/#1042/)).toBeInTheDocument();
+    expect(getOrdersArea().getByText(/#1041/)).toBeInTheDocument();
+    expect(getOrdersArea().queryByText(/#1039/)).not.toBeInTheDocument();
+    expect(getOrdersArea().queryByText(/#1038/)).not.toBeInTheDocument();
+
+    // กรองเอาเฉพาะสำเร็จแล้ว
+    await userEvent.click(screen.getByRole('button', { name: 'สำเร็จแล้ว' }));
+    expect(getOrdersArea().queryByText(/#1042/)).not.toBeInTheDocument();
+    expect(getOrdersArea().queryByText(/#1041/)).not.toBeInTheDocument();
+    expect(getOrdersArea().getByText(/#1039/)).toBeInTheDocument();
+    expect(getOrdersArea().queryByText(/#1038/)).not.toBeInTheDocument();
+
+    // กรองเอาเฉพาะยกเลิก/ล้มเหลว
+    await userEvent.click(screen.getByRole('button', { name: 'ยกเลิก/ล้มเหลว' }));
+    expect(getOrdersArea().queryByText(/#1042/)).not.toBeInTheDocument();
+    expect(getOrdersArea().queryByText(/#1041/)).not.toBeInTheDocument();
+    expect(getOrdersArea().queryByText(/#1039/)).not.toBeInTheDocument();
+    expect(getOrdersArea().getByText(/#1038/)).toBeInTheDocument();
+
+    // กลับมาทั้งหมด
+    await userEvent.click(screen.getByRole('button', { name: 'ทั้งหมด' }));
+    expect(getOrdersArea().getByText(/#1042/)).toBeInTheDocument();
+
+    // ยกเลิกแบบ bulk
+    expect(screen.getByRole('button', { name: 'ยกเลิกออเดอร์ที่กำลังดำเนินการทั้งหมด' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'ยกเลิกออเดอร์ที่กำลังดำเนินการทั้งหมด' }));
+    await userEvent.click(screen.getByRole('button', { name: 'ยืนยันยกเลิกทั้งหมด' }));
+
+    expect(screen.queryByRole('button', { name: /ยกเลิกทั้งหมด/ })).not.toBeInTheDocument();
+    expect(getOrdersArea().getAllByText('CancelledByAdmin').length).toBe(2);
   });
 });

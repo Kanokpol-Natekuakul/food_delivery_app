@@ -175,6 +175,7 @@ type Action =
   | { type: 'menuRemoveDish'; restaurantId: string; dishId: string }
   // ── แอดมินกำกับดูแล ──
   | { type: 'adminCancelOrder'; id: string }
+  | { type: 'adminCancelAllActive' }
   | { type: 'toggleSuspend'; actor: string }
   | { type: 'walletPayout'; account: string }
   | { type: 'walletRunSettlement' } // รันรอบ settlement: จ่ายทุกบัญชีที่ถึงยอดถอนขั้นต่ำ
@@ -256,6 +257,22 @@ function reducer(s: State, a: Action): State {
       // ยกเลิกแล้วออเดอร์จบ → ลงบัญชี wallet (คืนลูกค้า + แพลตฟอร์มแบกค่าอาหาร)
       const ledger = [...postOrder(s.ledger, s.restaurants, s.rateOverrides, cancelled, deliveryCoord(s))];
       return { ...s, orders, ledger };
+    }
+    case 'adminCancelAllActive': {
+      let currentLedger = s.ledger;
+      let anyChanged = false;
+      const orders = s.orders.map((o) => {
+        const r = adminCancel(o.state);
+        if (r.ok) {
+          anyChanged = true;
+          const cancelled = { ...o, state: r.state };
+          currentLedger = [...postOrder(currentLedger, s.restaurants, s.rateOverrides, cancelled, deliveryCoord(s))];
+          return cancelled;
+        }
+        return o;
+      });
+      if (!anyChanged) return s;
+      return { ...s, orders, ledger: currentLedger };
     }
     case 'toggleSuspend':
       return {
@@ -523,6 +540,12 @@ const liveAuth: AuthClient = { login: apiLogin, logout: apiLogout, me: apiMe };
 function mirror(m: MutationSource, action: Action, prev: State): Promise<unknown> | undefined {
   switch (action.type) {
     case 'adminCancelOrder': return m.cancelOrder(action.id);
+    case 'adminCancelAllActive': {
+      const cancelPromises = prev.orders
+        .filter((o) => adminCancel(o.state).ok)
+        .map((o) => m.cancelOrder(o.id));
+      return Promise.all(cancelPromises);
+    }
     case 'resolveDispute': return m.resolveDispute(action.id, action.amount);
     case 'toggleSuspend': return isSuspended(prev.suspended, action.actor) ? m.unsuspendActor(action.actor) : m.suspendActor(action.actor);
     case 'walletRunSettlement': return m.runSettlement();
