@@ -73,6 +73,10 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **✅ แก้ #2 แล้ว** (`apps/api/src/jobs/settlement.ts`): เพิ่ม `boss.on('error', …)` — เดิม pg-boss ปล่อย event `'error'` (เช่น DB connection หลุด `57P01`) โดยไม่มี listener → EventEmitter throw จน process ตายทั้งตัว. ดักไว้แค่ log แล้วปล่อย pg-boss สร้าง connection ใหม่ตอน poll รอบถัดไป (กู้คืนเอง; main db เป็น postgres.js/porsager ซึ่ง reconnect ต่อ query อยู่แล้ว). verify: `docker restart fd-postgres` ระหว่าง api รัน → api **PID เดิม ไม่ crash** + `GET /restaurants`→200 (กู้คืน) + log จับ error `57P01` ได้จริง.
 
+**✅ แก้ #3 แล้ว** (`apps/web/src/ui/App.tsx` + `index.html`): เดิม `<title>` ตายตัวใน index.html ทุกหน้าขึ้น "ติดตามออเดอร์". เพิ่ม `<DocumentTitle/>` (ใช้ `useLocation` + store) ตั้ง `document.title` ตาม route: หน้าแรก=แบรนด์ล้วน, หน้าคงที่ (ตะกร้า/คอนโซล/แอดมิน/ฯลฯ)="<ชื่อหน้า> · แบรนด์", `/r/:id`=ชื่อร้าน, `/r/:id/:dishId`=ชื่อเมนู·ชื่อร้าน (ดึงจาก catalog จริง). index.html title เริ่มต้น=แบรนด์ล้วน. เทสต์ `App.title.test.tsx` (+5: render App ตาม route เช็ค document.title) → UI **76/76**.
+
+**🏁 QA batch ปิดครบ**: #1–#6 filed, #1/#2/#4/#5/#6 แก้+ปิด, **#3 แก้+ปิด** — ไม่เหลือ issue open.
+
 ## Responsive ทั้งแอป (CSS-first, มือถือ-first คงเดิม 100%)
 
 เดิมทุกหน้า cap `max-width:560–600px` กลางจอ → บนเดสก์ท็อปเป็นกรอบมือถือลอยกลาง. เพิ่ม `@media` **tablet ≥768 / desktop ≥1024** เท่านั้น (ไม่แตะ markup/logic → IA เดียวกันทุก context, ไม่พัง test):

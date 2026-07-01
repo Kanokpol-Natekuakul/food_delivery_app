@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useStore } from './store';
+import type { State } from './store';
 import './App.css';
 
 /** แถบแจ้งผู้ใช้ชั่วคราว (mirror ไป backend ล้ม เช่น ต้องล็อกอิน) — ปิดเองใน 4 วิ หรือกดปิด */
@@ -49,6 +50,46 @@ function AuthBar() {
   );
 }
 
+const BRAND = 'ตลาดเปิดเมื่อนั้น';
+
+const PAGE_TITLES: Record<string, string> = {
+  '/all': 'ร้านอาหารทั้งหมด',
+  '/cart': 'ตะกร้า',
+  '/track': 'ติดตามออเดอร์',
+  '/merchant': 'คอนโซลร้าน',
+  '/merchant/menu': 'จัดการเมนู',
+  '/merchant/rate': 'อัตราคอมมิชชัน',
+  '/rider': 'คอนโซลไรเดอร์',
+  '/admin': 'ผู้ดูแลระบบ',
+  '/login': 'เข้าสู่ระบบ',
+};
+
+/** ชื่อหน้าจาก path (null = หน้าแรก → ใช้แบรนด์ล้วน) */
+function pageTitle(pathname: string, restaurants: State['restaurants']): string | null {
+  if (pathname === '/') return null;
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
+  // /r/:id (หน้าร้าน) หรือ /r/:id/:dishId (หน้าเมนู) → ชื่อร้าน / ชื่อเมนู · ชื่อร้าน
+  const m = pathname.match(/^\/r\/([^/]+)(?:\/([^/]+))?$/);
+  if (m) {
+    const r = restaurants.find((x) => x.id === m[1]);
+    if (!r) return 'ร้านอาหาร';
+    const dish = m[2] ? r.dishes.find((d) => d.id === m[2]) : undefined;
+    return dish ? `${dish.name} · ${r.name}` : r.name;
+  }
+  return null;
+}
+
+/** ตั้งชื่อแท็บเบราว์เซอร์ตามหน้า (แก้ #3: เดิม index.html ตั้ง <title> ตายตัวทุกหน้า) */
+function DocumentTitle() {
+  const { pathname } = useLocation();
+  const { state } = useStore();
+  useEffect(() => {
+    const page = pageTitle(pathname, state.restaurants);
+    document.title = page ? `${page} · ${BRAND}` : BRAND;
+  }, [pathname, state.restaurants]);
+  return null;
+}
+
 export function App() {
   // เดสก์ท็อป: หมุน wheel แนวตั้งเหนือแถวเลื่อนแนวนอน (.hscroll) → เลื่อนแนวนอนแทน
   useEffect(() => {
@@ -64,6 +105,7 @@ export function App() {
 
   return (
     <>
+      <DocumentTitle />
       <AuthBar />
       <Notice />
       <Routes>
