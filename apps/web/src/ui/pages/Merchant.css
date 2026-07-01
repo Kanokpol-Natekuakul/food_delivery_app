@@ -4,13 +4,13 @@
   margin-bottom:var(--sp-5)}
 .m-who{font-family:var(--display); font-weight:700; font-size:var(--fs-h); min-width:0;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.m-back{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
-.m-back:hover{color:var(--paper)}
+.m-back, .m-forward{color:var(--paper-dim); text-decoration:none; font-size:var(--fs-label); flex:0 0 auto}
+.m-back:hover, .m-forward:hover{color:var(--paper)}
 .m-links{display:flex; gap:var(--sp-3); flex:0 0 auto}
 
 /* ใบออเดอร์ (order ticket) */
 .m-ticket{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
-  padding:var(--sp-5); border-left:4px solid var(--mango)}
+  padding:var(--sp-5)}
 .m-ticket__head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3);
   margin-bottom:var(--sp-4)}
 .m-no{font-family:var(--mono); font-weight:700; font-size:1.05rem}

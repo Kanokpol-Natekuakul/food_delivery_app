@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../store';
 import type { OrderState } from '@app/domain/order/state.js';
@@ -13,6 +14,32 @@ const ACTION: Record<MerchantAction, { label: string; cls: string; run: (s: Orde
   markReady: { label: 'อาหารเสร็จ', cls: 'btn--mango', run: merchantMarkReady },
   reject: { label: 'ปฏิเสธ', cls: 'btn--ghost', run: merchantReject },
 };
+
+function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
+  className: string;
+  label: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  if (!armed) {
+    return (
+      <button className={className} onClick={() => setArmed(true)}>{label}</button>
+    );
+  }
+  return (
+    <span className="m-confirm" style={{ display: 'inline-flex', gap: '8px' }}>
+      <button className="btn btn--chili m-confirm__yes" onClick={() => { setArmed(false); onConfirm(); }}>{confirmLabel}</button>
+      <button className="btn btn--ghost m-confirm__no" onClick={() => setArmed(false)}>ย้อนกลับ</button>
+    </span>
+  );
+}
 
 export function Merchant() {
   const { state, dispatch } = useStore();
@@ -44,14 +71,14 @@ export function Merchant() {
       <div className="m-top">
         <span className="m-who">🏪 ครัวร้าน{restaurant ? ` · ${restaurant.name}` : ''}</span>
         <span className="m-links">
-          <Link className="m-back" to="/merchant/rate">ค่าคอม ›</Link>
-          <Link className="m-back" to="/merchant/menu">จัดการเมนู ›</Link>
+          <Link className="m-forward" to="/merchant/rate">ค่าคอม ›</Link>
+          <Link className="m-forward" to="/merchant/menu">จัดการเมนู ›</Link>
         </span>
       </div>
 
       <article className="m-ticket">
         <div className="m-ticket__head">
-          <span className="m-no">ออเดอร์ #1042</span>
+          <span className="m-no">ออเดอร์ #{state.liveOrderId || '1042'}</span>
           <span className={`m-stage${view.active ? '' : ' m-stage--done'}`}>{view.stageLabel}</span>
         </div>
 
@@ -74,11 +101,20 @@ export function Merchant() {
           {view.actions.length === 0 ? (
             <p className="m-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'ออเดอร์นี้จบหน้าที่ของร้านแล้ว'}</p>
           ) : (
-            view.actions.map((a) => (
-              <button key={a} className={`btn ${ACTION[a].cls}`} onClick={() => apply(a)}>
-                {ACTION[a].label}
-              </button>
-            ))
+            view.actions.map((a) => {
+              if (a === 'reject') {
+                return (
+                  <ConfirmButton key={a} className={`btn ${ACTION[a].cls}`}
+                    label={ACTION[a].label} confirmLabel={`ยืนยัน${ACTION[a].label}`}
+                    onConfirm={() => apply(a)} />
+                );
+              }
+              return (
+                <button key={a} className={`btn ${ACTION[a].cls}`} onClick={() => apply(a)}>
+                  {ACTION[a].label}
+                </button>
+              );
+            })
           )}
         </div>
       </article>

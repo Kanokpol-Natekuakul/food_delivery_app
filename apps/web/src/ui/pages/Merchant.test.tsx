@@ -30,6 +30,7 @@ describe('Merchant — คอนโซลรับออเดอร์', () => 
   it('ปฏิเสธออเดอร์ → ขึ้นสถานะปฏิเสธ ไม่มีปุ่มให้กดแล้ว', async () => {
     renderWithProviders(<Merchant />);
     await userEvent.click(screen.getByRole('button', { name: 'ปฏิเสธ' }));
+    await userEvent.click(screen.getByRole('button', { name: 'ยืนยันปฏิเสธ' }));
     expect(screen.getByText('ร้านปฏิเสธออเดอร์')).toBeInTheDocument();
     expect(screen.getByText(/จบหน้าที่ของร้านแล้ว/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'รับออเดอร์' })).not.toBeInTheDocument();

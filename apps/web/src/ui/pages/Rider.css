@@ -7,7 +7,7 @@
 
 /* ใบงาน (job ticket) — เน้นด้วยเส้นซ้ายสีเขียว "พร้อมวิ่ง" */
 .r-ticket{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
-  padding:var(--sp-5); border-left:4px solid var(--pandan)}
+  padding:var(--sp-5)}
 .r-ticket__head{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-4)}
 .r-no{font-family:var(--mono); font-weight:700; font-size:1.05rem}
 .r-stage{font-family:var(--mono); font-size:var(--fs-label); color:var(--pandan);
@@ -43,3 +43,5 @@
   .rider{max-width:720px}
   .r-actions .btn{flex:0 1 auto; min-width:160px}
 }
+
+.r-mono-num{font-family:var(--mono); font-weight:700}

@@ -24,6 +24,32 @@ const ACTION: Record<RiderAction, { label: string; cls: string; run: (s: OrderSt
   release: { label: 'คืนงาน', cls: 'btn--ghost', run: releaseClaim },
 };
 
+function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
+  className: string;
+  label: string;
+  confirmLabel: string;
+  onConfirm: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  if (!armed) {
+    return (
+      <button className={className} onClick={() => setArmed(true)}>{label}</button>
+    );
+  }
+  return (
+    <span className="r-confirm" style={{ display: 'inline-flex', gap: '8px' }}>
+      <button className="btn btn--chili r-confirm__yes" onClick={() => { setArmed(false); onConfirm(); }}>{confirmLabel}</button>
+      <button className="btn btn--ghost r-confirm__no" onClick={() => setArmed(false)}>ย้อนกลับ</button>
+    </span>
+  );
+}
+
 export function Rider() {
   const { state, dispatch } = useStore();
   const order = state.order;
@@ -86,21 +112,21 @@ export function Rider() {
       )}
       {held && (
         <div className="r-hold" role="status">
-          ⏳ ถูกลดอันดับ — งานนี้เปิดให้ไรเดอร์อันดับสูงคว้าก่อน (เหลือ {Math.max(0, RIDER_PRIORITY_WINDOW_SEC - waited)} วิ)
+          ⏳ ถูกลดอันดับ — งานนี้เปิดให้ไรเดอร์อันดับสูงคว้าก่อน (เหลือ <span className="r-mono-num">{Math.max(0, RIDER_PRIORITY_WINDOW_SEC - waited)}</span> วิ)
           <button className="btn btn--ghost" onClick={() => setWaited(RIDER_PRIORITY_WINDOW_SEC)}>ข้ามช่วงรอ (เดโม)</button>
         </div>
       )}
 
       <article className="r-ticket">
         <div className="r-ticket__head">
-          <span className="r-no">งาน #1042</span>
+          <span className="r-no">งาน #{state.liveOrderId || '1042'}</span>
           <span className={`r-stage${view.active ? '' : ' r-stage--done'}`}>{view.stageLabel}</span>
         </div>
 
         {restaurant && (
           <div className="r-route">
             <span>🏪 รับที่ <b>{restaurant.name}</b></span>
-            <span>📍 ส่งที่ ลาดพร้าว ซ.1</span>
+            <span>📍 ส่งที่ {state.deliveryLabel || 'ลาดพร้าว ซ.1'}</span>
           </div>
         )}
 
@@ -117,12 +143,21 @@ export function Rider() {
           {view.actions.length === 0 ? (
             <p className="r-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'งานนี้จบแล้ว'}</p>
           ) : (
-            view.actions.map((a) => (
-              <button key={a} className={`btn ${ACTION[a].cls}`}
-                disabled={a === 'claim' && (suspended || held)} onClick={() => apply(a)}>
-                {ACTION[a].label}
-              </button>
-            ))
+            view.actions.map((a) => {
+              if (a === 'release' || a === 'declareFailed') {
+                return (
+                  <ConfirmButton key={a} className={`btn ${ACTION[a].cls}`}
+                    label={ACTION[a].label} confirmLabel={`ยืนยัน${ACTION[a].label}`}
+                    onConfirm={() => apply(a)} />
+                );
+              }
+              return (
+                <button key={a} className={`btn ${ACTION[a].cls}`}
+                  disabled={a === 'claim' && (suspended || held)} onClick={() => apply(a)}>
+                  {ACTION[a].label}
+                </button>
+              );
+            })
           )}
         </div>
       </article>
