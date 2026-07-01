@@ -15,6 +15,41 @@ const ACTION: Record<MerchantAction, { label: string; cls: string; run: (s: Orde
   reject: { label: 'ปฏิเสธ', cls: 'btn--ghost', run: merchantReject },
 };
 
+function playChime() {
+  if (typeof window === 'undefined') return;
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate([100, 50, 100]);
+  }
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    const playNote = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+      
+      gain.gain.setValueAtTime(0.15, start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(start);
+      osc.stop(start + duration);
+    };
+    
+    const now = ctx.currentTime;
+    playNote(523.25, now, 0.3); // C5
+    playNote(783.99, now + 0.12, 0.4); // G5
+  } catch (e) {
+    console.error('Failed to play chime:', e);
+  }
+}
+
 function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
   className: string;
   label: string;
@@ -46,6 +81,14 @@ export function Merchant() {
   const order = state.order;
   const placed = state.placed;
 
+  const view = order ? merchantView(order) : { active: false, stageLabel: '', actions: [] as MerchantAction[] };
+
+  useEffect(() => {
+    if (order && view.actions.includes('accept')) {
+      playChime();
+    }
+  }, [order?.kind]);
+
   if (!order) {
     return (
       <div className="merchant">
@@ -58,8 +101,26 @@ export function Merchant() {
     );
   }
 
-  const view = merchantView(order);
   const restaurant = findRestaurant(state.restaurants, placed?.restaurantId ?? undefined);
+
+  // หาออเดอร์ทั้งหมดที่เป็นของร้านนี้และกำลังดำเนินการ (Active)
+  const activeOrders = state.orders.filter(
+    (o) =>
+      o.placed.restaurantId === (placed?.restaurantId ?? null) &&
+      !['Completed', 'FailedDelivery', 'Cancelled'].includes(o.state.kind)
+  );
+
+  // รวมจำนวนรายการอาหารที่ต้องทำสะสมทั้งหมด (Kitchen Prep Queue)
+  const kitchenQueue: Record<string, { name: string; qty: number }> = {};
+  activeOrders.forEach((o) => {
+    o.placed.lines.forEach((line) => {
+      const key = line.itemName;
+      if (!kitchenQueue[key]) {
+        kitchenQueue[key] = { name: line.itemName, qty: 0 };
+      }
+      kitchenQueue[key].qty += line.qty;
+    });
+  });
 
   const apply = (a: MerchantAction) => {
     const r = ACTION[a].run(order);
@@ -118,6 +179,20 @@ export function Merchant() {
           )}
         </div>
       </article>
+
+      {activeOrders.length > 0 && (
+        <section className="m-prep">
+          <h2 className="m-prep__title">🍳 สรุปรายการครัวที่ต้องเตรียมสะสม ({activeOrders.length} ออเดอร์)</h2>
+          <div className="m-prep__grid">
+            {Object.values(kitchenQueue).map((item) => (
+              <div className="m-prep__item" key={item.name}>
+                <span className="m-prep__qty">×{item.qty}</span>
+                <span className="m-prep__name">{item.name}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }

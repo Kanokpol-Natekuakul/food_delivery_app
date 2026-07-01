@@ -39,7 +39,7 @@ export function Home() {
   const enriched = state.restaurants.map((r) => {
     const svc = checkServiceability(coord, r.coord);
     return {
-      id: r.id, name: r.name, icon: r.icon, g: r.g, rating: r.rating, cat: r.cat, blurb: r.blurb,
+      id: r.id, name: r.name, icon: r.icon, image: r.image, g: r.g, rating: r.rating, cat: r.cat, blurb: r.blurb,
       km: svc.distanceKm, fee: deliveryFee(svc.distanceKm), eta: Math.round(8 + svc.distanceKm * 4),
       offzone: !svc.orderable,
     };
@@ -116,7 +116,9 @@ export function Home() {
               <div className="hscroll">
                 {fStalls.map((s) => (
                   <Link className="stall" to={`/r/${s.id}`} key={s.id}>
-                    <div className={`thumb ${s.g}`}>{s.icon}</div>
+                    <div className={`thumb ${s.g}`}>
+                      {s.image ? <img src={s.image} alt={s.name} /> : s.icon}
+                    </div>
                     <h3>{s.name}</h3>
                     <div className="meta"><span className="rate">{s.rating}</span> · {s.km.toFixed(1)} กม.</div>
                   </Link>
@@ -134,7 +136,9 @@ export function Home() {
               <div className="near">
                 {fNear.map((r) => (
                   <Link className="row" to={`/r/${r.id}`} key={r.id}>
-                    <div className={`thumb ${r.g}`}>{r.icon}</div>
+                    <div className={`thumb ${r.g}`}>
+                      {r.image ? <img src={r.image} alt={r.name} /> : r.icon}
+                    </div>
                     <div className="info">
                       <h3>{r.name}</h3>
                       <p className="sub">{r.blurb}</p>

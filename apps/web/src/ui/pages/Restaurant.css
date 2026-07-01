@@ -6,6 +6,8 @@
 .resto-hero::after{content:""; position:absolute; inset:0;
   background:linear-gradient(to top, var(--ink) 4%, transparent 60%)}
 .resto-hero .resto-icon{position:relative; z-index:1; filter:drop-shadow(0 6px 18px rgba(0,0,0,.4))}
+.resto-hero img{position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.65; z-index:0}
+.dish-thumb img{width:100%; height:100%; object-fit:cover; border-radius:inherit}
 .resto-hero .back{position:absolute; top:var(--gutter); left:var(--gutter); z-index:2;
   width:40px; height:40px; border-radius:var(--r-sm); background:rgba(22,16,28,.6);
   border:1px solid var(--ink-line); color:var(--paper); cursor:pointer; font-size:18px;

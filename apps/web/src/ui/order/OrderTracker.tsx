@@ -21,7 +21,9 @@ export function OrderTracker({ state }: { state: OrderState }) {
       <div className="board">
         <div className="rail-heads">
           <div className="rail-head">🔥 ราง ร้าน</div>
-          <div className="rail-head">🛵 ราง ไรเดอร์ <span className="who">สมชาย</span></div>
+          <div className="rail-head">
+            <span className={`r-ride-ico${state.kind === 'InTransit' || (state.kind === 'AwaitingHandoff' && state.rider !== 'Unclaimed') ? ' is-riding' : ''}`}>🛵</span> ราง ไรเดอร์ <span className="who">สมชาย</span>
+          </div>
         </div>
 
         <div className="parallel">

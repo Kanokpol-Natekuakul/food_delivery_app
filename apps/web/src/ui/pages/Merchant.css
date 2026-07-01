@@ -35,3 +35,13 @@
   .merchant{max-width:720px}
   .m-actions .btn{flex:0 1 auto; min-width:160px}
 }
+
+.m-prep{margin-top:var(--sp-6); background:var(--ink-card); border:1px solid var(--ink-line);
+  border-radius:var(--r); padding:var(--sp-5)}
+.m-prep__title{font-family:var(--display); font-size:1.15rem; font-weight:700; color:var(--paper);
+  margin:0 0 var(--sp-4); display:flex; align-items:center; gap:var(--sp-2)}
+.m-prep__grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:var(--sp-3)}
+.m-prep__item{display:flex; align-items:center; gap:var(--sp-3); padding:var(--sp-3);
+  background:rgba(255,255,255,0.03); border:1px solid var(--ink-line); border-radius:var(--r-sm)}
+.m-prep__qty{font-family:var(--mono); font-weight:700; font-size:1.1rem; color:var(--mango)}
+.m-prep__name{font-size:var(--fs-data); color:var(--paper)}

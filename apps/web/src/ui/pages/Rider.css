@@ -44,4 +44,4 @@
   .r-actions .btn{flex:0 1 auto; min-width:160px}
 }
 
-.r-mono-num{font-family:var(--mono); font-weight:700}
+.r-mono-num{font-family:var(--mono); font-weight:700; color:var(--mango); text-shadow:0 0 6px rgba(255,182,39,.7)}

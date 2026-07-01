@@ -34,7 +34,11 @@ export function Restaurant() {
     <div className="resto">
       <div className={`resto-hero ${r.g}`}>
         <button className="back" aria-label="ย้อนกลับ" onClick={() => nav('/')}>‹</button>
-        <span className="resto-icon">{r.icon}</span>
+        {r.image ? (
+          <img src={r.image} alt={r.name} />
+        ) : (
+          <span className="resto-icon">{r.icon}</span>
+        )}
       </div>
 
       <div className="resto-body">
@@ -65,7 +69,9 @@ export function Restaurant() {
                   <p className="dish-desc">{d.desc}</p>
                   <span className="dish-price">฿{d.basePrice}</span>
                 </div>
-                <div className={`dish-thumb ${r.g}`}>{d.icon}</div>
+                <div className={`dish-thumb ${r.g}`}>
+                  {d.image ? <img src={d.image} alt={d.name} /> : d.icon}
+                </div>
               </div>
             ) : (
               <Link className="dish-row" to={`/r/${r.id}/${d.id}`} key={d.id}>
@@ -75,7 +81,7 @@ export function Restaurant() {
                   <span className="dish-price">฿{d.basePrice}</span>
                 </div>
                 <div className={`dish-thumb ${r.g}`}>
-                  {d.icon}
+                  {d.image ? <img src={d.image} alt={d.name} /> : d.icon}
                   <span className="dish-add" aria-hidden="true">＋</span>
                 </div>
               </Link>

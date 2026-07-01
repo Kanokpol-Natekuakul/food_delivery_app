@@ -9,7 +9,7 @@ describe('Merchant — คอนโซลรับออเดอร์', () => 
   it('แสดงรายการออเดอร์ + ปุ่มรับ/ปฏิเสธ ตอนรอร้านรับ', () => {
     renderWithProviders(<Merchant />);
     expect(screen.getByText('รอร้านรับออเดอร์')).toBeInTheDocument();
-    expect(screen.getByText(/ข้าวมันไก่ต้ม/)).toBeInTheDocument();
+    expect(screen.getByText(/ข้าวมันไก่ต้ม/, { selector: '.m-item' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'รับออเดอร์' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ปฏิเสธ' })).toBeInTheDocument();
   });

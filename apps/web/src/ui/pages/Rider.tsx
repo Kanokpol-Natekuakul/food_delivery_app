@@ -24,6 +24,41 @@ const ACTION: Record<RiderAction, { label: string; cls: string; run: (s: OrderSt
   release: { label: 'คืนงาน', cls: 'btn--ghost', run: releaseClaim },
 };
 
+function playChime() {
+  if (typeof window === 'undefined') return;
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    navigator.vibrate([100, 50, 100]);
+  }
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    const playNote = (freq: number, start: number, duration: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+      
+      gain.gain.setValueAtTime(0.15, start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      osc.start(start);
+      osc.stop(start + duration);
+    };
+    
+    const now = ctx.currentTime;
+    playNote(523.25, now, 0.3); // C5
+    playNote(783.99, now + 0.12, 0.4); // G5
+  } catch (e) {
+    console.error('Failed to play chime:', e);
+  }
+}
+
 function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
   className: string;
   label: string;
@@ -55,6 +90,32 @@ export function Rider() {
   const order = state.order;
   const placed = state.placed;
 
+  // ตัวตนไรเดอร์จาก session ถ้าล็อกอินเป็น rider ไม่งั้น fallback เดโม (rider:somchai)
+  const riderId = riderActorId(state);
+  const riderName = riderId.replace(/^rider:/, '');
+  const suspended = isSuspended(state.suspended, riderId);
+  const downranked = state.downranked.includes(riderId);
+  // แจ้งเตือนจากสถิติ (แสดงเมื่อยังไม่ถูกระงับ — ระงับมีแบนเนอร์ของตัวเอง)
+  const warned = state.notified.includes(riderId) && !suspended;
+
+  // pull-based dispatch (ADR 0001): ไรเดอร์ถูกลดอันดับต้องรอช่วงให้สิทธิ์อันดับสูงก่อน
+  const jobOpen = order ? (order.kind === 'AwaitingHandoff' && order.rider === 'Unclaimed') : false;
+  const [waited, setWaited] = useState(0);
+  const held = isPriorityHeld(downranked, waited) && jobOpen && !suspended;
+
+  useEffect(() => {
+    if (!held) return;
+    const id = setInterval(() => setWaited((w) => w + 1), 1000);
+    return () => clearInterval(id);
+  }, [held]);
+
+  // เสียงแจ้งเตือนเมื่อมีงานใหม่เข้าสำหรับไรเดอร์
+  useEffect(() => {
+    if (jobOpen && !suspended && !held) {
+      playChime();
+    }
+  }, [jobOpen]);
+
   if (!order) {
     return (
       <div className="rider">
@@ -67,25 +128,8 @@ export function Rider() {
     );
   }
 
-  // ตัวตนไรเดอร์จาก session ถ้าล็อกอินเป็น rider ไม่งั้น fallback เดโม (rider:somchai)
-  const riderId = riderActorId(state);
-  const riderName = riderId.replace(/^rider:/, '');
   const view = riderView(order);
   const restaurant = findRestaurant(state.restaurants, placed?.restaurantId ?? undefined);
-  const suspended = isSuspended(state.suspended, riderId);
-  const downranked = state.downranked.includes(riderId);
-  // แจ้งเตือนจากสถิติ (แสดงเมื่อยังไม่ถูกระงับ — ระงับมีแบนเนอร์ของตัวเอง)
-  const warned = state.notified.includes(riderId) && !suspended;
-
-  // pull-based dispatch (ADR 0001): ไรเดอร์ถูกลดอันดับต้องรอช่วงให้สิทธิ์อันดับสูงก่อน
-  const jobOpen = order.kind === 'AwaitingHandoff' && order.rider === 'Unclaimed';
-  const [waited, setWaited] = useState(0);
-  const held = isPriorityHeld(downranked, waited) && jobOpen && !suspended;
-  useEffect(() => {
-    if (!held) return;
-    const id = setInterval(() => setWaited((w) => w + 1), 1000);
-    return () => clearInterval(id);
-  }, [held]);
 
   const apply = (a: RiderAction) => {
     // คว้างาน → claimLive (โดเมน claimJob ตรวจพักงาน/ช่วงให้สิทธิ์ + persist riderId=session ฝั่ง server)

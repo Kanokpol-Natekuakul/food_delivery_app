@@ -83,6 +83,7 @@
   background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r); padding:var(--sp-3)}
 .home .row .thumb{flex:0 0 76px; height:76px; border-radius:var(--r-sm); display:grid;
   place-items:center; font-size:34px}
+.home .thumb img{width:100%; height:100%; object-fit:cover; border-radius:inherit}
 .home .row .info{min-width:0; flex:1}
 .home .row h3{font-size:var(--fs-h); font-weight:600; margin:0 0 4px;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis}

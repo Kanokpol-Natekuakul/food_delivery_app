@@ -25,6 +25,7 @@ export type Dish = {
   basePrice: number;
   desc: string;
   icon: string;
+  image?: string;
   /** Option Group เลือก-1 บังคับ (เช่น ความเผ็ด) — ไม่มี = ข้ามกลุ่มนี้ */
   choice?: { label: string; options: string[] };
   /** Option Group เลือกหลายได้ (ท็อปปิ้ง/ของเพิ่ม) */
@@ -35,6 +36,7 @@ export type Restaurant = {
   id: string;
   name: string;
   icon: string;
+  image?: string;
   /** คลาส gradient พื้นหลังรูป (ดู Home.css/Restaurant.css: .g1..g6) */
   g: string;
   rating: string;
@@ -55,11 +57,11 @@ export const restaurants: Restaurant[] = [
   {
     id: 'khao-man-kai',
     name: 'ข้าวมันไก่ตำนาน ลาดพร้าว',
-    icon: '🍗', g: 'g1', rating: '★ 4.8', cat: 'ข้าวมันไก่',
+    icon: '🍗', image: '/images/khao_man_kai.jpg', g: 'g1', rating: '★ 4.8', cat: 'ข้าวมันไก่',
     blurb: 'ไก่ต้มเนื้อนุ่ม ข้าวหุงมันหอม น้ำจิ้มเต้าเจี้ยวสูตรร้าน',
     coord: { lat: 13.814, lng: 100.580 },
     dishes: [
-      { id: 'kmk-tom', name: 'ข้าวมันไก่ต้ม', basePrice: 50, icon: '🍗',
+      { id: 'kmk-tom', name: 'ข้าวมันไก่ต้ม', basePrice: 50, icon: '🍗', image: '/images/khao_man_kai.jpg',
         desc: 'ไก่ต้มเนื้อนุ่ม ราดน้ำมันไก่ พร้อมน้ำจิ้มเต้าเจี้ยว',
         choice: { label: 'ความเผ็ดน้ำจิ้ม', options: SPICE },
         extras: [
@@ -68,7 +70,7 @@ export const restaurants: Restaurant[] = [
           { id: 'chicken', label: 'ไก่พิเศษ', price: 15 },
           { id: 'sauce', label: 'น้ำจิ้มแยกถ้วย', price: 5 },
         ] },
-      { id: 'kmk-tod', name: 'ข้าวมันไก่ทอด', basePrice: 55, icon: '🍗',
+      { id: 'kmk-tod', name: 'ข้าวมันไก่ทอด', basePrice: 55, icon: '🍗', image: '/images/khao_man_kai.jpg',
         desc: 'ไก่ทอดกรอบนอกนุ่มใน เสิร์ฟบนข้าวมัน',
         choice: { label: 'ความเผ็ดน้ำจิ้ม', options: SPICE },
         extras: [
@@ -76,7 +78,7 @@ export const restaurants: Restaurant[] = [
           { id: 'rice', label: 'ข้าวเพิ่ม', price: 10 },
           { id: 'chicken', label: 'ไก่พิเศษ', price: 15 },
         ] },
-      { id: 'kmk-mix', name: 'ข้าวมันไก่รวมมิตร (ต้ม+ทอด)', basePrice: 70, icon: '🍱',
+      { id: 'kmk-mix', name: 'ข้ามันไก่รวมมิตร (ต้ม+ทอด)', basePrice: 70, icon: '🍱', image: '/images/khao_man_kai.jpg',
         desc: 'ได้ทั้งไก่ต้มและไก่ทอดในจานเดียว จัดเต็ม',
         extras: [
           { id: 'egg', label: 'เพิ่มไข่ต้ม', price: 10 },
@@ -89,11 +91,11 @@ export const restaurants: Restaurant[] = [
   {
     id: 'kuaytiao-ruea',
     name: 'ก๋วยเตี๋ยวเรือป้านิด',
-    icon: '🍜', g: 'g2', rating: '★ 4.7', cat: 'ก๋วยเตี๋ยว',
+    icon: '🍜', image: '/images/boat_noodles.jpg', g: 'g2', rating: '★ 4.7', cat: 'ก๋วยเตี๋ยว',
     blurb: 'น้ำตกเข้มข้น เครื่องแน่น สูตรเรือต้นตำรับ',
     coord: { lat: 13.792, lng: 100.560 },
     dishes: [
-      { id: 'kr-moo', name: 'ก๋วยเตี๋ยวเรือหมู', basePrice: 45, icon: '🍜',
+      { id: 'kr-moo', name: 'ก๋วยเตี๋ยวเรือหมู', basePrice: 45, icon: '🍜', image: '/images/boat_noodles.jpg',
         desc: 'น้ำตกหมูเข้มข้น ลูกชิ้นเด้ง ผักสด',
         choice: { label: 'เลือกเส้น', options: NOODLE },
         extras: [
@@ -102,7 +104,7 @@ export const restaurants: Restaurant[] = [
           { id: 'pak', label: 'ผักเพิ่ม', price: 5 },
           { id: 'kaki', label: 'แคบหมู', price: 10 },
         ] },
-      { id: 'kr-nuea', name: 'ก๋วยเตี๋ยวเรือเนื้อ', basePrice: 55, icon: '🍜',
+      { id: 'kr-nuea', name: 'ก๋วยเตี๋ยวเรือเนื้อ', basePrice: 55, icon: '🍜', image: '/images/boat_noodles.jpg',
         desc: 'เนื้อเปื่อยนุ่ม น้ำซุปหอมเครื่องเทศ',
         choice: { label: 'เลือกเส้น', options: NOODLE },
         extras: [
@@ -110,7 +112,7 @@ export const restaurants: Restaurant[] = [
           { id: 'luuk', label: 'เพิ่มลูกชิ้นเนื้อ', price: 15 },
           { id: 'kaki', label: 'แคบหมู', price: 10 },
         ] },
-      { id: 'kr-yen', name: 'เกาเหลา (ไม่ใส่เส้น)', basePrice: 50, icon: '🥣',
+      { id: 'kr-yen', name: 'เกาเหลา (ไม่ใส่เส้น)', basePrice: 50, icon: '🥣', image: '/images/boat_noodles.jpg',
         desc: 'เครื่องจัดเต็มไม่มีเส้น สำหรับคนคุมแป้ง',
         extras: [
           { id: 'luuk', label: 'เพิ่มลูกชิ้น', price: 15 },
@@ -123,11 +125,11 @@ export const restaurants: Restaurant[] = [
   {
     id: 'cha-maimuk',
     name: 'ชาไข่มุกซอย 5',
-    icon: '🧋', g: 'g4', rating: '★ 4.9', cat: 'เครื่องดื่ม',
+    icon: '🧋', image: '/images/thai_tea.jpg', g: 'g4', rating: '★ 4.9', cat: 'เครื่องดื่ม',
     blurb: 'ชงสด ไข่มุกนุ่มหนึบ หวานปรับได้ตามใจ',
     coord: { lat: 13.809, lng: 100.578 },
     dishes: [
-      { id: 'cm-thai', name: 'ชาไทยไข่มุก', basePrice: 45, icon: '🧋',
+      { id: 'cm-thai', name: 'ชาไทยไข่มุก', basePrice: 45, icon: '🧋', image: '/images/thai_tea.jpg',
         desc: 'ชาไทยเข้มข้น นมหอม ไข่มุกหนึบ',
         choice: { label: 'ระดับความหวาน', options: SWEET },
         extras: [
@@ -136,14 +138,14 @@ export const restaurants: Restaurant[] = [
           { id: 'whip', label: 'วิปครีม', price: 15 },
           { id: 'shot', label: 'เพิ่มชอตชา', price: 20 },
         ] },
-      { id: 'cm-green', name: 'ชาเขียวนมไข่มุก', basePrice: 45, icon: '🍵',
+      { id: 'cm-green', name: 'ชาเขียวนมไข่มุก', basePrice: 45, icon: '🍵', image: '/images/thai_tea.jpg',
         desc: 'ชาเขียวมัทฉะ นมสด ไข่มุก',
         choice: { label: 'ระดับความหวาน', options: SWEET },
         extras: [
           { id: 'boba', label: 'เพิ่มไข่มุก', price: 10 },
           { id: 'whip', label: 'วิปครีม', price: 15 },
         ] },
-      { id: 'cm-choc', name: 'โกโก้ปั่น', basePrice: 55, icon: '🥤',
+      { id: 'cm-choc', name: 'โกโก้ปั่น', basePrice: 55, icon: '🥤', image: '/images/thai_tea.jpg',
         desc: 'โกโก้เข้ม ๆ ปั่นเย็นซ่า',
         choice: { label: 'ระดับความหวาน', options: SWEET },
         extras: [{ id: 'whip', label: 'วิปครีม', price: 15 }] },
