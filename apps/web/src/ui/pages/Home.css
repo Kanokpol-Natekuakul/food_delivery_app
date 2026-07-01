@@ -1,7 +1,7 @@
 .home{max-width:600px; margin-inline:auto; padding:var(--gutter) var(--gutter) 110px}
 
 /* แถบบน */
-.home .topbar{display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-5)}
+.home .topbar{display:flex; align-items:center; gap:var(--sp-3); margin-bottom:var(--sp-4)}
 .home .loc{appearance:none; cursor:pointer; background:none; border:none; color:var(--paper);
   font-family:var(--ui); display:flex; align-items:center; gap:6px; min-width:0; padding:0}
 .home .loc b{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
@@ -11,25 +11,25 @@
   border:1px solid var(--ink-line); color:var(--paper); cursor:pointer; font-size:17px}
 
 /* HERO: ป้ายไฟ */
-.home .hero{padding:var(--sp-4) 0 var(--sp-6); text-align:center}
-.home .hero .eyebrow{display:block; margin-bottom:var(--sp-4)}
+.home .hero{padding:var(--sp-3) 0 var(--sp-4); text-align:center}
+.home .hero .eyebrow{display:block; margin-bottom:var(--sp-3)}
 .home .sign{font-family:var(--display); font-weight:800; line-height:1.02;
   font-size:var(--fs-display-xl); letter-spacing:-.01em; margin:0}
 .home .sign .l1{display:block; color:var(--paper)}
 .home .sign .l2{display:block; color:var(--mango);
   text-shadow:0 0 4px rgba(255,182,39,.9), 0 0 16px rgba(255,182,39,.55), 0 0 34px rgba(255,182,39,.35)}
-.home .open-tag{display:inline-flex; align-items:center; gap:7px; margin-top:var(--sp-4);
+.home .open-tag{display:inline-flex; align-items:center; gap:7px; margin-top:var(--sp-3);
   font-family:var(--mono); font-size:var(--fs-label); color:var(--pandan);
   border:1px solid rgba(87,179,104,.35); border-radius:var(--r-pill); padding:5px 12px}
 .home .open-tag .dot{width:8px; height:8px; border-radius:50%; background:var(--pandan);
   box-shadow:var(--glow-pandan)}
-.home .riders{margin-top:var(--sp-4); color:var(--paper-dim); font-size:var(--fs-data)}
+.home .riders{margin-top:var(--sp-2); color:var(--paper-dim); font-size:var(--fs-data)}
 .home .riders b{font-family:var(--mono); color:var(--mango)}
 
 /* ค้นหา */
 .home .search{display:flex; align-items:center; gap:var(--sp-3); background:var(--ink-card);
   border:1px solid var(--ink-line); border-radius:var(--r); padding:14px var(--sp-4);
-  margin-bottom:var(--sp-6)}
+  margin-bottom:var(--sp-5)}
 .home .search input{flex:1; min-width:0; background:none; border:none; color:var(--paper);
   font-family:var(--ui); font-size:var(--fs-body)}
 .home .search input::placeholder{color:var(--paper-dim)}
