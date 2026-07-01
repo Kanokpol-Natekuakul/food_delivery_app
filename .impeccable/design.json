@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-07-01T00:00:00.000Z",
+  "title": "Design System: Food Delivery Marketplace",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Warm Ink (พื้นค่ำ)",
+        "canonical": "#16101C",
+        "tonalRamp": ["oklch(16% 0.03 310)", "oklch(24% 0.035 310)", "oklch(34% 0.04 310)", "oklch(45% 0.04 310)", "oklch(56% 0.035 310)", "oklch(68% 0.03 310)", "oklch(80% 0.02 310)", "oklch(92% 0.012 310)"]
+      },
+      "ink-card": {
+        "role": "neutral",
+        "displayName": "Ink Card (พื้นการ์ด)",
+        "canonical": "#221829",
+        "tonalRamp": ["oklch(20% 0.035 315)", "oklch(28% 0.04 315)", "oklch(38% 0.045 315)", "oklch(48% 0.045 315)", "oklch(59% 0.04 315)", "oklch(70% 0.03 315)", "oklch(82% 0.02 315)", "oklch(93% 0.012 315)"]
+      },
+      "ink-line": {
+        "role": "neutral",
+        "displayName": "Ink Line (เส้นขอบ)",
+        "canonical": "#34273E"
+      },
+      "mango": {
+        "role": "primary",
+        "displayName": "Signage Amber (แสงป้ายไฟมะม่วง)",
+        "canonical": "#FFB627",
+        "tonalRamp": ["oklch(30% 0.09 75)", "oklch(42% 0.12 75)", "oklch(54% 0.15 75)", "oklch(66% 0.17 75)", "oklch(78% 0.17 78)", "oklch(85% 0.15 80)", "oklch(91% 0.10 82)", "oklch(96% 0.05 84)"]
+      },
+      "chili": {
+        "role": "primary",
+        "displayName": "Chili Heat (ไฟเตาพริก)",
+        "canonical": "#FF4D3D",
+        "tonalRamp": ["oklch(30% 0.10 28)", "oklch(42% 0.15 28)", "oklch(52% 0.19 28)", "oklch(62% 0.21 28)", "oklch(68% 0.22 29)", "oklch(78% 0.17 30)", "oklch(87% 0.10 32)", "oklch(95% 0.04 34)"]
+      },
+      "pandan": {
+        "role": "secondary",
+        "displayName": "Fresh Pandan (ใบเตยสด)",
+        "canonical": "#57B368",
+        "tonalRamp": ["oklch(28% 0.06 150)", "oklch(38% 0.09 150)", "oklch(48% 0.11 150)", "oklch(58% 0.13 150)", "oklch(68% 0.14 150)", "oklch(78% 0.12 150)", "oklch(87% 0.08 152)", "oklch(95% 0.04 154)"]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper (ตัวอักษรหลัก)",
+        "canonical": "#F4ECE0"
+      },
+      "paper-dim": {
+        "role": "neutral",
+        "displayName": "Dim Paper (ตัวอักษรรอง)",
+        "canonical": "#9C8FA6"
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (ป้ายไฟ)", "purpose": "ป้ายไฟชื่อแบรนด์บน Home เท่านั้น — Kanit 800, บรรทัดสองเรืองแสงมะม่วง." },
+      "headline": { "displayName": "Headline", "purpose": "หัวข้อ section — Kanit 700." },
+      "title": { "displayName": "Title", "purpose": "ชื่อร้าน/เมนู/หัวการ์ด — Anuphan 600." },
+      "body": { "displayName": "Body", "purpose": "เนื้อความ — Anuphan 400, lh 1.55, จำกัด 65–75ch." },
+      "label": { "displayName": "Label", "purpose": "eyebrow/meta — Anuphan 500 สี paper-dim, ไม่ใช่ uppercase." },
+      "data": { "displayName": "Data (mono)", "purpose": "ตัวเลขข้อมูลทั้งหมด — Space Mono (฿/%/กม./เวลา/อัตรา)." }
+    },
+    "shadows": [
+      { "name": "glow-chili", "value": "0 0 26px rgba(255,77,61,.45)", "purpose": "Signature หลัก — เรืองใต้ปุ่มร้อนหลัก/cartbar/สถานะ live. หนึ่งเดียวต่อหน้า." },
+      { "name": "glow-mango", "value": "0 0 28px rgba(255,182,39,.40)", "purpose": "เรืองรอบไฮไลต์มะม่วง — สงวน, แทบไม่ใช้บนปุ่มเพื่อกัน glow เกลื่อน." },
+      { "name": "glow-pandan", "value": "0 0 24px rgba(87,179,104,.40)", "purpose": "เรืองใต้จุดสถานะ 'เปิดอยู่/พร้อม'." },
+      { "name": "focus-mango", "value": "0 0 0 3px rgba(255,182,39,.14)", "purpose": "แสงเรืองขอบมะม่วงจางบน :focus-within ของช่องค้นหา/ฟิลด์." }
+    ],
+    "motion": [
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25,1,0.5,1)", "purpose": "Default easing — ปุ่มกด/hover/การ์ดยก." },
+      { "name": "ease-out-quint", "value": "cubic-bezier(0.22,1,0.36,1)", "purpose": "ตัวเลขจำนวน pop (countPop)." },
+      { "name": "ease-out-expo", "value": "cubic-bezier(0.16,1,0.3,1)", "purpose": "cartbar เด้งขึ้น (cartbarIn) — เข้าแรงชะลอนุ่ม." },
+      { "name": "dur-fast", "value": "130ms", "purpose": "กดยุบ/tactile." },
+      { "name": "dur", "value": "200ms", "purpose": "transition มาตรฐาน." },
+      { "name": "dur-slow", "value": "320ms", "purpose": "entrance (cartbar)." }
+    ],
+    "breakpoints": [
+      { "name": "tablet", "value": "768px" },
+      { "name": "desktop", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button (Chili)",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Action หลักต่อหน้า — สั่งเลย/เพิ่มลงตะกร้า. ตัวเดียวที่ได้ glow.",
+      "html": "<button class=\"ds-btn-chili\">สั่งเลย</button>",
+      "css": ".ds-btn-chili{font-family:Anuphan,system-ui,sans-serif;font-weight:600;font-size:1rem;border:none;border-radius:10px;padding:13px 20px;color:#16101C;background:#FF4D3D;box-shadow:0 0 26px rgba(255,77,61,.45);cursor:pointer;transition:transform 130ms cubic-bezier(0.25,1,0.5,1),filter 200ms cubic-bezier(0.25,1,0.5,1)}.ds-btn-chili:hover{filter:brightness(1.06)}.ds-btn-chili:active{transform:scale(.97)}.ds-btn-chili:focus-visible{outline:2px solid #FFB627;outline-offset:2px}"
+    },
+    {
+      "name": "Highlight Button (Mango)",
+      "kind": "button",
+      "refersTo": "button-mango",
+      "description": "Action รอง/ยืนยัน — อนุมัติ/เข้าสู่ระบบ. สีล้วน ไม่เรือง.",
+      "html": "<button class=\"ds-btn-mango\">อนุมัติ</button>",
+      "css": ".ds-btn-mango{font-family:Anuphan,system-ui,sans-serif;font-weight:600;font-size:1rem;border:none;border-radius:10px;padding:13px 20px;color:#16101C;background:#FFB627;cursor:pointer;transition:transform 130ms cubic-bezier(0.25,1,0.5,1),filter 200ms cubic-bezier(0.25,1,0.5,1)}.ds-btn-mango:hover{filter:brightness(1.06)}.ds-btn-mango:active{transform:scale(.97)}.ds-btn-mango:focus-visible{outline:2px solid #FFB627;outline-offset:2px}"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Action รองลงมา/ยกเลิก — พื้นการ์ด ขอบบาง.",
+      "html": "<button class=\"ds-btn-ghost\">ยกเลิก</button>",
+      "css": ".ds-btn-ghost{font-family:Anuphan,system-ui,sans-serif;font-weight:600;font-size:1rem;border:1px solid #34273E;border-radius:10px;padding:13px 20px;color:#F4ECE0;background:#221829;cursor:pointer;transition:transform 130ms cubic-bezier(0.25,1,0.5,1),filter 200ms cubic-bezier(0.25,1,0.5,1)}.ds-btn-ghost:hover{filter:brightness(1.15)}.ds-btn-ghost:active{transform:scale(.97)}.ds-btn-ghost:focus-visible{outline:2px solid #FFB627;outline-offset:2px}"
+    },
+    {
+      "name": "Chip (Mango filter)",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "หมวด/ตัวกรอง — variant มะม่วงตอน active.",
+      "html": "<button class=\"ds-chip ds-chip-mango\">ตามสั่ง</button>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:8px;font-family:Anuphan,system-ui,sans-serif;font-size:.8125rem;color:#F4ECE0;background:#221829;border:1px solid #34273E;padding:8px 14px;border-radius:999px;white-space:nowrap;cursor:pointer;transition:border-color 200ms cubic-bezier(0.25,1,0.5,1),transform 130ms cubic-bezier(0.25,1,0.5,1)}.ds-chip:active{transform:scale(.96)}.ds-chip-mango{color:#FFB627;background:rgba(255,182,39,.08);border-color:rgba(255,182,39,.3)}"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "search-input",
+      "description": "ช่องค้นหาร้าน — focus เรืองขอบมะม่วงจาง (ไม่ใช่ outline).",
+      "html": "<div class=\"ds-search\"><span>🔍</span><input type=\"search\" placeholder=\"หิวอะไร ค้นเลย…\"></div>",
+      "css": ".ds-search{display:flex;align-items:center;gap:12px;background:#221829;border:1px solid #34273E;border-radius:16px;padding:14px 16px;transition:box-shadow 200ms cubic-bezier(0.25,1,0.5,1)}.ds-search:focus-within{box-shadow:0 0 0 3px rgba(255,182,39,.14)}.ds-search input{flex:1;min-width:0;background:none;border:none;color:#F4ECE0;font-family:Anuphan,system-ui,sans-serif;font-size:1rem}.ds-search input::placeholder{color:#9C8FA6}.ds-search input:focus{outline:none}"
+    },
+    {
+      "name": "Restaurant Row Card",
+      "kind": "card",
+      "refersTo": "card-row",
+      "description": "การ์ดร้าน 'ใกล้คุณ' — ยกด้วยโทน+ขอบ ไม่มีเงา. hover ยกตัว.",
+      "html": "<a class=\"ds-row\"><div class=\"ds-thumb\">🍜</div><div class=\"ds-info\"><h3>ข้าวมันไก่ประตูน้ำ</h3><p class=\"ds-sub\">ตามสั่ง · ข้าว</p><div class=\"ds-meta\"><span class=\"ds-rate\">★ 4.8</span><span>1.2 กม.</span><span>฿24</span></div></div></a>",
+      "css": ".ds-row{display:flex;gap:16px;align-items:center;text-decoration:none;color:#F4ECE0;background:#221829;border:1px solid #34273E;border-radius:16px;padding:12px;transition:transform 200ms cubic-bezier(0.25,1,0.5,1)}.ds-row:hover{transform:translateY(-2px)}.ds-row:active{transform:scale(.99)}.ds-thumb{flex:0 0 76px;height:76px;border-radius:10px;display:grid;place-items:center;font-size:34px;background:linear-gradient(135deg,#5A2E2A,#8A4B2F)}.ds-info{min-width:0;flex:1}.ds-row h3{font-family:Anuphan,system-ui,sans-serif;font-size:1.125rem;font-weight:600;margin:0 0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ds-sub{font-size:.8125rem;color:#9C8FA6;margin:0 0 6px}.ds-meta{font-family:'Space Mono',ui-monospace,monospace;font-size:.78rem;color:#9C8FA6;display:flex;gap:12px;align-items:center}.ds-rate{color:#FFB627}"
+    },
+    {
+      "name": "Cartbar (signature)",
+      "kind": "custom",
+      "refersTo": "cartbar",
+      "description": "แถบตะกร้าลอยติดล่าง — พื้นพริก+glow, เด้งขึ้นตอนมีของ, ตัวเลข pop.",
+      "html": "<a class=\"ds-cartbar\"><span class=\"ds-count\">2</span><span>ดูตะกร้า</span><span class=\"ds-total\">฿148</span></a>",
+      "css": ".ds-cartbar{display:flex;align-items:center;gap:12px;background:#FF4D3D;color:#16101C;border-radius:16px;padding:14px 24px;box-shadow:0 0 26px rgba(255,77,61,.45);font-family:Anuphan,system-ui,sans-serif;font-weight:600;text-decoration:none;animation:ds-cartbarIn 320ms cubic-bezier(0.16,1,0.3,1) both}.ds-cartbar:hover{filter:brightness(1.05)}.ds-count{background:rgba(0,0,0,.18);border-radius:999px;padding:3px 10px;font-family:'Space Mono',ui-monospace,monospace;font-size:.82rem;animation:ds-countPop 200ms cubic-bezier(0.22,1,0.36,1) both}.ds-total{margin-left:auto;font-family:'Space Mono',ui-monospace,monospace}@keyframes ds-cartbarIn{from{opacity:0;transform:translateY(120%)}to{opacity:1;transform:translateY(0)}}@keyframes ds-countPop{from{transform:scale(.6);opacity:.3}to{transform:scale(1);opacity:1}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "แสงป้ายไฟตลาดกลางคืน (The Night Market Neon)",
+    "overview": "ระบบนี้คือซอยสตรีทฟู้ดไทยยามค่ำที่ถูกย่อลงในหน้าจอ — พื้นหลังคือความมืดอุ่นอมม่วงของกลางคืน, และสิ่งที่ 'ติดไฟ' คือป้ายร้าน (มะม่วง), เตาที่กำลังร้อน (พริก), และของสดที่พร้อมเสิร์ฟ (ใบเตย). ความอบอุ่นและมีชีวิตชีวามาจากแสงที่เรืองออกจากความมืด ไม่ใช่จากพื้นสว่างจ้า. แต่ระบบนี้เป็น product — เมื่อผู้ใช้ลงมือทำงานจริง ป้ายไฟต้องหลบให้งานลื่น ดังนั้นแสงเรืองถูกสงวนไว้อย่างมีวินัย: หนึ่งการกระทำหลักต่อหนึ่งหน้าเท่านั้นที่ติดไฟ ที่เหลือเงียบ. ระบบนี้ปฏิเสธชัดเจน: look แอปส่งอาหารทั่วไป (พื้นขาวจ้า ส้มสด), SaaS dashboard เทมเพลต, และความหรูเย็นชาแบบคอร์ปอเรต.",
+    "keyCharacteristics": [
+      "พื้นค่ำอมม่วงอุ่น (--ink #16101C) เป็นผืนเดียวตลอดทั้งแอป — ไม่มีโหมดสว่าง",
+      "accent สามสี = ป้ายไฟสามชนิด: มะม่วง (ไฮไลต์), พริก (action ร้อน), ใบเตย (พร้อม/สำเร็จ)",
+      "แสงเรือง (glow) เป็น signature — แต่ปรากฏเฉพาะ 'ปุ่มร้อนหลัก' ต่อหน้า",
+      "ตัวเลข/ข้อมูลใช้ mono font (Space Mono) เสมอ",
+      "ไทยเป็นหลัก: ลำดับชั้นแยกด้วยน้ำหนัก+สี ไม่ใช่ uppercase"
+    ],
+    "rules": [
+      { "name": "The One Sign Rule (กฎป้ายเดียว)", "body": "มีเพียง action หลักหนึ่งเดียวต่อหน้าที่ได้ติดไฟพริก (glow-chili). ปุ่มมะม่วงเป็นสีล้วนไม่เรือง. glow บนทุกปุ่ม = ป้ายไฟรกจนไม่มีป้ายไหนเด่น ต้องห้าม.", "section": "colors" },
+      { "name": "The Mono-Number Rule (กฎตัวเลข mono)", "body": "ตัวเลขข้อมูลทั้งหมด (฿ ค่าส่ง % อัตรา ระยะทาง เวลา) ต้องใช้ Space Mono เสมอ.", "section": "colors" },
+      { "name": "The No-Uppercase-Eyebrow Rule", "body": "ไทยไม่มีตัวพิมพ์ใหญ่ — ห้ามเลียน eyebrow uppercase+letter-spacing กว้าง. แยกลำดับชั้นด้วยน้ำหนัก+สี.", "section": "typography" },
+      { "name": "The Glow-Is-Not-Shadow Rule", "body": "แสงเรืองบอก 'ติดไฟ/มีพลังงาน' ไม่ใช่ 'ลอยเหนือพื้น'. ห้ามเงาดำดรอปทำการ์ดลอยแบบ Material — ยกด้วยโทน+ขอบเท่านั้น.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do ใช้พื้น --ink #16101C เป็นผืนเดียวทั้งแอป — ความอบอุ่นมาจาก accent+typography ไม่ใช่พื้นสว่าง",
+      "Do สงวน glow-chili ให้ปุ่มร้อนหลักหนึ่งเดียวต่อหน้า (The One Sign Rule)",
+      "Do ใส่ตัวเลขข้อมูลทั้งหมดด้วย Space Mono (The Mono-Number Rule)",
+      "Do ยกการ์ดด้วยโทน (ink→ink-card) + ขอบ ink-line 1px ไม่ใช่เงา",
+      "Do แยกลำดับชั้น label ด้วยน้ำหนัก+สี paper-dim",
+      "Do ให้ทุก motion มีทางเลือก prefers-reduced-motion",
+      "Do ปรับความหนาแน่นตามฝ่าย: ลูกค้าโปร่ง, คอนโซลแน่นเน้นข้อมูล"
+    ],
+    "donts": [
+      "Don't ทำให้ดูเหมือนแอปส่งอาหารทั่วไป (สว่าง ขาว-ส้ม) แบบ Grab/LineMan/foodpanda",
+      "Don't ทำ SaaS dashboard เทมเพลต — hero-metric การ์ดใหญ่, eyebrow uppercase ทุก section, gradient text",
+      "Don't ดูหรูเย็นชาแบบคอร์ปอเรตจนไม่เหลือกลิ่นสตรีทฟู้ด",
+      "Don't ใส่ glow บนทุกปุ่ม — glow เกลื่อน = ไม่มีป้ายไหนเด่น",
+      "Don't ใช้เงาดำดรอปทำการ์ดลอยแบบ Material",
+      "Don't ใช้ side-stripe border (border-left > 1px เป็นแถบสี) บนการ์ด/alert",
+      "Don't ใช้ --paper-dim กับ body ยาวบนพื้นเข้มถ้า contrast ไม่ถึง 4.5:1"
+    ]
+  }
+}
