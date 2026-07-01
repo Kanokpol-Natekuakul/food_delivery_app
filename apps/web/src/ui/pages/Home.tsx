@@ -48,6 +48,8 @@ export function Home() {
   // เปิดอยู่ตอนนี้ = ร้านในเขต เรียงตามเรตติ้ง; ใกล้คุณ = ทุกร้าน เรียงตามระยะจริง
   const fStalls = byStanding([...filtered].filter((c) => !c.offzone).sort((a, b) => ratingValue(b.rating) - ratingValue(a.rating)));
   const fNear = byStanding([...filtered].sort((a, b) => a.km - b.km));
+  // ร้านที่ "ส่งถึงคุณได้" จริงจากที่อยู่ที่ปักหมุด (in-zone) — ใช้แทนตัวเลขตกแต่งที่ฮาร์ดโค้ดเดิม
+  const inZoneCount = enriched.filter((c) => !c.offzone).length;
   const filtering = q !== '' || activeCat !== null;
   const noResults = filtering && fStalls.length === 0 && fNear.length === 0;
 
@@ -67,13 +69,13 @@ export function Home() {
       </div>
 
       <header className="hero">
-        <span className="eyebrow">ลาดพร้าว · ค่ำนี้เปิดอยู่ 23 ร้าน</span>
+        <span className="eyebrow">{deliveryLabel(state)} · ส่งถึงคุณได้ {inZoneCount} ร้าน</span>
         <h1 className="sign">
           <span className="l1">หิวเมื่อไหร่</span>
           <span className="l2">ตลาดเปิดเมื่อนั้น</span>
         </h1>
         <span className="open-tag"><span className="dot" /> เปิดรับออเดอร์</span>
-        <p className="riders">🛵 ไรเดอร์ว่างใกล้คุณ <b>12</b> คน — รับงานเร็ว</p>
+        <p className="riders">🛵 ไรเดอร์รับงานเร็วในย่านคุณ</p>
       </header>
 
       <form className="search" role="search" onSubmit={(e) => e.preventDefault()}>

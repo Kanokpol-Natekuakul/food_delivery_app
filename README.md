@@ -77,6 +77,12 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **🏁 QA batch ปิดครบ**: #1–#6 filed, #1/#2/#4/#5/#6 แก้+ปิด, **#3 แก้+ปิด** — ไม่เหลือ issue open.
 
+## Design polish (customer flow — /animate + /critique)
+
+**Feedback layer (micro-interactions)** [`ccb66b8`]: motion tokens ใน tokens.css (`--ease-out-quart/quint/expo`, `--dur-fast/·/slow` 130/200/320ms; ไม่ใช้ bounce/elastic; GPU transform/opacity/filter; reduced-motion ปิดด้วย global rule เดิม). Signature = cartbar **เด้งขึ้น** (`cartbarIn`) + ตัวเลขจำนวน **pop** (`countPop` ผ่าน `key={count}` remount ใน Home/Restaurant.tsx). รอบๆ เงียบ: ปุ่มกดยุบ (.btn scale .97), การ์ดร้าน hover-lift/press, ช่องค้นหา focus glow, ปุ่ม "+" เมนูโต/ยุบ, เครื่องหมายถูก scale-in, ปุ่มจำนวนกดยุบ.
+
+**Critique fixes**: (1) **stats hero ให้จริง** — เดิมฮาร์ดโค้ด "เปิดอยู่ 23 ร้าน / ไรเดอร์ 12 คน" → `inZoneCount` (ร้าน serviceable จริงจากที่อยู่ที่ปักหมุด, reactive) + ตัดเลขไรเดอร์ปลอมทิ้ง. (2) **glow มีวินัย** — ลบ glow จาก `.btn--mango` (เดิมเรืองเกลื่อน Admin/Login); สงวน glow ให้ "ปุ่มร้อน = action หลักต่อหน้า" เท่านั้น (`.btn--chili` สั่งเลย/เพิ่มลงตะกร้า + cartbar + OrderTracker สถานะ live). typecheck + UI 76/76 ผ่าน.
+
 ## Responsive ทั้งแอป (CSS-first, มือถือ-first คงเดิม 100%)
 
 เดิมทุกหน้า cap `max-width:560–600px` กลางจอ → บนเดสก์ท็อปเป็นกรอบมือถือลอยกลาง. เพิ่ม `@media` **tablet ≥768 / desktop ≥1024** เท่านั้น (ไม่แตะ markup/logic → IA เดียวกันทุก context, ไม่พัง test):

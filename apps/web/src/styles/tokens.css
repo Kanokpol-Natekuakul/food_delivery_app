@@ -78,8 +78,10 @@ img{max-width:100%; display:block}
   transition:transform var(--dur-fast) var(--ease-out-quart), filter var(--dur) var(--ease-out-quart)}
 .btn:hover{filter:brightness(1.06)}
 .btn:active{transform:scale(.97)}          /* กดแล้วยุบเข้า — tactile feedback */
+/* glow สงวนไว้ให้ "ปุ่มร้อน" = action หลักต่อหน้า (สั่งเลย/เพิ่มลงตะกร้า/cartbar) เท่านั้น
+   ปุ่ม mango (ไฮไลต์/รอง เช่น อนุมัติ/เข้าสู่ระบบ) เป็นสีล้วน ไม่เรือง — กัน glow เกลื่อนจอ */
 .btn--chili{background:var(--chili); box-shadow:var(--glow-chili)}
-.btn--mango{background:var(--mango); box-shadow:var(--glow-mango)}
+.btn--mango{background:var(--mango)}
 .btn--ghost{background:var(--ink-card); color:var(--paper); border:1px solid var(--ink-line);
   box-shadow:none}
 
