@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useReducer, useRef, useCallback } from 'react';
+import { createContext, useContext, useEffect, useReducer, useRef, useCallback, useState } from 'react';
 import type { Dispatch, ReactNode } from 'react';
 import { emptyCart, addLine, removeLine, setLineQty, foodTotal, SERVICE_FEE } from '@app/domain/cart/cart.js';
 import type { Cart, OrderLine } from '@app/domain/cart/cart.js';
@@ -362,6 +362,7 @@ type StoreValue = {
   dispatch: Dispatch<Action>;
   login: (actorId: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
+  hydrating: boolean; // กำลังดึงข้อมูลสดจาก backend (โชว์ loading bar); false เสมอเมื่อไม่เปิด hydrate
 };
 const Ctx = createContext<StoreValue | null>(null);
 
@@ -563,8 +564,10 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
 
   // cutover: ดึง state จาก backend — ใช้ทั้งตอน mount และ refetch หลัง mutation ล้มเหลว (rollback)
   // ดึงเฉพาะ read ที่ source มี → ประกอบ patch ก้อนเดียว → dispatch ทับ optimistic ให้ตรง server
+  const [hydrating, setHydrating] = useState<boolean>(Boolean(hydrate));
   const rehydrate = useCallback(async () => {
     if (!hydrate) return;
+    setHydrating(true);
     const src = hydrate === true ? liveSource : hydrate;
     const patch: Partial<State> = {};
     const tasks: Promise<void>[] = [];
@@ -579,6 +582,7 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
       await Promise.all(tasks);
       if (Object.keys(patch).length > 0) dispatch({ type: 'hydrate', patch });
     } catch { /* ออฟไลน์/ API ล่ม → คงค่าปัจจุบัน */ }
+    finally { setHydrating(false); }
   }, [hydrate]);
 
   useEffect(() => { void rehydrate(); }, [rehydrate]); // hydrate ตอน mount
@@ -662,7 +666,7 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     dispatch({ type: 'setAuth', user: null });
   }, [auth]);
 
-  return <Ctx.Provider value={{ state, dispatch: dispatchWithSync, login, logout }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ state, dispatch: dispatchWithSync, login, logout, hydrating }}>{children}</Ctx.Provider>;
 }
 
 export function useStore() {

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { useStore } from './store';
 import type { State } from './store';
@@ -47,6 +47,21 @@ function AuthBar() {
         <Link className="authbar-link" to="/login">เข้าสู่ระบบ</Link>
       )}
     </div>
+  );
+}
+
+/** แถบโหลดบางบนสุด — โชว์ตอนดึงข้อมูลสดจาก backend (hydrate); delay 250ms กันกระพริบตอนโหลดเร็ว */
+function LoadingBar() {
+  const { hydrating } = useStore();
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!hydrating) { setVisible(false); return; }
+    const id = setTimeout(() => setVisible(true), 250);
+    return () => clearTimeout(id);
+  }, [hydrating]);
+  if (!visible) return null;
+  return (
+    <div className="loadbar" role="progressbar" aria-label="กำลังอัปเดตข้อมูล" aria-busy="true"><span /></div>
   );
 }
 
@@ -105,6 +120,7 @@ export function App() {
 
   return (
     <>
+      <LoadingBar />
       <DocumentTitle />
       <AuthBar />
       <Notice />
