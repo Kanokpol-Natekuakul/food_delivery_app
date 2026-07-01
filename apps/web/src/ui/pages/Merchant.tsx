@@ -89,24 +89,14 @@ export function Merchant() {
     }
   }, [order?.kind]);
 
-  if (!order) {
-    return (
-      <div className="merchant">
-        <Link className="m-back" to="/">‹ ไปฝั่งลูกค้า</Link>
-        <div className="empty">
-          <div className="big">🏪</div>
-          <p>ยังไม่มีออเดอร์เข้า — รอลูกค้าสั่ง</p>
-        </div>
-      </div>
-    );
-  }
-
-  const restaurant = findRestaurant(state.restaurants, placed?.restaurantId ?? undefined);
+  const merchantId = state.auth?.actorId;
+  const restId = merchantId?.startsWith('merchant:') ? merchantId.replace(/^merchant:/, '') : undefined;
+  const restaurant = findRestaurant(state.restaurants, restId || placed?.restaurantId || undefined);
 
   // หาออเดอร์ทั้งหมดที่เป็นของร้านนี้และกำลังดำเนินการ (Active)
   const activeOrders = state.orders.filter(
     (o) =>
-      o.placed.restaurantId === (placed?.restaurantId ?? null) &&
+      o.placed.restaurantId === (restId || placed?.restaurantId || null) &&
       !['Completed', 'FailedDelivery', 'Cancelled'].includes(o.state.kind)
   );
 
@@ -123,6 +113,7 @@ export function Merchant() {
   });
 
   const apply = (a: MerchantAction) => {
+    if (!order) return;
     const r = ACTION[a].run(order);
     if (r.ok) dispatch({ type: 'setOrder', order: r.state, txn: a }); // txn → mirror /transition (ราง ร้าน)
   };
@@ -138,48 +129,55 @@ export function Merchant() {
         </span>
       </div>
 
-      <article className="m-ticket">
-        <div className="m-ticket__head">
-          <span className="m-no">ออเดอร์ #{state.liveOrderId || '1042'}</span>
-          <span className={`m-stage${view.active ? '' : ' m-stage--done'}`}>{view.stageLabel}</span>
+      {!order ? (
+        <div className="empty">
+          <div className="big">🏪</div>
+          <p>ยังไม่มีออเดอร์เข้า — รอลูกค้าสั่ง</p>
         </div>
+      ) : (
+        <article className="m-ticket">
+          <div className="m-ticket__head">
+            <span className="m-no">ออเดอร์ #{state.liveOrderId || '1042'}</span>
+            <span className={`m-stage${view.active ? '' : ' m-stage--done'}`}>{view.stageLabel}</span>
+          </div>
 
-        <ul className="m-lines">
-          {placed?.lines.map((l) => (
-            <li key={l.id}>
-              <span className="m-qty">×{l.qty}</span>
-              <span className="m-item">
-                {l.itemName}
-                {(l.spice || l.options.length > 0) && (
-                  <span className="m-opts"> · {[l.spice, ...l.options.map((o) => o.label)].filter(Boolean).join(' · ')}</span>
-                )}
-                {l.note && <span className="m-note"> “{l.note}”</span>}
-              </span>
-            </li>
-          ))}
-        </ul>
+          <ul className="m-lines">
+            {placed?.lines.map((l) => (
+              <li key={l.id}>
+                <span className="m-qty">×{l.qty}</span>
+                <span className="m-item">
+                  {l.itemName}
+                  {(l.spice || l.options.length > 0) && (
+                    <span className="m-opts"> · {[l.spice, ...l.options.map((o) => o.label)].filter(Boolean).join(' · ')}</span>
+                  )}
+                  {l.note && <span className="m-note"> “{l.note}”</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
 
-        <div className="m-actions">
-          {view.actions.length === 0 ? (
-            <p className="m-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'ออเดอร์นี้จบหน้าที่ของร้านแล้ว'}</p>
-          ) : (
-            view.actions.map((a) => {
-              if (a === 'reject') {
+          <div className="m-actions">
+            {view.actions.length === 0 ? (
+              <p className="m-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'ออเดอร์นี้จบหน้าที่ของร้านแล้ว'}</p>
+            ) : (
+              view.actions.map((a) => {
+                if (a === 'reject') {
+                  return (
+                    <ConfirmButton key={a} className={`btn ${ACTION[a].cls}`}
+                      label={ACTION[a].label} confirmLabel={`ยืนยัน${ACTION[a].label}`}
+                      onConfirm={() => apply(a)} />
+                  );
+                }
                 return (
-                  <ConfirmButton key={a} className={`btn ${ACTION[a].cls}`}
-                    label={ACTION[a].label} confirmLabel={`ยืนยัน${ACTION[a].label}`}
-                    onConfirm={() => apply(a)} />
+                  <button key={a} className={`btn ${ACTION[a].cls}`} onClick={() => apply(a)}>
+                    {ACTION[a].label}
+                  </button>
                 );
-              }
-              return (
-                <button key={a} className={`btn ${ACTION[a].cls}`} onClick={() => apply(a)}>
-                  {ACTION[a].label}
-                </button>
-              );
-            })
-          )}
-        </div>
-      </article>
+              })
+            )}
+          </div>
+        </article>
+      )}
 
       {activeOrders.length > 0 && (
         <section className="m-prep">

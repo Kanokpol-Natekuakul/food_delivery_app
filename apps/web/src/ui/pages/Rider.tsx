@@ -116,22 +116,11 @@ export function Rider() {
     }
   }, [jobOpen]);
 
-  if (!order) {
-    return (
-      <div className="rider">
-        <Link className="r-back" to="/">‹ ไปฝั่งลูกค้า</Link>
-        <div className="empty">
-          <div className="big">🛵</div>
-          <p>ยังไม่มีงานวิ่ง — รอออเดอร์ใหม่</p>
-        </div>
-      </div>
-    );
-  }
-
-  const view = riderView(order);
+  const view = order ? riderView(order) : { active: false, stageLabel: '', actions: [] as RiderAction[] };
   const restaurant = findRestaurant(state.restaurants, placed?.restaurantId ?? undefined);
 
   const apply = (a: RiderAction) => {
+    if (!order) return;
     // คว้างาน → claimLive (โดเมน claimJob ตรวจพักงาน/ช่วงให้สิทธิ์ + persist riderId=session ฝั่ง server)
     if (a === 'claim') {
       dispatch({ type: 'claimLive', rider: riderId, riderSuspended: suspended, priorityHeld: held });
@@ -164,50 +153,64 @@ export function Rider() {
         </div>
       )}
 
-      <article className="r-ticket">
-        <div className="r-ticket__head">
-          <span className="r-no">งาน #{state.liveOrderId || '1042'}</span>
-          <span className={`r-stage${view.active ? '' : ' r-stage--done'}`}>{view.stageLabel}</span>
+      {!order ? (
+        <div className="empty">
+          <div className="big">🛵</div>
+          <p>ยังไม่มีงานวิ่ง — รอออเดอร์ใหม่</p>
         </div>
-
-        {restaurant && (
-          <div className="r-route">
-            <span>🏪 รับที่ <b>{restaurant.name}</b></span>
-            <span>📍 ส่งที่ {state.deliveryLabel || 'ลาดพร้าว ซ.1'}</span>
+      ) : (
+        <article className="r-ticket">
+          <div className="r-ticket__head">
+            <span className="r-no">งาน #{state.liveOrderId || '1042'}</span>
+            <span className={`r-stage${view.active ? '' : ' r-stage--done'}`}>{view.stageLabel}</span>
           </div>
-        )}
 
-        <ul className="r-lines">
-          {placed?.lines.map((l) => (
-            <li key={l.id}>
-              <span className="r-qty">×{l.qty}</span>
-              <span className="r-item">{l.itemName}</span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="r-actions">
-          {view.actions.length === 0 ? (
-            <p className="r-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'งานนี้จบแล้ว'}</p>
-          ) : (
-            view.actions.map((a) => {
-              if (a === 'release' || a === 'declareFailed') {
-                return (
-                  <ConfirmButton key={a} className={`btn ${ACTION[a].cls}`}
-                    label={ACTION[a].label} confirmLabel={`ยืนยัน${ACTION[a].label}`}
-                    onConfirm={() => apply(a)} />
-                );
-              }
-              return (
-                <button key={a} className={`btn ${ACTION[a].cls}`}
-                  disabled={a === 'claim' && (suspended || held)} onClick={() => apply(a)}>
-                  {ACTION[a].label}
-                </button>
-              );
-            })
+          {restaurant && (
+            <div className="r-route">
+              <div className="r-route__point">
+                <span className="r-route__label">🏪 จุดรับอาหาร (ร้าน)</span>
+                <span className="r-route__value">{restaurant.name}</span>
+              </div>
+              <span className="r-route__arrow" aria-hidden="true">➔</span>
+              <div className="r-route__point" style={{ textAlign: 'right' }}>
+                <span className="r-route__label">📍 จุดส่งอาหาร (ลูกค้า)</span>
+                <span className="r-route__value">{state.deliveryLabel || 'ลาดพร้าว ซ.1'}</span>
+              </div>
+            </div>
           )}
-        </div>
-      </article>
+
+          <ul className="r-lines">
+            {placed?.lines.map((l) => (
+              <li key={l.id}>
+                <span className="r-qty">×{l.qty}</span>
+                <span className="r-item">{l.itemName}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div className="r-actions">
+            {view.actions.length === 0 ? (
+              <p className="r-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'งานนี้จบแล้ว'}</p>
+            ) : (
+              view.actions.map((a) => {
+                if (a === 'release' || a === 'declareFailed') {
+                  return (
+                    <ConfirmButton key={a} className={`btn ${ACTION[a].cls}`}
+                      label={ACTION[a].label} confirmLabel={`ยืนยัน${ACTION[a].label}`}
+                      onConfirm={() => apply(a)} />
+                  );
+                }
+                return (
+                  <button key={a} className={`btn ${ACTION[a].cls}`}
+                    disabled={a === 'claim' && (suspended || held)} onClick={() => apply(a)}>
+                    {ACTION[a].label}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </article>
+      )}
     </div>
   );
 }
