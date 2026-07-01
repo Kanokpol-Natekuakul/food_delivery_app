@@ -22,7 +22,6 @@ export function Home() {
 
   const [query, setQuery] = useState('');
   const [activeCat, setActiveCat] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [locOpen, setLocOpen] = useState(false);
   const coord = deliveryCoord(state);
 
@@ -63,9 +62,6 @@ export function Home() {
         <button className="loc" aria-label="เปลี่ยนที่อยู่จัดส่ง" onClick={() => setLocOpen(true)}>
           <span className="pin">📍</span> <b>{deliveryLabel(state)}</b> <span aria-hidden="true">▾</span>
         </button>
-        <span className="spacer" />
-        <button className="icon-btn" aria-label="เปิดเมนู" aria-expanded={menuOpen}
-          onClick={() => setMenuOpen(true)}>☰</button>
       </div>
 
       <header className="hero">
@@ -163,35 +159,6 @@ export function Home() {
           <span>ดูตะกร้า</span>
           <span className="total">฿{total} ›</span>
         </Link>
-      )}
-
-      {menuOpen && (
-        <div className="drawer-scrim" onClick={() => setMenuOpen(false)}>
-          <aside className="drawer" role="dialog" aria-label="เมนูหลัก" onClick={(e) => e.stopPropagation()}>
-            <div className="drawer__head">
-              <div className="drawer__who">
-                <span className="drawer__avatar">😋</span>
-                <div>
-                  <b>สวัสดี, หิวแล้ว</b>
-                  <span className="drawer__loc">📍 {deliveryLabel(state)}</span>
-                </div>
-              </div>
-              <button className="icon-btn" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)}>✕</button>
-            </div>
-            <nav className="drawer__nav" onClick={() => setMenuOpen(false)}>
-              <Link to="/"><span className="di">🏠</span> หน้าแรก</Link>
-              <Link to="/all"><span className="di">🍽️</span> ร้านอาหารทั้งหมด</Link>
-              <Link to="/cart">
-                <span className="di">🛒</span> ตะกร้า
-                {count > 0 && <span className="drawer__badge">{count}</span>}
-              </Link>
-              <Link to="/track"><span className="di">📦</span> ติดตามออเดอร์</Link>
-              <Link to="/merchant"><span className="di">🏪</span> คอนโซลร้าน (Merchant)</Link>
-              <Link to="/rider"><span className="di">🛵</span> คอนโซลไรเดอร์ (Rider)</Link>
-              <Link to="/admin"><span className="di">🛠</span> ผู้ดูแลระบบ (Admin)</Link>
-            </nav>
-          </aside>
-        </div>
       )}
 
       {locOpen && <LocationPicker onClose={() => setLocOpen(false)} />}

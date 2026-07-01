@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Home } from './Home';
+import { App } from '../App';
 import type { State } from '../store';
 import { restaurants } from '../data/catalog';
 import { renderWithProviders } from '../../test/render';
@@ -58,7 +59,7 @@ describe('Home — ค้นหา / หมวดหมู่ / Service Zone', (
   });
 
   it('เปิด/ปิด drawer ด้วยปุ่ม hamburger', async () => {
-    renderWithProviders(<Home />);
+    renderWithProviders(<App />);
     expect(screen.queryByRole('dialog', { name: 'เมนูหลัก' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'เปิดเมนู' }));

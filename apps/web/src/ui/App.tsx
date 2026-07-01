@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { useStore } from './store';
+import { useStore, deliveryLabel } from './store';
 import type { State } from './store';
+import { cartItemCount } from '@app/domain/cart/cart.js';
 import './App.css';
 
 /** แถบแจ้งผู้ใช้ชั่วคราว (mirror ไป backend ล้ม เช่น ต้องล็อกอิน) — ปิดเองใน 4 วิ หรือกดปิด */
@@ -33,11 +34,13 @@ import { Admin } from './pages/Admin';
 import { Login } from './pages/Login';
 import { AllRestaurants } from './pages/AllRestaurants';
 
-/** แถบบนสุด: สถานะล็อกอิน (ตัวตนจาก Lucia session) + ลิงก์เข้า/ออกระบบ */
-function AuthBar() {
+/** แถบบนสุด: สถานะล็อกอิน (ตัวตนจาก Lucia session) + ลิงก์เข้า/ออกระบบ + ปุ่มแฮมเบอร์เกอร์เมนู */
+function AuthBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { state, logout } = useStore();
   return (
     <div className="authbar">
+      <button className="icon-btn authbar-menu" aria-label="เปิดเมนู" onClick={onOpenMenu}>☰</button>
+      <span style={{ flex: 1 }} />
       {state.auth ? (
         <>
           <span className="authbar-who" data-testid="authbar-user">{state.auth.actorId}</span>
@@ -106,6 +109,8 @@ function DocumentTitle() {
 }
 
 export function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   // เดสก์ท็อป: หมุน wheel แนวตั้งเหนือแถวเลื่อนแนวนอน (.hscroll) → เลื่อนแนวนอนแทน
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
@@ -122,7 +127,7 @@ export function App() {
     <>
       <LoadingBar />
       <DocumentTitle />
-      <AuthBar />
+      <AuthBar onOpenMenu={() => setMenuOpen(true)} />
       <Notice />
       <Routes>
         <Route path="/" element={<Home />} />
@@ -138,6 +143,48 @@ export function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/all" element={<AllRestaurants />} />
       </Routes>
+      <GlobalDrawer menuOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
+  );
+}
+
+interface GlobalDrawerProps {
+  menuOpen: boolean;
+  onClose: () => void;
+}
+
+function GlobalDrawer({ menuOpen, onClose }: GlobalDrawerProps) {
+  const { state } = useStore();
+  const count = cartItemCount(state.cart);
+
+  if (!menuOpen) return null;
+
+  return (
+    <div className="drawer-scrim" onClick={onClose}>
+      <aside className="drawer" role="dialog" aria-label="เมนูหลัก" onClick={(e) => e.stopPropagation()}>
+        <div className="drawer__head">
+          <div className="drawer__who">
+            <span className="drawer__avatar">😋</span>
+            <div>
+              <b>สวัสดี, หิวแล้ว</b>
+              <span className="drawer__loc">📍 {deliveryLabel(state)}</span>
+            </div>
+          </div>
+          <button className="icon-btn" aria-label="ปิดเมนู" onClick={onClose}>✕</button>
+        </div>
+        <nav className="drawer__nav" onClick={onClose}>
+          <Link to="/"><span className="di">🏠</span> หน้าแรก</Link>
+          <Link to="/all"><span className="di">🍽️</span> ร้านอาหารทั้งหมด</Link>
+          <Link to="/cart">
+            <span className="di">🛒</span> ตะกร้า
+            {count > 0 && <span className="drawer__badge">{count}</span>}
+          </Link>
+          <Link to="/track"><span className="di">📦</span> ติดตามออเดอร์</Link>
+          <Link to="/merchant"><span className="di">🏪</span> คอนโซลร้าน (Merchant)</Link>
+          <Link to="/rider"><span className="di">🛵</span> คอนโซลไรเดอร์ (Rider)</Link>
+          <Link to="/admin"><span className="di">🛠</span> ผู้ดูแลระบบ (Admin)</Link>
+        </nav>
+      </aside>
+    </div>
   );
 }

@@ -145,7 +145,10 @@ export function Rider() {
     <div className="rider">
       <div className="r-top">
         <span className="r-who">🛵 งานไรเดอร์ · {riderName}</span>
-        <Link className="r-back" to="/merchant">ดูฝั่งร้าน ›</Link>
+        <div className="r-links">
+          <Link className="r-back" to="/">‹ ไปฝั่งลูกค้า</Link>
+          <Link className="r-forward" to="/merchant">ดูฝั่งร้าน ›</Link>
+        </div>
       </div>
 
       {suspended && (

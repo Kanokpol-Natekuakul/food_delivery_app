@@ -6,9 +6,6 @@
   font-family:var(--ui); display:flex; align-items:center; gap:6px; min-width:0; padding:0}
 .home .loc b{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .home .loc .pin{color:var(--chili)}
-.home .topbar .spacer{margin-left:auto}
-.home .icon-btn{width:40px; height:40px; border-radius:var(--r-sm); background:var(--ink-card);
-  border:1px solid var(--ink-line); color:var(--paper); cursor:pointer; font-size:17px}
 
 /* HERO: ป้ายไฟ */
 .home .hero{padding:var(--sp-3) 0 var(--sp-4); text-align:center}
@@ -112,33 +109,7 @@
   font-family:var(--mono); font-size:.82rem}
 .home .cartbar .total{margin-left:auto; font-family:var(--mono)}
 
-/* Drawer (เมนู hamburger) */
-.drawer-scrim{position:fixed; inset:0; z-index:20; background:rgba(0,0,0,.55);
-  display:flex; justify-content:flex-end}
-.drawer{width:min(320px,86vw); height:100%; background:var(--ink-card);
-  border-left:1px solid var(--ink-line); padding:var(--gutter);
-  display:flex; flex-direction:column; gap:var(--sp-5); color:var(--paper)}
-.drawer__head{display:flex; align-items:flex-start; justify-content:space-between; gap:var(--sp-3)}
-.drawer__who{display:flex; align-items:center; gap:var(--sp-3); min-width:0}
-.drawer__avatar{width:46px; height:46px; border-radius:50%; display:grid; place-items:center;
-  font-size:24px; background:var(--ink); border:1px solid var(--ink-line); flex:0 0 auto}
-.drawer__who b{display:block; font-weight:600}
-.drawer__loc{font-size:var(--fs-label); color:var(--paper-dim)}
-.drawer__nav{display:flex; flex-direction:column}
-.drawer__nav a{display:flex; align-items:center; gap:var(--sp-3); padding:14px 8px;
-  color:var(--paper); text-decoration:none; border-radius:var(--r-sm);
-  border-bottom:1px solid var(--ink-line)}
-.drawer__nav a:hover{background:var(--ink)}
-.drawer__nav .di{font-size:20px; width:24px; text-align:center}
-.drawer__badge{margin-left:auto; font-family:var(--mono); font-size:.74rem; color:var(--ink);
-  background:var(--mango); border-radius:var(--r-pill); padding:2px 9px; font-weight:700}
 
-@media (prefers-reduced-motion:no-preference){
-  .drawer-scrim{animation:scrimIn .15s ease both}
-  .drawer{animation:drawerIn .2s ease both}
-  @keyframes scrimIn{from{opacity:0}to{opacity:1}}
-  @keyframes drawerIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
-}
 
 @media (prefers-reduced-motion:no-preference){
   .home .sign .l2{animation:flickerOn 1.1s ease both}

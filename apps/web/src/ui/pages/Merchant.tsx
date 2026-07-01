@@ -132,6 +132,7 @@ export function Merchant() {
       <div className="m-top">
         <span className="m-who">🏪 ครัวร้าน{restaurant ? ` · ${restaurant.name}` : ''}</span>
         <span className="m-links">
+          <Link className="m-back" to="/">‹ ไปฝั่งลูกค้า</Link>
           <Link className="m-forward" to="/merchant/rate">ค่าคอม ›</Link>
           <Link className="m-forward" to="/merchant/menu">จัดการเมนู ›</Link>
         </span>
