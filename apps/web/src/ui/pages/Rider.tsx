@@ -200,13 +200,13 @@ export function Rider() {
       )}
 
       {suspended && (
-        <div className="r-susp" style={{ marginTop: 'var(--sp-4)' }} role="status">⛔ บัญชีคุณถูกพักงาน — รับงานใหม่ไม่ได้ (ติดต่อแอดมิน){downranked ? ' · ถูกลดอันดับการจ่ายงาน' : ''}</div>
+        <div className="r-susp" role="status">⛔ บัญชีคุณถูกพักงาน — รับงานใหม่ไม่ได้ (ติดต่อแอดมิน){downranked ? ' · ถูกลดอันดับการจ่ายงาน' : ''}</div>
       )}
       {warned && (
-        <div className="r-warn" style={{ marginTop: 'var(--sp-4)' }} role="status">⚠️ มีการแจ้งเตือนจากสถิติร้องเรียน — โปรดปรับปรุงคุณภาพการส่ง{downranked ? ' · บัญชีถูกลดอันดับการจ่ายงาน' : ''}</div>
+        <div className="r-warn" role="status">⚠️ มีการแจ้งเตือนจากสถิติร้องเรียน — โปรดปรับปรุงคุณภาพการส่ง{downranked ? ' · บัญชีถูกลดอันดับการจ่ายงาน' : ''}</div>
       )}
       {held && (
-        <div className="r-hold" style={{ marginTop: 'var(--sp-4)' }} role="status">
+        <div className="r-hold" role="status">
           ⏳ ถูกลดอันดับ — งานนี้เปิดให้ไรเดอร์อันดับสูงคว้าก่อน (เหลือ <span className="r-mono-num">{Math.max(0, RIDER_PRIORITY_WINDOW_SEC - waited)}</span> วิ)
           <button className="btn btn--ghost" onClick={() => setWaited(RIDER_PRIORITY_WINDOW_SEC)}>ข้ามช่วงรอ (เดโม)</button>
         </div>
