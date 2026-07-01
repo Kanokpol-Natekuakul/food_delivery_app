@@ -28,7 +28,7 @@ export async function requireMerchantOf(req: FastifyRequest, reply: FastifyReply
   const user = await requireUser(req, reply);
   if (!user) return null;
   if (user.role === 'admin' || (user.role === 'merchant' && user.actorId === `merchant:${restaurantId}`)) return user;
-  await reply.code(403).send({ error: 'แก้ได้เฉพาะเมนูร้านของตัวเอง' });
+  await reply.code(403).send({ error: 'จัดการได้เฉพาะร้านของตัวเอง' });
   return null;
 }
 
