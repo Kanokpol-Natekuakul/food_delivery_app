@@ -60,8 +60,48 @@ export async function orderRoutes(app: FastifyInstance): Promise<void> {
 
   // วางออเดอร์สด (cart → order ลง DB) — เทียบ store action 'place'; คืน id ให้ฝั่ง web adopt
   // amounts คิดด้วยฟังก์ชันโดเมน (เหมือน demo seed); state เริ่มต้น = placeOrder()
+  // validate body: กันข้อมูลรายการไม่ครบ (ขาด basePrice/qty→400, ขาด options→default []) — Fastify คืน 400 เอง
   app.post<{ Body: { restaurantId: string | null; lines: OrderLine[]; customer?: string; rider?: string } }>(
-    '/orders', async (req) => {
+    '/orders',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['lines'],
+          properties: {
+            restaurantId: { type: ['string', 'null'] },
+            customer: { type: 'string' },
+            rider: { type: 'string' },
+            lines: {
+              type: 'array',
+              minItems: 1,
+              items: {
+                type: 'object',
+                required: ['id', 'itemName', 'basePrice', 'qty'],
+                properties: {
+                  id: { type: 'string' },
+                  itemName: { type: 'string' },
+                  basePrice: { type: 'number', minimum: 0 },
+                  qty: { type: 'integer', minimum: 1 },
+                  spice: { type: 'string', default: '' },
+                  note: { type: 'string', default: '' },
+                  options: {
+                    type: 'array',
+                    default: [],
+                    items: {
+                      type: 'object',
+                      required: ['label', 'price'],
+                      properties: { label: { type: 'string' }, price: { type: 'number' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (req) => {
       const b = req.body;
       const r = findRestaurant(restaurants, b.restaurantId ?? undefined);
       const amounts = {
