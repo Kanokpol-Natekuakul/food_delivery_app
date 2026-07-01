@@ -12,7 +12,7 @@ import {
 } from '@app/domain/order/transitions.js';
 import type { OrderState } from '@app/domain/order/state.js';
 import type { TransitionResult } from '@app/domain/order/transitions.js';
-import { requireUser, requireMerchantOf } from './auth.js';
+import { requireUser, requireMerchantOf, requireAdmin } from './auth.js';
 
 // ราง "ร้าน" — แก้ได้โดย merchant เจ้าของร้าน/admin
 const MERCHANT_TX: Record<string, (s: OrderState) => TransitionResult> = {
@@ -33,6 +33,27 @@ import { postSettlement } from '@app/domain/wallet/wallet.js';
 import { restaurants, findRestaurant, CUSTOMER_LOCATION } from '@app/domain/catalog/catalog.js';
 import { db, schema } from '../db/index.js';
 import { loadLedger, persistAppended } from '../services/ledger.js';
+import type { Amounts, Settlement } from '@app/domain/settlement/settlement.js';
+import type { Db } from '../db/index.js';
+
+type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
+
+/**
+ * ลงบัญชี settlement ของออเดอร์ที่ถึงปลายทาง (สำเร็จ/ส่งไม่ได้/ร้านปฏิเสธ/ยกเลิก) เข้า ledger
+ * idempotent: ถ้าออเดอร์นี้ลง ledger แล้ว จะไม่ลงซ้ำ (กันจ่ายซ้ำเมื่อถึงปลายทางได้หลายเส้นทาง เช่น confirmDelivery + complete)
+ * คืน settlement (null = ยังไม่ถึงปลายทาง เช่น AwaitingHandoff/InTransit → ไม่ลงบัญชี)
+ */
+async function settleOrderToLedger(
+  tx: Tx, orderId: string, restaurantId: string | null, amounts: Amounts, state: OrderState,
+): Promise<Settlement | null> {
+  const settlement = settle(state, amounts);
+  if (!settlement) return null;
+  const before = await loadLedger(tx);
+  if (before.some((e) => e.orderId === orderId)) return settlement; // ลงแล้ว ไม่ลงซ้ำ
+  const after = postSettlement(before, orderId, `merchant:${restaurantId ?? 'unknown'}`, settlement);
+  await persistAppended(tx, before, after);
+  return settlement;
+}
 
 export async function orderRoutes(app: FastifyInstance): Promise<void> {
   app.get('/orders', async () => db.select().from(schema.orders));
@@ -58,13 +79,19 @@ export async function orderRoutes(app: FastifyInstance): Promise<void> {
     });
 
   // ดันสถานะออเดอร์เป็น Completed (จุดที่ปลดล็อกการร้องเรียน) — เทียบ web setOrder→Completed
+  // ต้องล็อกอิน (ไม่งั้นใครก็ปิดออเดอร์คนอื่นเป็นสำเร็จได้) + ลง settlement เมื่อจบ (idempotent)
   app.post<{ Params: { id: string } }>('/orders/:id/complete', async (req, reply) => {
+    const user = await requireUser(req, reply);
+    if (!user) return reply;
     const { id } = req.params;
-    const [row] = await db.select().from(schema.orders).where(eq(schema.orders.id, id));
-    if (!row) return reply.code(404).send({ error: 'ไม่พบออเดอร์' });
-    const state: OrderState = { kind: 'Completed' };
-    await db.update(schema.orders).set({ state }).where(eq(schema.orders.id, id));
-    return { ok: true, state };
+    return db.transaction(async (tx) => {
+      const [row] = await tx.select().from(schema.orders).where(eq(schema.orders.id, id));
+      if (!row) return reply.code(404).send({ error: 'ไม่พบออเดอร์' });
+      const state: OrderState = { kind: 'Completed' };
+      await tx.update(schema.orders).set({ state }).where(eq(schema.orders.id, id));
+      const settlement = await settleOrderToLedger(tx, id, row.restaurantId, row.amounts as Amounts, state);
+      return { ok: true, state, settlement };
+    });
   });
 
   // ไรเดอร์ (จาก session) คว้างาน — pull-based dispatch (ADR 0001): assign riderId + transition
@@ -110,11 +137,15 @@ export async function orderRoutes(app: FastifyInstance): Promise<void> {
       const result = (merchantFn ?? riderFn!)(cur.state as OrderState);
       if (!result.ok) return reply.code(409).send({ error: result.reason });
       await tx.update(schema.orders).set({ state: result.state }).where(eq(schema.orders.id, req.params.id));
-      return { ok: true, state: result.state };
+      // ถึงปลายทาง (สำเร็จ/ส่งไม่ได้/ร้านปฏิเสธ) → ลง settlement เข้าบัญชี (idempotent; ระหว่างทางคืน null)
+      const settlement = await settleOrderToLedger(tx, req.params.id, cur.restaurantId, cur.amounts as Amounts, result.state);
+      return { ok: true, state: result.state, settlement };
     });
   });
 
+  // ยกเลิกโดยแอดมิน (force-cancel) — สิทธิ์แอดมินเท่านั้น + คืนเงิน/ลงบัญชีตามที่โดเมนตัดสิน
   app.post<{ Params: { id: string } }>('/orders/:id/cancel', async (req, reply) => {
+    if (!await requireAdmin(req, reply)) return reply;
     const { id } = req.params;
     return db.transaction(async (tx) => {
       const [row] = await tx.select().from(schema.orders).where(eq(schema.orders.id, id));
@@ -124,15 +155,8 @@ export async function orderRoutes(app: FastifyInstance): Promise<void> {
       if (!result.ok) return reply.code(409).send({ error: result.reason });
 
       await tx.update(schema.orders).set({ state: result.state }).where(eq(schema.orders.id, id));
-
-      // CancelledByAdmin → ไม่มีรายได้ แต่คืนเต็ม + แพลตฟอร์มแบกค่าอาหาร (settle ตัดสิน)
-      const settlement = settle(result.state, row.amounts);
-      if (settlement) {
-        const before = await loadLedger(tx);
-        const merchantAccount = `merchant:${row.restaurantId ?? 'unknown'}`;
-        const after = postSettlement(before, id, merchantAccount, settlement);
-        await persistAppended(tx, before, after);
-      }
+      // CancelledByAdmin → ไม่มีรายได้ แต่คืนเต็ม + แพลตฟอร์มแบกค่าอาหาร (settle ตัดสิน) — idempotent
+      const settlement = await settleOrderToLedger(tx, id, row.restaurantId, row.amounts as Amounts, result.state);
       return { ok: true, state: result.state, settlement };
     });
   });
