@@ -24,6 +24,83 @@ const ACTION: Record<RiderAction, { label: string; cls: string; run: (s: OrderSt
   release: { label: 'คืนงาน', cls: 'btn--ghost', run: releaseClaim },
 };
 
+/* ── Inline SVG icons (no emoji dependency) ── */
+
+function IconMotorbike({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18.5" cy="17.5" r="3.5" />
+      <circle cx="5.5" cy="17.5" r="3.5" />
+      <path d="M15 6h1.5l2 4.5" />
+      <path d="M2 17.5h3.5" />
+      <path d="M9 17.5h5.5l-3-7H7l-2 4" />
+    </svg>
+  );
+}
+
+function IconStore({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 21h18" />
+      <path d="M3 7v1a3 3 0 0 0 6 0V7" />
+      <path d="M9 7v1a3 3 0 0 0 6 0V7" />
+      <path d="M15 7v1a3 3 0 0 0 6 0V7" />
+      <path d="M3 7l2-4h14l2 4" />
+      <path d="M5 21V10.9" />
+      <path d="M19 21V10.9" />
+      <path d="M9 21v-6h6v6" />
+    </svg>
+  );
+}
+
+function IconPin({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function IconBan({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="m4.9 4.9 14.2 14.2" />
+    </svg>
+  );
+}
+
+function IconAlert({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+function IconClock({ size = 16 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </svg>
+  );
+}
+
+function IconArrowDown({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <polyline points="19 12 12 19 5 12" />
+    </svg>
+  );
+}
+
+/* ── Audio feedback ── */
+
 function playChime() {
   if (typeof window === 'undefined') return;
   if (typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -59,6 +136,8 @@ function playChime() {
   }
 }
 
+/* ── Confirm Button (destructive actions) ── */
+
 function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
   className: string;
   label: string;
@@ -78,12 +157,14 @@ function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
     );
   }
   return (
-    <span className="r-confirm" style={{ display: 'inline-flex', gap: '8px' }}>
+    <span className="r-confirm">
       <button className="btn btn--chili r-confirm__yes" onClick={() => { setArmed(false); onConfirm(); }}>{confirmLabel}</button>
       <button className="btn btn--ghost r-confirm__no" onClick={() => setArmed(false)}>ย้อนกลับ</button>
     </span>
   );
 }
+
+/* ── Main Rider Console ── */
 
 export function Rider() {
   const { state, dispatch } = useStore();
@@ -133,34 +214,43 @@ export function Rider() {
   return (
     <div className="rider">
       <div className="r-top">
-        <span className="r-who">🛵 งานไรเดอร์ · {riderName}</span>
+        <span className="r-who">
+          <span className="r-who-icon"><IconMotorbike size={16} /></span>
+          งานไรเดอร์ · {riderName}
+        </span>
         <div className="r-links">
-          <Link className="r-back" to="/">‹ ไปฝั่งลูกค้า</Link>
-          <Link className="r-forward" to="/merchant">ดูฝั่งร้าน ›</Link>
+          <Link className="r-back" to="/">ไปฝั่งลูกค้า</Link>
+          <Link className="r-forward" to="/merchant">ดูฝั่งร้าน</Link>
         </div>
       </div>
 
       {!order ? (
         <div className="empty">
-          <div className="big">🛵</div>
+          <div className="big"><IconMotorbike size={48} /></div>
           <p>ยังไม่มีงานวิ่ง — รอออเดอร์ใหม่</p>
         </div>
       ) : (
         <article className="r-ticket">
           <div className="r-ticket__head">
-            <span className="r-no">งาน #{state.liveOrderId || '1042'}</span>
+            <span className="r-no">#{state.liveOrderId || '1042'}</span>
             <span className={`r-stage${view.active ? '' : ' r-stage--done'}`}>{view.stageLabel}</span>
           </div>
 
           {restaurant && (
             <div className="r-route">
               <div className="r-route__point">
-                <span className="r-route__label">🏪 จุดรับอาหาร (ร้าน)</span>
+                <span className="r-route__label">
+                  <span className="r-route__icon r-route__icon--pickup"><IconStore /></span>
+                  จุดรับอาหาร
+                </span>
                 <span className="r-route__value">{restaurant.name}</span>
               </div>
-              <span className="r-route__arrow" aria-hidden="true">➔</span>
-              <div className="r-route__point" style={{ textAlign: 'right' }}>
-                <span className="r-route__label">📍 จุดส่งอาหาร (ลูกค้า)</span>
+              <span className="r-route__arrow" aria-hidden="true"><IconArrowDown /></span>
+              <div className="r-route__point">
+                <span className="r-route__label">
+                  <span className="r-route__icon r-route__icon--drop"><IconPin /></span>
+                  จุดส่งอาหาร
+                </span>
                 <span className="r-route__value">{state.deliveryLabel || 'ลาดพร้าว ซ.1'}</span>
               </div>
             </div>
@@ -169,7 +259,7 @@ export function Rider() {
           <ul className="r-lines">
             {placed?.lines.map((l) => (
               <li key={l.id}>
-                <span className="r-qty">×{l.qty}</span>
+                <span className="r-qty">{l.qty}x</span>
                 <span className="r-item">{l.itemName}</span>
               </li>
             ))}
@@ -177,7 +267,7 @@ export function Rider() {
 
           <div className="r-actions">
             {view.actions.length === 0 ? (
-              <p className="r-idle">{view.active ? 'รอขั้นตอนถัดไป…' : 'งานนี้จบแล้ว'}</p>
+              <p className="r-idle">{view.active ? 'รอขั้นตอนถัดไป...' : 'งานนี้จบแล้ว'}</p>
             ) : (
               view.actions.map((a) => {
                 if (a === 'release' || a === 'declareFailed') {
@@ -200,14 +290,23 @@ export function Rider() {
       )}
 
       {suspended && (
-        <div className="r-susp" role="status">⛔ บัญชีคุณถูกพักงาน — รับงานใหม่ไม่ได้ (ติดต่อแอดมิน){downranked ? ' · ถูกลดอันดับการจ่ายงาน' : ''}</div>
+        <div className="r-susp" role="status">
+          <span className="r-banner-icon"><IconBan /></span>
+          <span>บัญชีคุณถูกพักงาน — รับงานใหม่ไม่ได้ (ติดต่อแอดมิน){downranked ? ' · ถูกลดอันดับการจ่ายงาน' : ''}</span>
+        </div>
       )}
       {warned && (
-        <div className="r-warn" role="status">⚠️ มีการแจ้งเตือนจากสถิติร้องเรียน — โปรดปรับปรุงคุณภาพการส่ง{downranked ? ' · บัญชีถูกลดอันดับการจ่ายงาน' : ''}</div>
+        <div className="r-warn" role="status">
+          <span className="r-banner-icon"><IconAlert /></span>
+          <span>มีการแจ้งเตือนจากสถิติร้องเรียน — โปรดปรับปรุงคุณภาพการส่ง{downranked ? ' · บัญชีถูกลดอันดับการจ่ายงาน' : ''}</span>
+        </div>
       )}
       {held && (
         <div className="r-hold" role="status">
-          ⏳ ถูกลดอันดับ — งานนี้เปิดให้ไรเดอร์อันดับสูงคว้าก่อน (เหลือ <span className="r-mono-num">{Math.max(0, RIDER_PRIORITY_WINDOW_SEC - waited)}</span> วิ)
+          <span className="r-banner-icon"><IconClock /></span>
+          <span>
+            ถูกลดอันดับ — งานนี้เปิดให้ไรเดอร์อันดับสูงคว้าก่อน (เหลือ <span className="r-mono-num">{Math.max(0, RIDER_PRIORITY_WINDOW_SEC - waited)}</span> วิ)
+          </span>
           <button className="btn btn--ghost" onClick={() => setWaited(RIDER_PRIORITY_WINDOW_SEC)}>ข้ามช่วงรอ (เดโม)</button>
         </div>
       )}
