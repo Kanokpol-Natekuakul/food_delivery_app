@@ -50,8 +50,55 @@ const FlagBadge = ({ level }: { level: FlagLevel }) =>
 // ผู้ใช้ที่แอดมินกำกับดูแล (แหล่งเดียวกับ auto-suspend ใน store) — ปริมาณออเดอร์คิดจากข้อมูลจริง
 const ACTORS = MONITORED_PARTIES;
 
+/**
+ * ปุ่ม action ที่ย้อนไม่ได้ (force-cancel/ล้างข้อมูล) — ยืนยันแบบ inline สองจังหวะ:
+ * กดครั้งแรก → ปุ่มสลับเป็น "ยืนยัน / ย้อนกลับ"; ยืนยันจึงทำจริง (auto-ยกเลิกใน 4 วิถ้าไม่ทำต่อ).
+ * ใช้ inline แทน modal ตาม product register ("modal คือความขี้เกียจ — ใช้ inline ก่อน")
+ */
+function ConfirmButton({ className, label, triggerAria, confirmLabel, confirmAria, onConfirm }: {
+  className: string;
+  label: string;
+  triggerAria: string;
+  confirmLabel: string;
+  confirmAria: string;
+  onConfirm: () => void;
+}) {
+  const [armed, setArmed] = useState(false);
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  if (!armed) {
+    return (
+      <button className={className} aria-label={triggerAria} onClick={() => setArmed(true)}>{label}</button>
+    );
+  }
+  return (
+    <span className="a-confirm" role="group" aria-label={confirmAria}>
+      <button className="btn btn--chili a-confirm__yes" aria-label={confirmAria}
+        onClick={() => { setArmed(false); onConfirm(); }}>{confirmLabel}</button>
+      <button className="btn btn--ghost a-confirm__no" onClick={() => setArmed(false)}>ย้อนกลับ</button>
+    </span>
+  );
+}
+
 export function Admin() {
   const { state, dispatch } = useStore();
+
+  // ── ชั้น triage: นับงานที่ "รอแอดมินตัดสิน" จริง (ข้อมูลจริงจาก state) ──
+  const openDisputes = state.disputes.filter((d) => d.status === 'open').length;
+  const pendingRates = state.rateRequests.filter((q) => q.status === 'pending').length;
+  const payableCount = payableAccounts(state.ledger).length;
+  const triageTotal = openDisputes + pendingRates + payableCount;
+  // จัดรายการที่ต้องลงมือ (open/pending) ขึ้นบนสุดของลิสต์ (stable sort)
+  const sortedDisputes = [...state.disputes].sort(
+    (a, b) => Number(b.status === 'open') - Number(a.status === 'open'),
+  );
+  const sortedRates = [...state.rateRequests].sort(
+    (a, b) => Number(b.status === 'pending') - Number(a.status === 'pending'),
+  );
 
   return (
     <div className="admin">
@@ -59,6 +106,25 @@ export function Admin() {
         <span className="a-who">🛠 ผู้ดูแลระบบ</span>
         <Link className="a-back" to="/">ไปฝั่งลูกค้า ›</Link>
       </div>
+
+      <nav className="a-triage" aria-label="งานที่รอจัดการ">
+        {triageTotal === 0 ? (
+          <span className="a-triage__clear">✓ ไม่มีงานค้าง</span>
+        ) : (
+          <>
+            <span className="a-triage__label">รอจัดการ</span>
+            {openDisputes > 0 && (
+              <a className="a-triage__item" href="#a-disputes"><b>{openDisputes}</b> ร้องเรียน</a>
+            )}
+            {pendingRates > 0 && (
+              <a className="a-triage__item" href="#a-rates"><b>{pendingRates}</b> คำขออัตรา</a>
+            )}
+            {payableCount > 0 && (
+              <a className="a-triage__item" href="#a-wallet"><b>{payableCount}</b> บัญชีถึงเกณฑ์</a>
+            )}
+          </>
+        )}
+      </nav>
 
       <section className="a-mod">
         <h2 className="a-h2">กำกับดูแลผู้ใช้</h2>
@@ -70,23 +136,27 @@ export function Admin() {
           const level = flagParty(state.disputes, act.id, volume);
           return (
             <div className={`a-actor${suspended ? ' a-actor--off' : ''}`} key={act.id}>
-              <span className="a-actor__name">{act.icon} {act.name}</span>
-              <span className="a-actor__stat">ร้องเรียน {complaints}/{volume}</span>
-              <FlagBadge level={level} />
-              {state.notified.includes(act.id) && <span className="a-act a-act--notify">⚠️ แจ้งเตือน</span>}
-              {state.downranked.includes(act.id) && <span className="a-act a-act--downrank">⬇️ ลดอันดับ</span>}
-              {suspended && <span className="a-susp">พักงาน</span>}
-              <button className="btn btn--ghost a-actor__btn"
-                aria-label={`${suspended ? 'ปลดระงับ' : 'ระงับ'} ${act.name}`}
-                onClick={() => dispatch({ type: 'toggleSuspend', actor: act.id })}>
-                {suspended ? 'ปลดระงับ' : 'ระงับ'}
-              </button>
+              <div className="a-actor__main">
+                <span className="a-actor__name">{act.icon} {act.name}</span>
+                <button className="btn btn--ghost a-actor__btn"
+                  aria-label={`${suspended ? 'ปลดระงับ' : 'ระงับ'} ${act.name}`}
+                  onClick={() => dispatch({ type: 'toggleSuspend', actor: act.id })}>
+                  {suspended ? 'ปลดระงับ' : 'ระงับ'}
+                </button>
+              </div>
+              <div className="a-actor__status">
+                <span className="a-actor__stat">ร้องเรียน {complaints}/{volume}</span>
+                <FlagBadge level={level} />
+                {state.notified.includes(act.id) && <span className="a-act a-act--notify">⚠️ แจ้งเตือน</span>}
+                {state.downranked.includes(act.id) && <span className="a-act a-act--downrank">⬇️ ลดอันดับ</span>}
+                {suspended && <span className="a-susp">พักงาน</span>}
+              </div>
             </div>
           );
         })}
       </section>
 
-      <section className="a-wallet">
+      <section className="a-wallet" id="a-wallet">
         <h2 className="a-h2">Wallet &amp; Settlement</h2>
         <p className="a-wnote">เงินเครดิตเข้า wallet ภายในเมื่อออเดอร์จบ (escrow) — จ่ายออกเป็นรอบ เฉพาะบัญชีที่ถึงยอดถอนขั้นต่ำ ฿{MIN_PAYOUT} (ADR 0004)</p>
         <SettlementScheduler onRun={() => dispatch({ type: 'walletRunSettlement' })} />
@@ -96,7 +166,7 @@ export function Admin() {
             รันรอบ settlement (กดถอนเอง) — จ่าย {payableAccounts(state.ledger).length} บัญชีที่ถึงเกณฑ์
           </button>
         )}
-        {accounts(state.ledger).length === 0 && <p className="a-wempty">ยังไม่มีรายการ</p>}
+        {accounts(state.ledger).length === 0 && <p className="a-wempty">ยังไม่มีรายการ — เงินจะเข้า wallet เมื่อออเดอร์แรกจบวงจร</p>}
         {accounts(state.ledger).map((acc) => {
           const bal = balance(state.ledger, acc);
           const label = accountLabel(acc, state.restaurants);
@@ -116,11 +186,11 @@ export function Admin() {
         })}
       </section>
 
-      <section className="a-disputes">
+      <section className="a-disputes" id="a-disputes">
         <h2 className="a-h2">ร้องเรียนหลังส่ง ({state.disputes.length})</h2>
         <p className="a-wnote">เกิดหลังออเดอร์สำเร็จ พิสูจน์ความผิดรายครั้งไม่ได้ → คืน goodwill จากแพลตฟอร์ม; เก็บสถิติรายฝ่ายไว้จัดการระยะยาว (ADR 0006)</p>
-        {state.disputes.length === 0 && <p className="a-wempty">ยังไม่มีคำร้อง</p>}
-        {state.disputes.map((d) => (
+        {state.disputes.length === 0 && <p className="a-wempty">ยังไม่มีคำร้อง — ลูกค้ายื่นได้ภายใน 2 ชม. หลังรับของ</p>}
+        {sortedDisputes.map((d) => (
           <DisputeRow key={d.id} d={d} restaurants={state.restaurants} disputes={state.disputes}
             goodwill={goodwillAmount(state.orders, d)} customerOrders={orderVolume(state.orders, d.customer)}
             onResolve={(amount) => dispatch({ type: 'resolveDispute', id: d.id, amount })}
@@ -128,11 +198,11 @@ export function Admin() {
         ))}
       </section>
 
-      <section className="a-rates">
+      <section className="a-rates" id="a-rates">
         <h2 className="a-h2">คำขอปรับอัตราคอมมิชชัน ({state.rateRequests.length})</h2>
         <p className="a-wnote">ร้านเจรจาขอลดคอม — แอดมิน อนุมัติ/ปฏิเสธ/<strong>เสนอแย้ง</strong> (ร้านตอบรับเอง); ตกลงแล้วมีผลรอบถัดไป (ADR 0003)</p>
-        {state.rateRequests.length === 0 && <p className="a-wempty">ยังไม่มีคำขอ</p>}
-        {state.rateRequests.map((q) => (
+        {state.rateRequests.length === 0 && <p className="a-wempty">ยังไม่มีคำขอ — ร้านยื่นขอลดคอมได้จากคอนโซลร้าน</p>}
+        {sortedRates.map((q) => (
           <RateRequestRow key={q.id} q={q} name={accountLabel(`merchant:${q.merchantId}`, state.restaurants)}
             onApprove={() => dispatch({ type: 'approveRateRequest', id: q.id })}
             onReject={() => dispatch({ type: 'rejectRateRequest', id: q.id })}
@@ -142,6 +212,7 @@ export function Admin() {
 
       <section className="a-orders">
         <h2 className="a-h2">ออเดอร์ในระบบ ({state.orders.length})</h2>
+        {state.orders.length === 0 && <p className="a-wempty">ยังไม่มีออเดอร์ — จะปรากฏเมื่อลูกค้าสั่งและออเดอร์เริ่มเดินวงจร</p>}
         {state.orders.map((o) => (
           <OrderRow key={o.id} o={o} restaurants={state.restaurants} rateOverrides={state.rateOverrides}
             onCancel={() => dispatch({ type: 'adminCancelOrder', id: o.id })} />
@@ -149,10 +220,10 @@ export function Admin() {
       </section>
 
       <footer className="a-footer">
-        <button className="btn btn--ghost a-reset"
-          onClick={() => { clearPersistedState(); dispatch({ type: 'resetApp' }); }}>
-          ล้างข้อมูลที่บันทึก (รีเซ็ตเป็นค่าตั้งต้น)
-        </button>
+        <ConfirmButton className="btn btn--ghost a-reset"
+          triggerAria="ล้างข้อมูลที่บันทึก (รีเซ็ตเป็นค่าตั้งต้น)" label="ล้างข้อมูลที่บันทึก (รีเซ็ตเป็นค่าตั้งต้น)"
+          confirmAria="ยืนยันล้างข้อมูล" confirmLabel="ยืนยันล้างข้อมูล"
+          onConfirm={() => { clearPersistedState(); dispatch({ type: 'resetApp' }); }} />
       </footer>
     </div>
   );
@@ -336,9 +407,10 @@ function OrderRow({ o, restaurants, rateOverrides, onCancel }: {
       </div>
 
       {s === null ? (
-        <button className="btn btn--ghost a-cancel" aria-label={`ยกเลิกออเดอร์ #${o.id}`} onClick={onCancel}>
-          ยกเลิกออเดอร์ (แอดมิน)
-        </button>
+        <ConfirmButton className="btn btn--ghost a-cancel"
+          triggerAria={`ยกเลิกออเดอร์ #${o.id}`} label="ยกเลิกออเดอร์ (แอดมิน)"
+          confirmAria={`ยืนยันยกเลิกออเดอร์ #${o.id}`} confirmLabel="ยืนยันยกเลิก"
+          onConfirm={onCancel} />
       ) : (
         <div className="a-settle">
           <span className={`a-fault a-fault--${s.fault}`}>{FAULT_LABEL[s.fault]}</span>

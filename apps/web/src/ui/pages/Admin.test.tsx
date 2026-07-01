@@ -43,8 +43,9 @@ describe('Admin — หลายออเดอร์ + suspend + force-cancel',
 
   it('force-cancel: ยกเลิกออเดอร์ที่ยังดำเนินอยู่ → กลายเป็น CancelledByAdmin', async () => {
     renderWithProviders(<Admin />);
-    const btn = screen.getByRole('button', { name: 'ยกเลิกออเดอร์ #1042' });
-    await userEvent.click(btn);
+    await userEvent.click(screen.getByRole('button', { name: 'ยกเลิกออเดอร์ #1042' }));
+    // ยืนยัน inline สองจังหวะ: กดครั้งแรกยังไม่ทำจริง — ต้องกด "ยืนยัน"
+    await userEvent.click(screen.getByRole('button', { name: 'ยืนยันยกเลิกออเดอร์ #1042' }));
     expect(screen.queryByRole('button', { name: 'ยกเลิกออเดอร์ #1042' })).not.toBeInTheDocument();
     expect(screen.getByText('CancelledByAdmin')).toBeInTheDocument();
   });
@@ -160,6 +161,7 @@ describe('Admin — หลายออเดอร์ + suspend + force-cancel',
     await userEvent.click(screen.getByRole('button', { name: 'ระงับ สมชาย (ไรเดอร์)' }));
     expect(screen.getByRole('button', { name: 'ปลดระงับ สมชาย (ไรเดอร์)' })).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /ล้างข้อมูลที่บันทึก/ }));
+    await userEvent.click(screen.getByRole('button', { name: 'ยืนยันล้างข้อมูล' })); // ยืนยัน inline
     expect(screen.getByRole('button', { name: 'ระงับ สมชาย (ไรเดอร์)' })).toBeInTheDocument(); // กลับ seed
   });
 
