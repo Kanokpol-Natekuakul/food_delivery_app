@@ -71,6 +71,8 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 **✅ แก้ #6 แล้ว** (`apps/api/src/routes/orders.ts`): เพิ่ม Fastify JSON schema validation ที่ route `POST /orders` — `lines` ต้อง minItems 1, แต่ละ line ต้องมี `id/itemName/basePrice(≥0)/qty(int≥1)`, `options` default `[]` (ขาดได้ไม่ crash), `spice/note` default `''`. input ไม่ครบ → Fastify คืน **400** เอง (ไม่ใช่ 500/null). e2e: ขาด basePrice/qty/lines ว่าง/option ขาด price/ใช้ field ผิด→400; ขาด options→200+food ถูก; admin-cancel ออเดอร์นั้น→200 (บั๊ก null amount หาย). typecheck ผ่าน.
 
+**✅ แก้ #2 แล้ว** (`apps/api/src/jobs/settlement.ts`): เพิ่ม `boss.on('error', …)` — เดิม pg-boss ปล่อย event `'error'` (เช่น DB connection หลุด `57P01`) โดยไม่มี listener → EventEmitter throw จน process ตายทั้งตัว. ดักไว้แค่ log แล้วปล่อย pg-boss สร้าง connection ใหม่ตอน poll รอบถัดไป (กู้คืนเอง; main db เป็น postgres.js/porsager ซึ่ง reconnect ต่อ query อยู่แล้ว). verify: `docker restart fd-postgres` ระหว่าง api รัน → api **PID เดิม ไม่ crash** + `GET /restaurants`→200 (กู้คืน) + log จับ error `57P01` ได้จริง.
+
 ## Responsive ทั้งแอป (CSS-first, มือถือ-first คงเดิม 100%)
 
 เดิมทุกหน้า cap `max-width:560–600px` กลางจอ → บนเดสก์ท็อปเป็นกรอบมือถือลอยกลาง. เพิ่ม `@media` **tablet ≥768 / desktop ≥1024** เท่านั้น (ไม่แตะ markup/logic → IA เดียวกันทุก context, ไม่พัง test):
