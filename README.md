@@ -57,6 +57,27 @@ e2e: place→complete→login customer→fileDispute → dispute.customer จา
 
 > เทสต์ UI: บน Windows worker-fork แบบขนานบาง crash (suite-load) — รัน `npm run test:ui -- --no-file-parallelism` เพื่อผลคงที่
 
+## QA session (backend E2E + UI) — issues ที่ filed
+
+รัน `/qa` ยิง fullstack จริง (login 3 role ถือ session แยก → เดินวงจร/สิทธิ์/dispute ผ่าน API). **ผ่าน**: happy-path lifecycle เต็ม (place→accept→ready→claim→arrive→pickup→arrive→confirm→Completed), access control ข้ามบทบาท/ข้ามร้าน (403 ครบ), suspended rider กัน claim (409), admin-only suspend, admin-cancel settlement (refund/payout+ledger), dispute file (401 ถ้าไม่ login) + goodwill double-entry. **filed 6 issues** (GitHub):
+- **#2** API ล่มทั้ง process เมื่อ DB connection หลุด (pg-boss `57P01` unhandled → ควร reconnect/ดักจับ) — สูง
+- **#3** browser tab title ค้าง "…ติดตามออเดอร์" ทุกหน้า (static `<title>` ใน index.html, ไม่อัปเดตต่อ route) — ต่ำ
+- **#4** ออเดอร์ส่งสำเร็จ (confirmDelivery→Completed) **ไม่ post settlement ลง ledger** — ร้าน/ไรเดอร์ไม่ได้เงิน; มีแต่ `/cancel` (admin) ที่ post; terminal อื่น (FailedDelivery/RejectedByMerchant) ก็ไม่ post — สูง
+- **#5** `/orders/:id/complete` และ `/cancel` **ไม่มี auth guard** — anonymous สั่ง complete/admin-cancel ออเดอร์ใครก็ได้ (ต่างจาก claim/transition/disputes ที่กั้นครบ) — สูง
+- **#6** `POST /orders` ไม่ validate line → ขาด `options`=500 ตอนสร้าง / ขาด `basePrice`=NaN→เก็บ amount null แล้ว 500 ตอน settle — กลาง
+- nit (ยังไม่ filed): ข้อความ 403 ของ `requireMerchantOf` เขียน "แก้ได้เฉพาะเมนูร้านของตัวเอง" แต่ใช้กับ transition ออเดอร์ด้วย (copy กำกวม)
+
+**✅ แก้ #4 + #5 แล้ว** (`apps/api/src/routes/orders.ts`): helper `settleOrderToLedger(tx, orderId, restaurantId, amounts, state)` — เรียก `settle()` ถ้าถึงปลายทางแล้ว post เข้า ledger, **idempotent** (ข้ามถ้า orderId มีใน ledger แล้ว กันจ่ายซ้ำเมื่อถึง Completed ได้หลายเส้นทาง). wire เข้า `/transition` (ทุก terminal: confirmDelivery/declareFailed/reject), `/complete`, และ refactor `/cancel` มาใช้ helper เดียวกัน. **auth**: `/cancel`→`requireAdmin`, `/complete`→`requireUser`. e2e: ส่งสำเร็จ→ledger 3 รายการ (merchant/rider/platform) + /complete ซ้ำไม่เพิ่ม; anon complete/cancel→401, customer cancel→403, admin cancel→200. ⚠️ ผลข้างเคียง: web demo Track "complete" ตอนนี้ต้องล็อกอิน (ไม่งั้น 401→notice+rollback — พฤติกรรมที่ถูกต้อง). typecheck api ผ่าน. **commit `bc566d7`** (branch `fix/order-settlement-and-authz`, ยังไม่ merge เข้า main); ปิด issue #4/#5 บน GitHub แล้ว.
+
+## Responsive ทั้งแอป (CSS-first, มือถือ-first คงเดิม 100%)
+
+เดิมทุกหน้า cap `max-width:560–600px` กลางจอ → บนเดสก์ท็อปเป็นกรอบมือถือลอยกลาง. เพิ่ม `@media` **tablet ≥768 / desktop ≥1024** เท่านั้น (ไม่แตะ markup/logic → IA เดียวกันทุก context, ไม่พัง test):
+- **Home**: desktop container 1100px · แถว "เปิดอยู่ตอนนี้" กาง **grid** (`.stalls .hscroll`→grid auto-fill, เลิกพึ่ง horizontal scroll/wheel บนเดสก์ท็อป) · "ใกล้คุณ" 2→3 คอลัมน์ · search คุมกว้าง 600 · หมวดหมู่จัดกึ่งกลาง
+- **AllRestaurants** grid 2→3 คอลัมน์ · **Restaurant** เมนู 2 คอลัมน์ (820/1000px) · **Menu** กว้างขึ้นคงโฟกัสกลาง (680/760)
+- **Cart** desktop 2 คอลัมน์: รายการซ้าย / สรุปยอดขวา **sticky** (grid auto-flow dense; placebar คงติดล่าง)
+- **Merchant/Rider** container 720px + ปุ่ม action ไม่ยืดเต็ม · **Admin** 1040px + `.a-orders`/`.a-disputes` 2 คอลัมน์
+- แก้ใน CSS ต่อไฟล์เท่านั้น (Home/AllRestaurants/Restaurant/Menu/Cart/Merchant/Rider/Admin.css); Track คงเดิม (vertical flow). ตรวจ: typecheck clean + **test:ui 71/71** + vite เสิร์ฟไม่มี build error. *ผลภาพเดสก์ท็อปยังไม่ได้ screenshot ยืนยัน (Chrome ext debugger ถูกกั้น — localhost ยังไม่ approve); ขยายหน้าต่างเป็น 1440px ให้ผู้ใช้ eyeball แล้ว.* follow-up ถ้าต้องการ: master-detail จริงของ consoles (ต้องแก้ component/state).
+
 ## การรัน (เว็บ — ที่ root)
 
 ```bash
