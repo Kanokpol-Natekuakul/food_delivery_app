@@ -218,19 +218,19 @@ export function Rider() {
 
       {suspended && (
         <div className="r-susp" role="status">
-          <span className="r-banner-icon"><IconBan /></span>
+          <span className="r-banner-icon"><IconBan aria-label="ไอคอนบัญชีถูกระงับสิทธิ์" /></span>
           <span>บัญชีคุณถูกพักงาน — รับงานใหม่ไม่ได้ (ติดต่อแอดมิน){downranked ? ' · ถูกลดอันดับการจ่ายงาน' : ''}</span>
         </div>
       )}
       {warned && (
         <div className="r-warn" role="status">
-          <span className="r-banner-icon"><IconAlertTriangle /></span>
+          <span className="r-banner-icon"><IconAlertTriangle aria-label="ไอคอนคำเตือนปรับปรุงการส่งงาน" /></span>
           <span>มีการแจ้งเตือนจากสถิติร้องเรียน — โปรดปรับปรุงคุณภาพการส่ง{downranked ? ' · บัญชีถูกลดอันดับการจ่ายงาน' : ''}</span>
         </div>
       )}
       {held && (
         <div className="r-hold" role="status">
-          <span className="r-banner-icon"><IconClock /></span>
+          <span className="r-banner-icon"><IconClock aria-label="ไอคอนจับเวลาระงับการจัดสรรงานสิทธิ์แรก" /></span>
           <span>
             ถูกลดอันดับ — งานนี้เปิดให้ไรเดอร์อันดับสูงคว้าก่อน (เหลือ <span className="r-mono-num">{Math.max(0, RIDER_PRIORITY_WINDOW_SEC - waited)}</span> วิ)
           </span>

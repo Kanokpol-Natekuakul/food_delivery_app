@@ -70,7 +70,7 @@ function ConfirmButton({ className, label, confirmLabel, onConfirm }: {
     );
   }
   return (
-    <span className="m-confirm" style={{ display: 'inline-flex', gap: '8px' }}>
+    <span className="m-confirm">
       <button className="btn btn--chili m-confirm__yes" onClick={() => { setArmed(false); onConfirm(); }}>{confirmLabel}</button>
       <button className="btn btn--ghost m-confirm__no" onClick={() => setArmed(false)}>ย้อนกลับ</button>
     </span>

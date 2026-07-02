@@ -34,7 +34,11 @@
 @media (min-width:768px){
   .merchant{max-width:720px}
   .m-actions .btn{flex:0 1 auto; min-width:160px}
+  .m-confirm{width:auto}
 }
+
+.m-confirm{display:flex; gap:var(--sp-2); width:100%}
+.m-confirm .btn{flex:1}
 
 .m-prep{margin-top:var(--sp-6); background:var(--ink-card); border:1px solid var(--ink-line);
   border-radius:var(--r); padding:var(--sp-5)}

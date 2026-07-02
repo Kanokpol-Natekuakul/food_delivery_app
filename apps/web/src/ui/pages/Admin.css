@@ -76,21 +76,21 @@
 .a-dispute{background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r);
   padding:var(--sp-4); margin-bottom:var(--sp-3)}
 .a-dstat{color:var(--paper); opacity:0.85; font-family:var(--mono); font-size:.78rem}
-.a-dactions{display:flex; gap:var(--sp-3)}
-.a-dgood{flex:1; justify-content:center}
-.a-dreject{flex:0 0 auto; color:var(--chili)}
+.a-dactions{display:flex; flex-wrap:wrap; gap:var(--sp-2); width:100%}
+.a-dgood{flex:1 1 auto; min-width:120px; justify-content:center}
+.a-dreject{flex:1 1 auto; min-width:80px; color:var(--chili); justify-content:center}
 
 /* คำขอปรับอัตราคอมมิชชัน */
 .a-rates{margin-bottom:var(--sp-6)}
-.a-rrow{display:flex; align-items:center; gap:var(--sp-3); padding:10px 12px; margin-bottom:var(--sp-2);
+.a-rrow{display:flex; flex-direction:column; gap:var(--sp-3); padding:10px 12px; margin-bottom:var(--sp-2);
   background:var(--ink-card); border:1px solid var(--ink-line); border-radius:var(--r-sm)}
-.a-rinfo{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.a-rinfo{width:100%; display:flex; flex-direction:column; gap:2px}
 .a-rname{font-size:var(--fs-data)}
 .a-rmove{font-family:var(--mono); font-size:.78rem; color:var(--paper); opacity:0.85}
-.a-ractions{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); flex:0 0 auto}
-.a-rapprove,.a-rreject{font-size:var(--fs-label); padding:6px 12px}
+.a-ractions{display:flex; flex-wrap:wrap; align-items:center; gap:var(--sp-2); width:100%}
+.a-rapprove,.a-rreject{font-size:var(--fs-label); padding:6px 12px; flex:1 1 auto; justify-content:center; text-align:center}
 .a-rreject{color:var(--chili)}
-.a-rcounter{display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-label); color:var(--paper-dim)}
+.a-rcounter{display:inline-flex; align-items:center; gap:4px; font-size:var(--fs-label); color:var(--paper-dim); flex:1 1 auto}
 .a-rcounter input{width:48px; padding:5px 6px; border-radius:var(--r-sm); border:1px solid var(--ink-line);
   background:var(--ink); color:var(--paper); font-family:var(--mono); font-size:var(--fs-label)}
 .a-rcounter .btn{font-size:var(--fs-label); padding:6px 10px}
@@ -126,6 +126,9 @@
 /* ── Responsive: tablet/desktop — แอดมินกว้างขึ้น, รายการออเดอร์กาง grid ── */
 @media (min-width:768px){
   .admin{max-width:760px}
+  .a-rrow{flex-direction:row; align-items:center}
+  .a-rinfo{width:auto; flex:1}
+  .a-ractions{width:auto; flex:0 0 auto}
 }
 @media (min-width:1024px){
   .admin{max-width:1040px}

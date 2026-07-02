@@ -175,12 +175,12 @@ export function Admin() {
                 <FlagBadge level={level} />
                 {state.notified.includes(act.id) && (
                   <span className="a-act a-act--notify" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <IconAlertTriangle size={14} /> แจ้งเตือน
+                    <IconAlertTriangle size={14} aria-hidden="true" /> แจ้งเตือน
                   </span>
                 )}
                 {state.downranked.includes(act.id) && (
                   <span className="a-act a-act--downrank" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                    <IconArrowDown size={14} /> ลดอันดับ
+                    <IconArrowDown size={14} aria-hidden="true" /> ลดอันดับ
                   </span>
                 )}
                 {suspended && <span className="a-susp">พักงาน</span>}
@@ -333,7 +333,7 @@ function SettlementScheduler({ onRun }: { onRun: () => void }) {
   return (
     <div className="a-sched">
       <span className="a-schedinfo" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-        <IconClock size={14} /> รอบถัดไป (เวลาจริง): <b>{nextAt}</b> · {cadenceLabel}
+        <IconClock size={14} aria-hidden="true" /> รอบถัดไป (เวลาจริง): <b>{nextAt}</b> · {cadenceLabel}
       </span>
       <div className="a-schedbtns">
         <button className="btn btn--ghost" onClick={() => setCadence((c) => (c === 'daily' ? 'weekly' : 'daily'))}>
