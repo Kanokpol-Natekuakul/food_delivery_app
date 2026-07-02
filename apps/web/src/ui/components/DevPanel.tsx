@@ -3,9 +3,14 @@ import { useStore } from '../store';
 import { IconWrench, IconAlertTriangle, IconClock } from './Icons';
 import './DevPanel.css';
 
+/** DevPanel โผล่เฉพาะ dev mode หรือเมื่อ URL มี ?dev (สำหรับเดโม production) */
+const showDev = import.meta.env.DEV || new URLSearchParams(window.location.search).has('dev');
+
 export function DevPanel() {
   const { state, dispatch, offlineQueue = [] } = useStore();
   const [collapsed, setCollapsed] = useState(true);
+
+  if (!showDev) return null;
 
   const mockOffline = state.mockOffline ?? false;
   const simSpeed = state.simSpeed ?? 1;

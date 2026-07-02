@@ -31,17 +31,19 @@ npm run build        # production build
 
 - `apps/web/src/ui/store.tsx` คือหัวใจ: `useReducer` + optimistic sync ไป API + **offline mutation queue** เก็บใน localStorage (ยิงซ้ำเมื่อกลับมาออนไลน์)
 - **Dev state ใน store**: `state.mockOffline` (จำลองเน็ตหลุด — mutation จะเข้า queue แทน) และ `state.simSpeed` (ตัวคูณความเร็ว setInterval ใน Track.tsx / Rider.tsx)
-- **DevPanel** (`ui/components/DevPanel.tsx`) — ปุ่มประแจมุมจอ: toggle mock offline + badge จำนวนรายการค้างซิงก์ + ปุ่มสปีดเวลา 1x/5x/15x/30x + diagnostics
+- **DevPanel** (`ui/components/DevPanel.tsx`) — ปุ่มประแจมุมจอ: toggle mock offline + badge จำนวนรายการค้างซิงก์ + ปุ่มสปีดเวลา 1x/5x/15x/30x + diagnostics — **โผล่เฉพาะ dev mode** (`import.meta.env.DEV`) หรือเปิดด้วย `?dev` query param
 - **PWA**: `public/manifest.json` + `public/sw.js` (cache-first สำหรับ asset, precache ต้องชี้ไฟล์ที่มีจริงเท่านั้น — ไฟล์หายตัวเดียว = `cache.addAll` reject = SW ติดตั้งไม่สำเร็จทั้งตัว) — SW ลงทะเบียนเฉพาะ production build (`import.meta.env.PROD` ใน main.tsx) จึงไม่รบกวน dev/เทสต์ ไอคอนอยู่ `public/icons/` (192/512 PNG + favicon.png) วาดโดยสคริปต์ (พระจันทร์เสี้ยว mango บนพื้น ink ตาม tokens.css)
 - Order lifecycle เป็น **dual-track state machine** (ฝั่งร้าน + ฝั่งไรเดอร์ บรรจบกันตอน pickup) — ดู docs/order-lifecycle.md
 
 ## สถานะล่าสุด (2026-07-02)
 
-- เทสต์ผ่านครบ: domain + UI 77/77, build production ผ่าน
-- `main` ในเครื่องนำหน้า `origin/main` อยู่ 5 คอมมิต (ยังไม่ push — รอเจ้าของสั่ง)
-- งานที่เพิ่งเสร็จ: ErrorBoundary, offline mutation queue, DevPanel (mock offline + sim speed), PWA manifest + SW
+- เทสต์ผ่านครบ: domain 109/109, UI 77/77, build production ผ่าน
+- `main` ตรงกับ `origin/main` (push แล้ว)
+- GitHub Actions CI ตั้งแล้ว (`.github/workflows/ci.yml`) — typecheck + domain test + UI test + build ทุก push/PR
+- DevPanel ถูก gate ไว้หลัง `import.meta.env.DEV || ?dev` (ไม่โผล่ใน production ยกเว้นเปิดเอง)
+- `docs/overview.md` เขียนใหม่ให้ตรงกับ fullstack ปัจจุบัน
 
 ## งานที่รู้ว่าค้าง / ควรทำต่อ
 
-- [ ] push คอมมิตค้างขึ้น origin เมื่อเจ้าของยืนยัน
-- [ ] พิจารณาตั้ง GitHub Actions CI (typecheck + domain test + UI test)
+- [ ] verify ในเบราว์เซอร์จริง (แผนที่ Leaflet, responsive, PWA install) — ยืนยันด้วย unit test + build เท่านั้น
+- [ ] master-detail layout จริงของ console (Merchant/Admin) บนจอใหญ่ (ต้องแก้ component/state)
