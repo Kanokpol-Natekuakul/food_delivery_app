@@ -36,8 +36,8 @@ export function Login() {
 
   return (
     <div className="login">
-      <div className="m-top">
-        <span className="m-who" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+      <div className="login-top">
+        <span className="login-who">
           <IconUser size={18} /> เข้าสู่ระบบ
         </span>
         <Link className="m-back" to="/">‹ หน้าแรก</Link>
