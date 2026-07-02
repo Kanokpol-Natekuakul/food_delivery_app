@@ -7,6 +7,7 @@ import { checkServiceability, SERVICE_ZONE_KM } from '@app/domain/delivery/deliv
 import { findDish, findRestaurant } from '../data/catalog';
 import type { Dish, Restaurant } from '../data/catalog';
 import './Menu.css';
+import { IconUtensils } from '../components/Icons';
 
 export function Menu() {
   const { restaurantId, dishId } = useParams();
@@ -17,7 +18,7 @@ export function Menu() {
     return (
       <div className="menu menu--missing">
         <div className="empty">
-          <div className="big">🍽️</div>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconUtensils size={48} /></div>
           <p>ไม่พบเมนูนี้แล้ว</p>
           <Link className="btn btn--mango" to="/">กลับหน้าแรก</Link>
         </div>

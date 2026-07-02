@@ -18,6 +18,7 @@ import type { RateRequest } from '@app/domain/revenue/revenue.js';
 import { findRestaurant, ratesFor, merchantOverrides, CUSTOMER_LOCATION } from '../data/catalog';
 import type { Restaurant } from '../data/catalog';
 import './Admin.css';
+import { IconWrench, IconMotorbike, IconStore, IconAlertTriangle, IconArrowDown, IconClock } from '../components/Icons';
 
 function accountLabel(account: string, restaurants: readonly Restaurant[]): string {
   if (account === PLATFORM) return 'แพลตฟอร์ม';
@@ -126,7 +127,7 @@ export function Admin() {
   return (
     <div className="admin">
       <div className="a-top">
-        <span className="a-who">🛠 ผู้ดูแลระบบ</span>
+        <span className="a-who" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><IconWrench size={18} /> ผู้ดูแลระบบ</span>
         <Link className="a-back" to="/">ไปฝั่งลูกค้า ›</Link>
       </div>
 
@@ -160,7 +161,9 @@ export function Admin() {
           return (
             <div className={`a-actor${suspended ? ' a-actor--off' : ''}`} key={act.id}>
               <div className="a-actor__main">
-                <span className="a-actor__name">{act.icon} {act.name}</span>
+                <span className="a-actor__name" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  {act.icon === '🛵' ? <IconMotorbike size={16} /> : <IconStore size={16} />} {act.name}
+                </span>
                 <button className="btn btn--ghost a-actor__btn"
                   aria-label={`${suspended ? 'ปลดระงับ' : 'ระงับ'} ${act.name}`}
                   onClick={() => dispatch({ type: 'toggleSuspend', actor: act.id })}>
@@ -170,8 +173,16 @@ export function Admin() {
               <div className="a-actor__status">
                 <span className="a-actor__stat">ร้องเรียน {complaints}/{volume}</span>
                 <FlagBadge level={level} />
-                {state.notified.includes(act.id) && <span className="a-act a-act--notify">⚠️ แจ้งเตือน</span>}
-                {state.downranked.includes(act.id) && <span className="a-act a-act--downrank">⬇️ ลดอันดับ</span>}
+                {state.notified.includes(act.id) && (
+                  <span className="a-act a-act--notify" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <IconAlertTriangle size={14} /> แจ้งเตือน
+                  </span>
+                )}
+                {state.downranked.includes(act.id) && (
+                  <span className="a-act a-act--downrank" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <IconArrowDown size={14} /> ลดอันดับ
+                  </span>
+                )}
                 {suspended && <span className="a-susp">พักงาน</span>}
               </div>
             </div>
@@ -313,7 +324,7 @@ function SettlementScheduler({ onRun }: { onRun: () => void }) {
       const t = Date.now();
       setLastRunAt(t);
       localStorage.setItem(LS_LAST_RUN, String(t));
-      setMsg(`⚙️ รอบ settlement อัตโนมัติ — ${new Date(t).toLocaleString('th-TH')}`);
+      setMsg(`[ระบบ] รอบ settlement อัตโนมัติ — ${new Date(t).toLocaleString('th-TH')}`);
     }
   }, [now, lastRunAt, cadence, onRun]);
 
@@ -321,8 +332,8 @@ function SettlementScheduler({ onRun }: { onRun: () => void }) {
   const nextAt = new Date(nextSettlementAt(lastRunAt, cadence)).toLocaleString('th-TH');
   return (
     <div className="a-sched">
-      <span className="a-schedinfo">
-        🕒 รอบถัดไป (เวลาจริง): <b>{nextAt}</b> · {cadenceLabel}
+      <span className="a-schedinfo" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+        <IconClock size={14} /> รอบถัดไป (เวลาจริง): <b>{nextAt}</b> · {cadenceLabel}
       </span>
       <div className="a-schedbtns">
         <button className="btn btn--ghost" onClick={() => setCadence((c) => (c === 'daily' ? 'weekly' : 'daily'))}>
@@ -402,7 +413,7 @@ function DisputeRow({ d, restaurants, disputes, goodwill, customerOrders, onReso
         <span className="a-kind">{DISPUTE_STATUS[d.status]}</span>
       </div>
       <div className="a-rails">
-        <span>ปัญหา: {CATEGORY_LABEL[d.category]} {d.hasPhoto ? '· 📷 มีรูป' : ''}</span>
+        <span>ปัญหา: {CATEGORY_LABEL[d.category]} {d.hasPhoto ? '· (มีรูปหลักฐาน)' : ''}</span>
         <span>พาดพิง: {merchantLabel} / {riderName(d.rider)}</span>
         <span className="a-dstat">
           ร้านนี้ถูกร้อง {complaintsAgainst(disputes, d.merchant)} ครั้ง ·

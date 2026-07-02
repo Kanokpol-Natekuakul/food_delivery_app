@@ -79,7 +79,7 @@ export function orderView(state: OrderState): TrackerView {
     case 'InTransit': {
       const at = state.rider === 'AtCustomer';
       return {
-        headline: at ? 'ไรเดอร์ถึงแล้ว!' : 'กำลังไปส่ง 🛵',
+        headline: at ? 'ไรเดอร์ถึงแล้ว!' : 'กำลังไปส่ง',
         sub: at ? 'บอกรหัสกับไรเดอร์เพื่อรับของ' : 'ไรเดอร์รับอาหารแล้ว กำลังมุ่งหน้าหาคุณ',
         cancel: false, kitchen: k3(['done', 'done', 'done']), rider: r3(['done', 'done', 'done']),
         single: s2(at ? ['done', 'active'] : ['active', 'todo']),
@@ -89,33 +89,33 @@ export function orderView(state: OrderState): TrackerView {
     }
     case 'Completed':
       return {
-        headline: 'รับของสำเร็จ 🎉', sub: 'ขอบคุณที่สั่ง — ทานให้อร่อยนะ', cancel: false,
+        headline: 'รับของสำเร็จ', sub: 'ขอบคุณที่สั่ง — ทานให้อร่อยนะ', cancel: false,
         kitchen: k3(['done', 'done', 'done']), rider: r3(['done', 'done', 'done']), single: s2(['done', 'done']),
         merge: 'done', mergeTitle: 'ไรเดอร์รับอาหารแล้ว', mergeSub: '', otp: 'done', terminal: null,
       };
     case 'RejectedByMerchant':
       return terminalView('ร้านของหมดพอดี', 'ออเดอร์ถูกยกเลิก',
         k3(['done', 'broken', 'todo']), r3(['done', 'released', 'todo']),
-        { icon: '🔥', title: 'ร้านของหมดพอดี', body: 'คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว ลองร้านอร่อยใกล้ๆ คุณดูไหม', action: 'ดูร้านใกล้ฉัน' });
+        { icon: 'flame', title: 'ร้านของหมดพอดี', body: 'คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว ลองร้านอร่อยใกล้ๆ คุณดูไหม', action: 'ดูร้านใกล้ฉัน' });
     case 'CancelledByCustomer':
       return terminalView('ยกเลิกออเดอร์แล้ว', 'คืนเงินให้เรียบร้อย',
         k3(['done', 'todo', 'todo']), r3(['todo', 'todo', 'todo']),
-        { icon: '🗑️', title: 'ยกเลิกออเดอร์แล้ว', body: 'คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว', action: 'สั่งใหม่อีกครั้ง' });
+        { icon: 'trash', title: 'ยกเลิกออเดอร์แล้ว', body: 'คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว', action: 'สั่งใหม่อีกครั้ง' });
     case 'DeliveryTimeout':
       return terminalView('หาไรเดอร์ไม่ได้', 'คืนเงินเต็มจำนวนแล้ว',
         k3(['done', 'done', 'done']), r3(['todo', 'todo', 'todo']),
-        { icon: '⌛', title: 'หาไรเดอร์ไม่ได้', body: 'ช่วงนี้ไรเดอร์เต็มมือ คืนเงินเต็มจำนวนให้แล้ว ขอโทษด้วยนะ', action: 'ลองสั่งใหม่' });
+        { icon: 'hourglass', title: 'หาไรเดอร์ไม่ได้', body: 'ช่วงนี้ไรเดอร์เต็มมือ คืนเงินเต็มจำนวนให้แล้ว ขอโทษด้วยนะ', action: 'ลองสั่งใหม่' });
     case 'FailedDelivery':
       return {
         headline: 'ส่งไม่สำเร็จ', sub: 'ติดต่อคุณไม่ได้ที่จุดหมาย', cancel: false,
         kitchen: k3(['done', 'done', 'done']), rider: r3(['done', 'done', 'done']), single: s2(['done', 'broken']),
         merge: 'done', mergeTitle: 'ไรเดอร์รับอาหารแล้ว', mergeSub: '', otp: 'hide',
-        terminal: { icon: '🚪', title: 'ส่งไม่สำเร็จ', body: 'ไรเดอร์รอแล้วแต่ติดต่อคุณไม่ได้ — ดูรายละเอียดในความช่วยเหลือ', action: 'ติดต่อช่วยเหลือ' },
+        terminal: { icon: 'door', title: 'ส่งไม่สำเร็จ', body: 'ไรเดอร์รอแล้วแต่ติดต่อคุณไม่ได้ — ดูรายละเอียดในความช่วยเหลือ', action: 'ติดต่อช่วยเหลือ' },
       };
     case 'CancelledByAdmin':
       return terminalView('ออเดอร์ถูกยกเลิกโดยระบบ', 'คืนเงินเต็มจำนวนแล้ว',
         k3(['done', 'todo', 'todo']), r3(['todo', 'todo', 'todo']),
-        { icon: '🛠️', title: 'ออเดอร์ถูกยกเลิกโดยระบบ', body: 'แอดมินยกเลิกออเดอร์นี้ คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว', action: 'สั่งใหม่อีกครั้ง' });
+        { icon: 'wrench', title: 'ออเดอร์ถูกยกเลิกโดยระบบ', body: 'แอดมินยกเลิกออเดอร์นี้ คืนเงินเต็มจำนวนเข้าช่องทางเดิมให้แล้ว', action: 'สั่งใหม่อีกครั้ง' });
     default:
       return assertNever(state);
   }

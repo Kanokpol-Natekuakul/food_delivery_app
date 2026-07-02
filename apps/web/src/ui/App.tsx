@@ -4,6 +4,7 @@ import { useStore, deliveryLabel } from './store';
 import type { State } from './store';
 import { cartItemCount } from '@app/domain/cart/cart.js';
 import './App.css';
+import { IconAlertTriangle, IconX, IconMenu, IconUser, IconPin, IconHome, IconUtensils, IconShoppingCart, IconPackage, IconStore, IconMotorbike, IconWrench } from './components/Icons';
 
 /** แถบแจ้งผู้ใช้ชั่วคราว (mirror ไป backend ล้ม เช่น ต้องล็อกอิน) — ปิดเองใน 4 วิ หรือกดปิด */
 function Notice() {
@@ -16,8 +17,8 @@ function Notice() {
   if (!state.notice) return null;
   return (
     <div className="notice" role="alert" data-testid="notice">
-      <span>⚠️ {state.notice}</span>
-      <button className="notice-x" aria-label="ปิดการแจ้งเตือน" onClick={() => dispatch({ type: 'setNotice', text: null })}>✕</button>
+      <span><IconAlertTriangle size={14} /> {state.notice}</span>
+      <button className="notice-x" aria-label="ปิดการแจ้งเตือน" onClick={() => dispatch({ type: 'setNotice', text: null })}><IconX size={14} /></button>
     </div>
   );
 }
@@ -39,7 +40,7 @@ function AuthBar({ onOpenMenu }: { onOpenMenu: () => void }) {
   const { state, logout } = useStore();
   return (
     <div className="authbar">
-      <button className="icon-btn authbar-menu" aria-label="เปิดเมนู" onClick={onOpenMenu}>☰</button>
+      <button className="icon-btn authbar-menu" aria-label="เปิดเมนู" onClick={onOpenMenu}><IconMenu size={20} /></button>
       <span style={{ flex: 1 }} />
       {state.auth ? (
         <>
@@ -164,25 +165,25 @@ function GlobalDrawer({ menuOpen, onClose }: GlobalDrawerProps) {
       <aside className="drawer" role="dialog" aria-label="เมนูหลัก" onClick={(e) => e.stopPropagation()}>
         <div className="drawer__head">
           <div className="drawer__who">
-            <span className="drawer__avatar">😋</span>
+            <span className="drawer__avatar"><IconUser size={24} /></span>
             <div>
               <b>สวัสดี, หิวแล้ว</b>
-              <span className="drawer__loc">📍 {deliveryLabel(state)}</span>
+              <span className="drawer__loc"><IconPin size={13} /> {deliveryLabel(state)}</span>
             </div>
           </div>
-          <button className="icon-btn" aria-label="ปิดเมนู" onClick={onClose}>✕</button>
+          <button className="icon-btn" aria-label="ปิดเมนู" onClick={onClose}><IconX size={16} /></button>
         </div>
         <nav className="drawer__nav" onClick={onClose}>
-          <Link to="/"><span className="di">🏠</span> หน้าแรก</Link>
-          <Link to="/all"><span className="di">🍽️</span> ร้านอาหารทั้งหมด</Link>
+          <Link to="/"><span className="di"><IconHome size={20} /></span> หน้าแรก</Link>
+          <Link to="/all"><span className="di"><IconUtensils size={20} /></span> ร้านอาหารทั้งหมด</Link>
           <Link to="/cart">
-            <span className="di">🛒</span> ตะกร้า
+            <span className="di"><IconShoppingCart size={20} /></span> ตะกร้า
             {count > 0 && <span className="drawer__badge">{count}</span>}
           </Link>
-          <Link to="/track"><span className="di">📦</span> ติดตามออเดอร์</Link>
-          <Link to="/merchant"><span className="di">🏪</span> คอนโซลร้าน (Merchant)</Link>
-          <Link to="/rider"><span className="di">🛵</span> คอนโซลไรเดอร์ (Rider)</Link>
-          <Link to="/admin"><span className="di">🛠</span> ผู้ดูแลระบบ (Admin)</Link>
+          <Link to="/track"><span className="di"><IconPackage size={20} /></span> ติดตามออเดอร์</Link>
+          <Link to="/merchant"><span className="di"><IconStore size={20} /></span> คอนโซลร้าน (Merchant)</Link>
+          <Link to="/rider"><span className="di"><IconMotorbike size={20} /></span> คอนโซลไรเดอร์ (Rider)</Link>
+          <Link to="/admin"><span className="di"><IconWrench size={20} /></span> ผู้ดูแลระบบ (Admin)</Link>
         </nav>
       </aside>
     </div>

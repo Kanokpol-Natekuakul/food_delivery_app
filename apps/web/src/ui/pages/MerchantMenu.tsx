@@ -5,6 +5,7 @@ import { validateItemFields } from '@app/domain/menu/menu.js';
 import { findRestaurant } from '../data/catalog';
 import type { Dish } from '../data/catalog';
 import './MerchantMenu.css';
+import { IconStore } from '../components/Icons';
 
 type Fields = { name: string; price: string; desc: string };
 const emptyFields: Fields = { name: '', price: '', desc: '' };
@@ -19,7 +20,10 @@ export function MerchantMenu() {
     return (
       <div className="mmenu">
         <Link className="m-back" to="/merchant">‹ คอนโซลร้าน</Link>
-        <div className="empty"><div className="big">🏪</div><p>ไม่พบร้าน</p></div>
+        <div className="empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconStore size={48} /></div>
+          <p>ไม่พบร้าน</p>
+        </div>
       </div>
     );
   }

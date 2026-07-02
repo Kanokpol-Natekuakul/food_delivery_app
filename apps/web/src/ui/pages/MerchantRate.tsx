@@ -4,6 +4,7 @@ import { useStore, merchantRestaurantId } from '../store';
 import type { RateRequestStatus } from '@app/domain/revenue/revenue.js';
 import { findRestaurant, ratesFor, merchantOverrides } from '../data/catalog';
 import './MerchantRate.css';
+import { IconStore } from '../components/Icons';
 
 const STATUS_LABEL: Record<RateRequestStatus, string> = {
   pending: 'รออนุมัติ', countered: 'แอดมินเสนอแย้ง', approved: 'อนุมัติแล้ว', rejected: 'ถูกปฏิเสธ',
@@ -36,7 +37,9 @@ export function MerchantRate() {
   return (
     <div className="mrate">
       <div className="m-top">
-        <span className="m-who">💸 ค่าคอมมิชชัน{restaurant ? ` · ${restaurant.name}` : ''}</span>
+        <span className="m-who" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconStore size={18} /> ค่าคอมมิชชัน{restaurant ? ` · ${restaurant.name}` : ''}
+        </span>
         <Link className="m-back" to="/merchant">‹ คอนโซลร้าน</Link>
       </div>
 

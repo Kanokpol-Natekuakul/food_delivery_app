@@ -4,6 +4,7 @@ import { cartItemCount, foodTotal } from '@app/domain/cart/cart.js';
 import { checkServiceability, SERVICE_ZONE_KM } from '@app/domain/delivery/delivery.js';
 import { findRestaurant } from '../data/catalog';
 import './Restaurant.css';
+import { IconStore, IconMotorbike } from '../components/Icons';
 
 export function Restaurant() {
   const { restaurantId } = useParams();
@@ -18,7 +19,7 @@ export function Restaurant() {
     return (
       <div className="resto resto--missing">
         <div className="empty">
-          <div className="big">🏪</div>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconStore size={48} /></div>
           <p>ไม่พบร้านนี้แล้ว</p>
           <Link className="btn btn--mango" to="/">กลับหน้าแรก</Link>
         </div>
@@ -51,7 +52,9 @@ export function Restaurant() {
 
         {blocked && (
           <div className="resto-offzone" role="status">
-            <span className="resto-offzone__icon" aria-hidden="true">🛵</span>
+            <span className="resto-offzone__icon" aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <IconMotorbike size={16} />
+            </span>
             <div className="resto-offzone__text">
               <b>ร้านนี้อยู่นอกพื้นที่จัดส่ง</b>
               <span>ห่าง {service.distanceKm.toFixed(1)} กม. · ส่งได้ในรัศมี {SERVICE_ZONE_KM} กม. — ดูเมนูได้ แต่ยังสั่งไม่ได้</span>

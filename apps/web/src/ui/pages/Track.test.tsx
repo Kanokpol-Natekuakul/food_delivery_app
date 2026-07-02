@@ -29,7 +29,7 @@ const completed: State = {
 // store seed เริ่มที่ออเดอร์ AwaitingHandoff (merchant=PendingAccept, rider=Unclaimed)
 // คุมเวลาเองด้วยการ "หยุดเวลา" แล้วกด +1 นาที เพื่อให้ deterministic (ไม่พึ่ง setInterval จริง)
 async function stopClockAndStep(times: number) {
-  await userEvent.click(screen.getByRole('button', { name: '⏸ หยุดเวลา' }));
+  await userEvent.click(screen.getByRole('button', { name: 'หยุดเวลา' }));
   const step = screen.getByRole('button', { name: '+1 นาที' });
   for (let i = 0; i < times; i++) await userEvent.click(step);
 }
@@ -43,7 +43,7 @@ describe('Track — auto-fire ตัวจับเวลา', () => {
 
   it(`Z: ไรเดอร์คว้างานแล้วครบ ${CLAIM_EXPIRY_MIN} นาที → ปลดงานคืนลิสต์เอง`, async () => {
     renderWithProviders(<Track />);
-    await userEvent.click(screen.getByRole('button', { name: '⏸ หยุดเวลา' }));
+    await userEvent.click(screen.getByRole('button', { name: 'หยุดเวลา' }));
     await userEvent.click(screen.getByRole('button', { name: 'ไรเดอร์คว้างาน' }));
     const step = screen.getByRole('button', { name: '+1 นาที' });
     for (let i = 0; i < CLAIM_EXPIRY_MIN; i++) await userEvent.click(step);

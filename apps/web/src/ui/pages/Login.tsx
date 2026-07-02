@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 import './Login.css';
+import { IconUser } from '../components/Icons';
 
 // บัญชีเดโม (seed ฝั่ง api: รหัสผ่านเดียวกันทั้งหมด) — ปุ่มเติมให้ทดสอบเร็ว
 const DEMO_ACCOUNTS = [
-  { actorId: 'customer:aon', label: '🧑 ลูกค้า' },
-  { actorId: 'merchant:khao-man-kai', label: '🏪 ร้าน' },
-  { actorId: 'rider:somchai', label: '🛵 ไรเดอร์' },
-  { actorId: 'admin:root', label: '🛠️ แอดมิน' },
+  { actorId: 'customer:aon', label: 'ลูกค้า' },
+  { actorId: 'merchant:khao-man-kai', label: 'ร้าน' },
+  { actorId: 'rider:somchai', label: 'ไรเดอร์' },
+  { actorId: 'admin:root', label: 'แอดมิน' },
 ];
 const DEMO_PASSWORD = 'demo1234';
 
@@ -36,7 +37,9 @@ export function Login() {
   return (
     <div className="login">
       <div className="m-top">
-        <span className="m-who">🔑 เข้าสู่ระบบ</span>
+        <span className="m-who" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconUser size={18} /> เข้าสู่ระบบ
+        </span>
         <Link className="m-back" to="/">‹ หน้าแรก</Link>
       </div>
 

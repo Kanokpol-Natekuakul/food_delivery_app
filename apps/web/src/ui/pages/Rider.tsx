@@ -13,6 +13,7 @@ import { isPriorityHeld, RIDER_PRIORITY_WINDOW_SEC } from '@app/domain/order/tim
 import { isSuspended } from '@app/domain/moderation/moderation.js';
 import { findRestaurant } from '../data/catalog';
 import './Rider.css';
+import { IconMotorbike, IconStore, IconPin, IconBan, IconAlertTriangle, IconClock, IconArrowDown } from '../components/Icons';
 
 const ACTION: Record<RiderAction, { label: string; cls: string; run: (s: OrderState) => TransitionResult }> = {
   claim: { label: 'คว้างาน', cls: 'btn--mango', run: claimJob },
@@ -24,80 +25,6 @@ const ACTION: Record<RiderAction, { label: string; cls: string; run: (s: OrderSt
   release: { label: 'คืนงาน', cls: 'btn--ghost', run: releaseClaim },
 };
 
-/* ── Inline SVG icons (no emoji dependency) ── */
-
-function IconMotorbike({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18.5" cy="17.5" r="3.5" />
-      <circle cx="5.5" cy="17.5" r="3.5" />
-      <path d="M15 6h1.5l2 4.5" />
-      <path d="M2 17.5h3.5" />
-      <path d="M9 17.5h5.5l-3-7H7l-2 4" />
-    </svg>
-  );
-}
-
-function IconStore({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 21h18" />
-      <path d="M3 7v1a3 3 0 0 0 6 0V7" />
-      <path d="M9 7v1a3 3 0 0 0 6 0V7" />
-      <path d="M15 7v1a3 3 0 0 0 6 0V7" />
-      <path d="M3 7l2-4h14l2 4" />
-      <path d="M5 21V10.9" />
-      <path d="M19 21V10.9" />
-      <path d="M9 21v-6h6v6" />
-    </svg>
-  );
-}
-
-function IconPin({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
-      <circle cx="12" cy="10" r="3" />
-    </svg>
-  );
-}
-
-function IconBan({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="m4.9 4.9 14.2 14.2" />
-    </svg>
-  );
-}
-
-function IconAlert({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  );
-}
-
-function IconClock({ size = 16 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  );
-}
-
-function IconArrowDown({ size = 12 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19" />
-      <polyline points="19 12 12 19 5 12" />
-    </svg>
-  );
-}
 
 /* ── Audio feedback ── */
 
@@ -297,7 +224,7 @@ export function Rider() {
       )}
       {warned && (
         <div className="r-warn" role="status">
-          <span className="r-banner-icon"><IconAlert /></span>
+          <span className="r-banner-icon"><IconAlertTriangle /></span>
           <span>มีการแจ้งเตือนจากสถิติร้องเรียน — โปรดปรับปรุงคุณภาพการส่ง{downranked ? ' · บัญชีถูกลดอันดับการจ่ายงาน' : ''}</span>
         </div>
       )}

@@ -16,6 +16,7 @@ import {
 import type { DisputeCategory } from '@app/domain/dispute/dispute.js';
 import { OrderTracker } from '../order/OrderTracker';
 import './Track.css';
+import { IconTimer, IconPackage, IconCheckCircle } from '../components/Icons';
 
 const CATEGORY_OPTIONS: { value: DisputeCategory; label: string }[] = [
   { value: 'wrong_item', label: 'ได้ผิดรายการ' },
@@ -66,7 +67,7 @@ export function Track() {
         const r = deliveryTimeout(order);
         if (r.ok) {
           dispatch({ type: 'setOrder', order: r.state });
-          setMsg(`⏱ ไม่มีไรเดอร์ครบ ${DELIVERY_TIMEOUT_MIN} นาที — ระบบยกเลิกอัตโนมัติ (คืนเต็ม)`);
+          setMsg(`[ระบบ] ไม่มีไรเดอร์ครบ ${DELIVERY_TIMEOUT_MIN} นาที — ระบบยกเลิกอัตโนมัติ (คืนเต็ม)`);
         }
       }
     } else if (claimStartSim !== null && isClaimExpired(simMin - claimStartSim)) {
@@ -74,7 +75,7 @@ export function Track() {
       const r = releaseClaim(order);
       if (r.ok) {
         dispatch({ type: 'setOrder', order: r.state });
-        setMsg(`⏱ ไรเดอร์ไม่คืบหน้าครบ ${CLAIM_EXPIRY_MIN} นาที — ปลดงานคืนลิสต์อัตโนมัติ`);
+        setMsg(`[ระบบ] ไรเดอร์ไม่คืบหน้าครบ ${CLAIM_EXPIRY_MIN} นาที — ปลดงานคืนลิสต์อัตโนมัติ`);
       }
     }
   }, [order, simMin, claimStartSim, dispatch]);
@@ -111,7 +112,7 @@ export function Track() {
       <div className="app">
         <Link className="track-back" to="/">‹ กลับหน้าแรก</Link>
         <div className="empty">
-          <div className="big">🧾</div>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconPackage size={48} /></div>
           <p>ยังไม่มีออเดอร์ที่กำลังติดตาม</p>
           <Link className="btn btn--mango" to="/">เริ่มสั่งอาหาร</Link>
         </div>
@@ -128,15 +129,17 @@ export function Track() {
   return (
     <div className="app">
       <Link className="track-back" to="/">‹ กลับหน้าแรก</Link>
-      <OrderTracker state={order} />
+      <OrderTracker state={order} riderName={state.liveRider ? state.liveRider.replace(/^rider:/, '') : undefined} />
 
       <section className="panel">
         <div className="panel__label">แผงควบคุม (เดโม): กดเพื่อสั่ง state machine จริง</div>
 
         <div className="panel__clock">
-          <span className="panel__sim">⏱ เวลาจำลอง <b>{simMin}</b> นาที</span>
+          <span className="panel__sim" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+            <IconTimer size={14} /> เวลาจำลอง <b>{simMin}</b> นาที
+          </span>
           <button className="btn btn--ghost" onClick={() => setAuto((a) => !a)}>
-            {auto ? '⏸ หยุดเวลา' : '▶ เดินเวลา'}
+            {auto ? 'หยุดเวลา' : 'เดินเวลา'}
           </button>
           <button className="btn btn--ghost" onClick={() => setSimMin((m) => m + 1)}>+1 นาที</button>
         </div>
@@ -170,7 +173,9 @@ function ComplaintBox() {
   if (filed) {
     return (
       <section className="panel complaint">
-        <p className="complaint__done">✅ รับเรื่องร้องเรียนแล้ว — ทีมงานจะตรวจสอบและติดต่อกลับ</p>
+        <p className="complaint__done" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconCheckCircle size={16} /> รับเรื่องร้องเรียนแล้ว — ทีมงานจะตรวจสอบและติดต่อกลับ
+        </p>
       </section>
     );
   }

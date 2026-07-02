@@ -4,6 +4,7 @@ import { priceBreakdown, lineTotal, cartItemCount, isEmpty } from '@app/domain/c
 import { checkServiceability, SERVICE_ZONE_KM } from '@app/domain/delivery/delivery.js';
 import { findRestaurant } from '../data/catalog';
 import './Cart.css';
+import { IconShoppingCart, IconStore } from '../components/Icons';
 
 export function Cart() {
   const { state, dispatch } = useStore();
@@ -17,7 +18,7 @@ export function Cart() {
       <div className="cart">
         <Link className="cart-back" to="/">‹ กลับหน้าแรก</Link>
         <div className="empty">
-          <div className="big">🛒</div>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconShoppingCart size={48} /></div>
           <p>ตะกร้ายังว่าง — ตลาดเปิดรออยู่</p>
           <Link className="btn btn--mango" to="/">ดูร้านใกล้ฉัน</Link>
         </div>
@@ -41,7 +42,11 @@ export function Cart() {
     <div className="cart">
       <Link className="cart-back" to={backTo}>‹ เลือกเพิ่ม</Link>
       <h1 className="cart-title">ตะกร้าของคุณ</h1>
-      {restaurant && <p className="cart-shop">🏪 {restaurant.name}</p>}
+      {restaurant && (
+        <p className="cart-shop" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconStore size={14} /> {restaurant.name}
+        </p>
+      )}
 
       <div className="lines">
         {cart.lines.map((l) => (

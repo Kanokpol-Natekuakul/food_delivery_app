@@ -6,6 +6,7 @@ import { checkServiceability, deliveryFee } from '@app/domain/delivery/delivery.
 import { rankByStanding } from '@app/domain/moderation/moderation.js';
 import { LocationPicker } from '../components/LocationPicker';
 import './Home.css';
+import { IconPin, IconMotorbike, IconSearch } from '../components/Icons';
 
 /** ★ 4.8 → 4.8 (ใช้เรียงร้านเด่นตามเรตติ้ง) */
 const ratingValue = (s: string): number => parseFloat(s.replace(/[^\d.]/g, '')) || 0;
@@ -59,8 +60,8 @@ export function Home() {
   return (
     <div className="home">
       <div className="topbar">
-        <button className="loc" aria-label="เปลี่ยนที่อยู่จัดส่ง" onClick={() => setLocOpen(true)}>
-          <span className="pin">📍</span> <b>{deliveryLabel(state)}</b> <span aria-hidden="true">▾</span>
+        <button className="loc" aria-label="เปลี่ยนที่อยู่จัดส่ง" onClick={() => setLocOpen(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconPin size={14} className="pin" /> <b>{deliveryLabel(state)}</b> <span aria-hidden="true">▾</span>
         </button>
       </div>
 
@@ -71,11 +72,13 @@ export function Home() {
           <span className="l2">ตลาดเปิดเมื่อนั้น</span>
         </h1>
         <span className="open-tag"><span className="dot" /> เปิดรับออเดอร์</span>
-        <p className="riders">🛵 ไรเดอร์รับงานเร็วในย่านคุณ</p>
+        <p className="riders" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconMotorbike size={16} /> ไรเดอร์รับงานเร็วในย่านคุณ
+        </p>
       </header>
 
       <form className="search" role="search" onSubmit={(e) => e.preventDefault()}>
-        <span aria-hidden="true">🔍</span>
+        <span aria-hidden="true" style={{ display: 'inline-flex', alignItems: 'center' }}><IconSearch size={16} /></span>
         <input type="search" placeholder="ค้นหาเมนูหรือร้าน..." aria-label="ค้นหาเมนูหรือร้าน"
           value={query} onChange={(e) => setQuery(e.target.value)} />
         {query && (
@@ -95,7 +98,7 @@ export function Home() {
 
       {noResults ? (
         <section className="no-results">
-          <div className="big">🔍</div>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconSearch size={48} /></div>
           <p>ไม่พบร้านที่ตรงกับ{q && <> “<b>{query}</b>”</>}{activeCat && <> ในหมวด <b>{activeCat}</b></>}</p>
           <button className="btn btn--mango" onClick={clearFilters}>ล้างตัวกรอง</button>
         </section>

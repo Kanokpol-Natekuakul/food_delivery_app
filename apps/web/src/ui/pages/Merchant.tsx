@@ -8,6 +8,7 @@ import type { MerchantAction } from '@app/domain/order/merchantView.js';
 import { merchantView } from '@app/domain/order/merchantView.js';
 import { findRestaurant } from '../data/catalog';
 import './Merchant.css';
+import { IconStore, IconFlame } from '../components/Icons';
 
 const ACTION: Record<MerchantAction, { label: string; cls: string; run: (s: OrderState) => TransitionResult }> = {
   accept: { label: 'รับออเดอร์', cls: 'btn--mango', run: merchantAccept },
@@ -121,7 +122,9 @@ export function Merchant() {
   return (
     <div className="merchant">
       <div className="m-top">
-        <span className="m-who">🏪 ครัวร้าน{restaurant ? ` · ${restaurant.name}` : ''}</span>
+        <span className="m-who" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <IconStore size={18} /> ครัวร้าน{restaurant ? ` · ${restaurant.name}` : ''}
+        </span>
         <span className="m-links">
           <Link className="m-back" to="/">‹ ไปฝั่งลูกค้า</Link>
           <Link className="m-forward" to="/merchant/rate">ค่าคอม ›</Link>
@@ -131,7 +134,7 @@ export function Merchant() {
 
       {!order ? (
         <div className="empty">
-          <div className="big">🏪</div>
+          <div className="big" style={{ display: 'inline-flex', justifyContent: 'center' }}><IconStore size={48} /></div>
           <p>ยังไม่มีออเดอร์เข้า — รอลูกค้าสั่ง</p>
         </div>
       ) : (
@@ -181,7 +184,9 @@ export function Merchant() {
 
       {activeOrders.length > 0 && (
         <section className="m-prep">
-          <h2 className="m-prep__title">🍳 สรุปรายการครัวที่ต้องเตรียมสะสม ({activeOrders.length} ออเดอร์)</h2>
+          <h2 className="m-prep__title" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+            <IconFlame size={20} /> สรุปรายการครัวที่ต้องเตรียมสะสม ({activeOrders.length} ออเดอร์)
+          </h2>
           <div className="m-prep__grid">
             {Object.values(kitchenQueue).map((item) => (
               <div className="m-prep__item" key={item.name}>

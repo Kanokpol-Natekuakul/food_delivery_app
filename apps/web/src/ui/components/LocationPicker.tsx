@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { useStore, deliveryCoord, deliveryLabel } from '../store';
 import type { LatLng } from '@app/domain/delivery/delivery.js';
 import './LocationPicker.css';
+import { IconPin, IconX } from './Icons';
 
 // ตำแหน่งสำเร็จรูปใกล้ย่านร้าน (ให้เห็นทั้งในเขต/นอกเขตจัดส่ง)
 const PRESETS: { label: string; coord: LatLng }[] = [
@@ -35,10 +36,15 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
       }).addTo(map).bindTooltip(r.name);
     }
 
-    // หมุดที่อยู่จัดส่ง — ลากได้ + คลิกแผนที่เพื่อย้าย
+    // หมุดที่อยู่จัดส่ง — ลากได้ + คลิกแผนที่เพื่อย้าย (ใช้ SVG string แทน emoji)
     const marker = L.marker([start.lat, start.lng], {
       draggable: true,
-      icon: L.divIcon({ className: 'lp-pin', html: '📍', iconSize: [30, 30], iconAnchor: [15, 28] }),
+      icon: L.divIcon({
+        className: 'lp-pin',
+        html: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF4D3D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3))"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3" fill="#FF4D3D"/></svg>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 24]
+      }),
     }).addTo(map);
     const moveTo = (ll: L.LatLng) => { setCoord({ lat: ll.lat, lng: ll.lng }); setLabel('ตำแหน่งที่ปักหมุด'); };
     marker.on('dragend', () => moveTo(marker.getLatLng()));
@@ -63,8 +69,10 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
     <div className="lp-scrim" onClick={onClose}>
       <div className="lp" role="dialog" aria-label="เลือกที่อยู่จัดส่ง" onClick={(e) => e.stopPropagation()}>
         <div className="lp-head">
-          <b>📍 ที่อยู่จัดส่ง</b>
-          <button className="icon-btn" aria-label="ปิด" onClick={onClose}>✕</button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <IconPin size={18} /> <b>ที่อยู่จัดส่ง</b>
+          </span>
+          <button className="icon-btn" aria-label="ปิด" onClick={onClose}><IconX size={16} /></button>
         </div>
         <div className="lp-map" ref={mapElRef} data-testid="lp-map" />
         <div className="lp-presets">
@@ -75,7 +83,7 @@ export function LocationPicker({ onClose }: { onClose: () => void }) {
         <label className="lp-field">ชื่อสถานที่
           <input value={label} onChange={(e) => setLabel(e.target.value)} />
         </label>
-        <p className="lp-coord">พิกัด {coord.lat.toFixed(4)}, {coord.lng.toFixed(4)} — ลากหมุด 📍 หรือคลิกแผนที่เพื่อย้าย</p>
+        <p className="lp-coord">พิกัด {coord.lat.toFixed(4)}, {coord.lng.toFixed(4)} — ลากหมุดสีส้ม หรือคลิกแผนที่เพื่อย้าย</p>
         <button type="button" className="btn btn--mango lp-confirm" onClick={confirm}>ใช้ที่อยู่นี้</button>
       </div>
     </div>

@@ -187,8 +187,8 @@ describe('Admin — หลายออเดอร์ + suspend + force-cancel',
     await userEvent.click(screen.getByRole('checkbox')); // แนบรูป
     await userEvent.click(screen.getByRole('button', { name: 'ส่งเรื่องร้องเรียน' })); // ใบที่ 3
     expect(screen.getByRole('button', { name: 'ปลดระงับ สมชาย (ไรเดอร์)' })).toBeInTheDocument(); // ระงับ
-    expect(screen.getByText('⚠️ แจ้งเตือน')).toBeInTheDocument();
-    expect(screen.getByText('⬇️ ลดอันดับ')).toBeInTheDocument();
+    expect(screen.getByText('แจ้งเตือน', { selector: '.a-act--notify' })).toBeInTheDocument();
+    expect(screen.getByText('ลดอันดับ', { selector: '.a-act--downrank' })).toBeInTheDocument();
   });
 
   it('auto-action "จับตา" (ADR 0006): ยื่นร้องระดับจับตา → แจ้งเตือนอย่างเดียว (ไม่ลดอันดับ/ระงับ)', async () => {
@@ -205,8 +205,8 @@ describe('Admin — หลายออเดอร์ + suspend + force-cancel',
     renderWithProviders(<><Track /><Admin /></>, { initialState: st });
     await userEvent.click(screen.getByRole('checkbox'));
     await userEvent.click(screen.getByRole('button', { name: 'ส่งเรื่องร้องเรียน' }));
-    expect(screen.getByText('⚠️ แจ้งเตือน')).toBeInTheDocument();
-    expect(screen.queryByText('⬇️ ลดอันดับ')).not.toBeInTheDocument();
+    expect(screen.getByText('แจ้งเตือน', { selector: '.a-act--notify' })).toBeInTheDocument();
+    expect(screen.queryByText('ลดอันดับ', { selector: '.a-act--downrank' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'ระงับ สมชาย (ไรเดอร์)' })).toBeInTheDocument(); // ยังไม่ถูกระงับ
   });
 

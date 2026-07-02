@@ -2,27 +2,49 @@ import type { OrderState } from '@app/domain/order/state.js';
 import { orderView } from './orderView';
 import type { Status } from './orderView';
 import './OrderTracker.css';
+import { IconTimer, IconFlame, IconMotorbike, IconStar, IconTrash, IconHourglass, IconDoor, IconWrench } from '../components/Icons';
+
+const TERMINAL_ICONS: Record<string, JSX.Element> = {
+  flame: <IconFlame size={28} />,
+  trash: <IconTrash size={28} />,
+  hourglass: <IconHourglass size={28} />,
+  door: <IconDoor size={28} />,
+  wrench: <IconWrench size={28} />,
+};
 
 const nodeClass = (s: Status) => `node is-${s}`;
 
-export function OrderTracker({ state }: { state: OrderState }) {
+export function OrderTracker({ state, riderName = 'สมชาย ใจดี' }: { state: OrderState; riderName?: string }) {
   const v = orderView(state);
   const otpHint =
     v.otp === 'live' ? 'ไรเดอร์รออยู่หน้าบ้าน — แจ้งรหัสนี้ได้เลย'
       : v.otp === 'done' ? 'ยืนยันรับของเรียบร้อยแล้ว'
         : 'รหัสจะใช้ได้เมื่อไรเดอร์ถึงหน้าบ้าน';
 
+  const shortRiderName = state.kind === 'AwaitingHandoff' && state.rider === 'Unclaimed' 
+    ? 'ยังไม่มี' 
+    : (riderName.split(' ')[0] || 'สมชาย');
+
   return (
     <div className="tracker">
       <h1 className="headline" aria-live="polite">{v.headline}</h1>
       <p className="sub">{v.sub}</p>
-      {v.cancel && <span className="chip chip--mango chip-cancel">⏱ ยกเลิกฟรีได้อีก 04:46</span>}
+      {v.cancel && (
+        <span className="chip chip--mango chip-cancel">
+          <IconTimer size={14} style={{ marginRight: '4px' }} /> ยกเลิกฟรีได้อีก 04:46
+        </span>
+      )}
 
       <div className="board">
         <div className="rail-heads">
-          <div className="rail-head">🔥 ราง ร้าน</div>
-          <div className="rail-head">
-            <span className={`r-ride-ico${state.kind === 'InTransit' || (state.kind === 'AwaitingHandoff' && state.rider !== 'Unclaimed') ? ' is-riding' : ''}`}>🛵</span> ราง ไรเดอร์ <span className="who">สมชาย</span>
+          <div className="rail-head" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <IconFlame size={16} /> ราง ร้าน
+          </div>
+          <div className="rail-head" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <span className={`r-ride-ico${state.kind === 'InTransit' || (state.kind === 'AwaitingHandoff' && state.rider !== 'Unclaimed') ? ' is-riding' : ''}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
+              <IconMotorbike size={16} />
+            </span>{' '}
+            ราง ไรเดอร์ <span className="who">{shortRiderName}</span>
           </div>
         </div>
 
@@ -58,8 +80,13 @@ export function OrderTracker({ state }: { state: OrderState }) {
       {v.otp !== 'hide' && (
         <section className={`otp is-${v.otp}`} aria-label="รหัสรับของ">
           <div className="rider">
-            <span className="ava">🛵</span>
-            <div><div className="name">สมชาย ใจดี</div><div className="rate">★ 4.9</div></div>
+            <span className="ava" style={{ display: 'inline-flex', alignItems: 'center' }}><IconMotorbike size={20} /></span>
+            <div>
+              <div className="name">{riderName}</div>
+              <div className="rate" style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                <IconStar size={12} /> 4.9
+              </div>
+            </div>
           </div>
           <h2>รหัสรับของ</h2>
           <p>{otpHint}</p>
@@ -70,7 +97,9 @@ export function OrderTracker({ state }: { state: OrderState }) {
 
       {v.terminal && (
         <div className="terminal">
-          <span className="ic">{v.terminal.icon}</span>
+          <span className="ic" style={{ display: 'inline-flex', alignItems: 'center' }}>
+            {TERMINAL_ICONS[v.terminal.icon] ?? <IconAlertTriangle size={28} />}
+          </span>
           <div>
             <b>{v.terminal.title}</b>
             <p>{v.terminal.body}</p>
