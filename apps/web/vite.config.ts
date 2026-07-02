@@ -14,5 +14,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.ts',
     // เทสต์ฝั่ง UI เท่านั้น — ฝั่งโดเมนรันด้วย node:test (`npm test`) แยกกัน
     include: ['src/ui/**/*.test.{ts,tsx}'],
+    // เครื่อง dev แรมจำกัด: ปล่อย worker เต็มจำนวนแล้ว fork ตายแบบ OOM → เทสต์ timeout หลอก
+    maxWorkers: 2,
   },
 });
