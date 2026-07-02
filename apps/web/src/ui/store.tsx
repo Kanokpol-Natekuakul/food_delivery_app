@@ -380,6 +380,7 @@ type StoreValue = {
   login: (actorId: string, password: string) => Promise<AuthUser>;
   logout: () => Promise<void>;
   hydrating: boolean; // กำลังดึงข้อมูลสดจาก backend (โชว์ loading bar); false เสมอเมื่อไม่เปิด hydrate
+  offlineQueue?: { action: Action; timestamp: number }[];
 };
 const Ctx = createContext<StoreValue | null>(null);
 
@@ -579,6 +580,16 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     () => initialState ?? (persist ? loadPersisted() : __seed),
   );
 
+  const LS_OFFLINE_QUEUE = 'food_delivery_offline_queue';
+  const [offlineQueue, setOfflineQueue] = useState<{ action: Action; timestamp: number }[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(LS_OFFLINE_QUEUE);
+      if (stored) setOfflineQueue(JSON.parse(stored));
+    } catch { /* ปิดการใช้งาน localStorage */ }
+  }, []);
+
   // บันทึกทุกครั้งที่ state เปลี่ยน (เฉพาะโหมด persist และไม่ได้ override ด้วย initialState)
   useEffect(() => {
     if (!persist || initialState) return;
@@ -615,55 +626,145 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
   // mutation ล้มเหลว → rehydrate() ดึง server ทับ optimistic (rollback ให้ตรงความจริง)
   const stateRef = useRef(state);
   useEffect(() => { stateRef.current = state; }, [state]);
+
+  // ซิงก์คิวออฟไลน์ที่บันทึกไว้ในเครื่องขึ้น server
+  const drainOfflineQueue = useCallback(async () => {
+    if (offlineQueue.length === 0 || !sync) return;
+    console.log(`[Offline Sync] กำลังซิงก์ข้อมูลค้างสะสม ${offlineQueue.length} รายการ...`);
+    const q = [...offlineQueue];
+    const failed: typeof offlineQueue = [];
+    const m = sync === true ? liveMutations : sync;
+    if (!m) return;
+
+    for (const item of q) {
+      try {
+        if (item.action.type === 'submitRateRequest') {
+          await m.submitRateRequest({
+            merchantId: item.action.merchantId,
+            currentRate: item.action.currentRate,
+            proposedRate: item.action.proposedRate,
+            reason: item.action.reason
+          });
+        } else if (item.action.type === 'place') {
+          await m.createOrder({
+            restaurantId: stateRef.current.restaurantId,
+            lines: stateRef.current.cart.lines,
+            customer: stateRef.current.auth?.actorId ?? CUSTOMER_ID
+          });
+        } else if (item.action.type === 'claimLive') {
+          if (stateRef.current.liveOrderId) {
+            await m.claimOrder(stateRef.current.liveOrderId);
+          }
+        } else if (item.action.type === 'setOrder') {
+          if (stateRef.current.liveOrderId) {
+            if (item.action.txn) {
+              await m.transitionOrder(stateRef.current.liveOrderId, item.action.txn);
+            } else if (item.action.order.kind === 'Completed') {
+              await m.completeOrder(stateRef.current.liveOrderId);
+            }
+          }
+        } else if (item.action.type === 'fileDispute') {
+          if (stateRef.current.liveOrderId) {
+            await m.fileDispute({
+              orderId: stateRef.current.liveOrderId,
+              category: item.action.category,
+              hasPhoto: item.action.hasPhoto
+            });
+          }
+        } else {
+          await mirror(m, item.action, stateRef.current);
+        }
+      } catch (e) {
+        console.error('[Offline Sync] ซิงก์ไม่สำเร็จ เก็บไว้ส่งใหม่ภายหลัง:', e);
+        failed.push(item);
+      }
+    }
+
+    setOfflineQueue(failed);
+    try {
+      localStorage.setItem(LS_OFFLINE_QUEUE, JSON.stringify(failed));
+    } catch {}
+
+    if (failed.length === 0) {
+      dispatch({ type: 'setNotice', text: 'ซิงก์ข้อมูลตอนออฟไลน์เรียบร้อยแล้ว!' });
+      void rehydrate();
+    }
+  }, [offlineQueue, sync, rehydrate]);
+
+  // ซิงก์ออโต้เมื่อเน็ตกลับมาออนไลน์
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('[Offline Sync] ตรวจพบการออนไลน์ กำลังรันคิว...');
+      void drainOfflineQueue();
+    };
+    window.addEventListener('online', handleOnline);
+    if (navigator.onLine && offlineQueue.length > 0) {
+      void drainOfflineQueue();
+    }
+    return () => window.removeEventListener('online', handleOnline);
+  }, [drainOfflineQueue, offlineQueue.length]);
+
   const dispatchWithSync = useCallback<Dispatch<Action>>((action) => {
     const prev = stateRef.current;
     dispatch(action);
     if (!sync) return;
     const m = sync === true ? liveMutations : sync;
-    // mirror ล้มเหลว → แจ้งผู้ใช้ (ข้อความจาก server เช่น "ต้องเข้าสู่ระบบก่อน"/"ไม่ใช่งานของคุณ") + rollback ด้วย refetch
     const rollback = (e: unknown) => {
       dispatch({ type: 'setNotice', text: e instanceof Error ? e.message : 'ทำรายการไม่สำเร็จ' });
       void rehydrate();
     };
-    // create → adopt server id: optimistic ใส่ local id แล้วแทนด้วย entity จาก server (id ตรง DB)
-    // ทำนาย local id จาก prev (ตรงกับสูตรใน reducer) เพื่อรู้ว่าจะ reconcile ตัวไหน
+    const isNetworkError = (err: any) => {
+      return !navigator.onLine || 
+             err?.message?.includes('Failed to fetch') || 
+             err?.message?.includes('NetworkError') ||
+             err?.message?.includes('Network request failed');
+    };
+    const handleMutationError = (act: Action, err: unknown) => {
+      if (isNetworkError(err)) {
+        dispatch({ type: 'setNotice', text: 'ระบบออฟไลน์: บันทึกรายการลงเครื่องแล้ว จะซิงก์อัตโนมัติเมื่อเน็ตกลับมา' });
+        setOfflineQueue((q) => {
+          const next = [...q, { action: act, timestamp: Date.now() }];
+          try { localStorage.setItem(LS_OFFLINE_QUEUE, JSON.stringify(next)); } catch {}
+          return next;
+        });
+      } else {
+        rollback(err);
+      }
+    };
+
     if (action.type === 'submitRateRequest') {
       const localId = `rr${prev.rateRequests.length + 1}`;
       m.submitRateRequest({ merchantId: action.merchantId, currentRate: action.currentRate, proposedRate: action.proposedRate, reason: action.reason })
         .then((request) => dispatch({ type: 'reconcileRateRequest', localId, request }))
-        .catch(rollback);
+        .catch((err) => handleMutationError(action, err));
       return;
     }
-    // วางออเดอร์สด → สร้างฝั่ง server (ไม่มีไรเดอร์ — รอ pull-based claim) แล้ว adopt id
     if (action.type === 'place') {
       m.createOrder({ restaurantId: prev.restaurantId, lines: prev.cart.lines, customer: prev.auth?.actorId ?? CUSTOMER_ID })
         .then(({ id }) => dispatch({ type: 'reconcileLiveOrder', id }))
-        .catch(rollback);
+        .catch((err) => handleMutationError(action, err));
       return;
     }
-    // ไรเดอร์คว้างานออเดอร์สด → assign riderId=session ฝั่ง server (pull-based dispatch ADR 0001)
     if (action.type === 'claimLive') {
-      if (prev.liveOrderId) m.claimOrder(prev.liveOrderId).catch(rollback);
+      if (prev.liveOrderId) m.claimOrder(prev.liveOrderId).catch((err) => handleMutationError(action, err));
       return;
     }
-    // เดิน state machine ฝั่ง server: txn (ราง ร้าน/ไรเดอร์) → /transition; ไม่มี txn แต่ Completed (เดโม Track) → /complete
     if (action.type === 'setOrder') {
       if (!prev.liveOrderId) return;
-      if (action.txn) m.transitionOrder(prev.liveOrderId, action.txn).catch(rollback);
-      else if (action.order.kind === 'Completed' && prev.order?.kind !== 'Completed') m.completeOrder(prev.liveOrderId).catch(rollback);
+      if (action.txn) m.transitionOrder(prev.liveOrderId, action.txn).catch((err) => handleMutationError(action, err));
+      else if (action.order.kind === 'Completed' && prev.order?.kind !== 'Completed') m.completeOrder(prev.liveOrderId).catch((err) => handleMutationError(action, err));
       return;
     }
-    // ร้องเรียนออเดอร์สด → ส่งไป server (ตัวตนผู้ร้องจาก session ฝั่ง server) แล้ว adopt id
     if (action.type === 'fileDispute') {
       if (prev.liveOrderId) {
         const localId = `dp${prev.disputes.length + 1}`;
         m.fileDispute({ orderId: prev.liveOrderId, category: action.category, hasPhoto: action.hasPhoto })
           .then(({ dispute }) => dispatch({ type: 'reconcileDispute', localId, dispute }))
-          .catch(rollback);
+          .catch((err) => handleMutationError(action, err));
       }
       return;
     }
-    mirror(m, action, prev)?.catch(rollback);
+    mirror(m, action, prev)?.catch((err) => handleMutationError(action, err));
   }, [sync, rehydrate]);
 
   // ── auth (Lucia session) ──
@@ -678,6 +779,43 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // ── Real-time Sync (SSE / WebSocket) Skeleton ──
+  // เตรียมโครงสร้างสำหรับการเชื่อมต่อเรียลไทม์ในระดับโปรดักชัน
+  useEffect(() => {
+    if (!sync) return;
+    console.log('[Real-time Sync] กำลังเชื่อมต่อช่องสัญญาณเรียลไทม์...');
+    let active = true;
+    let sse: EventSource | null = null;
+    try {
+      // ตัวอย่าง SSE Client:
+      // sse = new EventSource('/api/live-events');
+      // sse.onmessage = (event) => {
+      //   console.log('[Real-time Sync] ได้รับอัปเดตจากเซิร์ฟเวอร์:', event.data);
+      //   void rehydrate();
+      // };
+      //
+      // ตัวอย่าง WebSocket Client:
+      // const ws = new WebSocket('ws://' + window.location.host + '/live');
+      // ws.onmessage = () => rehydrate();
+      
+      const pollInterval = setInterval(() => {
+        if (active) {
+          console.log('[Real-time Sync] ตรวจสอบอัปเดตแบบ Long-polling...');
+          void rehydrate();
+        }
+      }, 30000);
+
+      return () => {
+        active = false;
+        clearInterval(pollInterval);
+        if (sse) sse.close();
+        console.log('[Real-time Sync] ปิดการเชื่อมต่อเรียลไทม์');
+      };
+    } catch (e) {
+      console.warn('[Real-time Sync] ไม่สามารถเริ่มระบบเรียลไทม์ได้:', e);
+    }
+  }, [sync, rehydrate]);
+
   const login = useCallback(async (actorId: string, password: string): Promise<AuthUser> => {
     const user = await auth.login(actorId, password);
     dispatch({ type: 'setAuth', user });
@@ -689,7 +827,7 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
     dispatch({ type: 'setAuth', user: null });
   }, [auth]);
 
-  return <Ctx.Provider value={{ state, dispatch: dispatchWithSync, login, logout, hydrating }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ state, dispatch: dispatchWithSync, login, logout, hydrating, offlineQueue }}>{children}</Ctx.Provider>;
 }
 
 export function useStore() {

@@ -5,6 +5,7 @@ import type { State } from './store';
 import { cartItemCount } from '@app/domain/cart/cart.js';
 import './App.css';
 import { IconAlertTriangle, IconX, IconMenu, IconUser, IconPin, IconHome, IconUtensils, IconShoppingCart, IconPackage, IconStore, IconMotorbike, IconWrench } from './components/Icons';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 /** แถบแจ้งผู้ใช้ชั่วคราว (mirror ไป backend ล้ม เช่น ต้องล็อกอิน) — ปิดเองใน 4 วิ หรือกดปิด */
 function Notice() {
@@ -130,20 +131,22 @@ export function App() {
       <DocumentTitle />
       <AuthBar onOpenMenu={() => setMenuOpen(true)} />
       <Notice />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/r/:restaurantId" element={<Restaurant />} />
-        <Route path="/r/:restaurantId/:dishId" element={<Menu />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/track" element={<Track />} />
-        <Route path="/merchant" element={<Merchant />} />
-        <Route path="/merchant/menu" element={<MerchantMenu />} />
-        <Route path="/merchant/rate" element={<MerchantRate />} />
-        <Route path="/rider" element={<Rider />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/all" element={<AllRestaurants />} />
-      </Routes>
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/r/:restaurantId" element={<Restaurant />} />
+          <Route path="/r/:restaurantId/:dishId" element={<Menu />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/track" element={<Track />} />
+          <Route path="/merchant" element={<Merchant />} />
+          <Route path="/merchant/menu" element={<MerchantMenu />} />
+          <Route path="/merchant/rate" element={<MerchantRate />} />
+          <Route path="/rider" element={<Rider />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/all" element={<AllRestaurants />} />
+        </Routes>
+      </ErrorBoundary>
       <GlobalDrawer menuOpen={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
