@@ -6,6 +6,7 @@ import { cartItemCount } from '@app/domain/cart/cart.js';
 import './App.css';
 import { IconAlertTriangle, IconX, IconMenu, IconUser, IconPin, IconHome, IconUtensils, IconShoppingCart, IconPackage, IconStore, IconMotorbike, IconWrench } from './components/Icons';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { DevPanel } from './components/DevPanel';
 
 /** แถบแจ้งผู้ใช้ชั่วคราว (mirror ไป backend ล้ม เช่น ต้องล็อกอิน) — ปิดเองใน 4 วิ หรือกดปิด */
 function Notice() {
@@ -148,6 +149,7 @@ export function App() {
         </Routes>
       </ErrorBoundary>
       <GlobalDrawer menuOpen={menuOpen} onClose={() => setMenuOpen(false)} />
+      <DevPanel />
     </>
   );
 }

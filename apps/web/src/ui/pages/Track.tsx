@@ -45,9 +45,10 @@ export function Track() {
   // เดินเวลาอัตโนมัติ (เฉพาะตอนมีออเดอร์และเปิด auto)
   useEffect(() => {
     if (!auto || !order) return;
-    const id = setInterval(() => setSimMin((m) => m + 1), 1000);
+    const speed = state.simSpeed ?? 1;
+    const id = setInterval(() => setSimMin((m) => m + 1), Math.max(50, 1000 / speed));
     return () => clearInterval(id);
-  }, [auto, order]);
+  }, [auto, order, state.simSpeed]);
 
   // จับเวลาเริ่มคว้างาน: ตั้งครั้งแรกที่ rider พ้น Unclaimed, ล้างเมื่อกลับมา Unclaimed/จบ
   useEffect(() => {

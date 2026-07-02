@@ -76,6 +76,8 @@ export type State = {
   // ที่อยู่จัดส่งที่ผู้ใช้ปักหมุด (LatLng) + ป้ายชื่อ — ไม่มี = ใช้ค่าตั้งต้น (ลาดพร้าว ซ.1)
   deliveryCoord?: LatLng;
   deliveryLabel?: string;
+  mockOffline?: boolean;
+  simSpeed?: number;
 };
 
 export const DEFAULT_DELIVERY_LABEL = 'ลาดพร้าว ซ.1';
@@ -193,7 +195,10 @@ type Action =
   | { type: 'rejectRateRequest'; id: string }             // แอดมินปฏิเสธ
   | { type: 'counterRateRequest'; id: string; counter: number } // แอดมินเสนอแย้ง
   | { type: 'acceptCounterOffer'; id: string }            // ร้านตอบรับข้อเสนอแย้ง → อัปเดต rateOverrides
-  | { type: 'declineCounterOffer'; id: string };          // ร้านปฏิเสธข้อเสนอแย้ง
+  | { type: 'declineCounterOffer'; id: string }           // ร้านปฏิเสธข้อเสนอแย้ง
+  // ── จำลองโหมด Dev (ออฟไลน์จำลอง และตัวช่วยสปีดเวลา) ──
+  | { type: 'toggleMockOffline' }
+  | { type: 'setSimSpeed'; speed: number };
 
 /** อัปเดต dishes ของร้านหนึ่งด้วยฟังก์ชันโดเมน — ถ้าโดเมนปฏิเสธ คงของเดิม */
 function mapDishes(s: State, restaurantId: string, fn: (dishes: readonly Dish[]) => { ok: boolean; items?: readonly Dish[] }): State {
@@ -370,6 +375,12 @@ function reducer(s: State, a: Action): State {
       if (!r.ok) return s;
       return { ...s, rateRequests: s.rateRequests.map((q) => (q.id === a.id ? r.request : q)) };
     }
+    case 'toggleMockOffline': {
+      return { ...s, mockOffline: !s.mockOffline };
+    }
+    case 'setSimSpeed': {
+      return { ...s, simSpeed: a.speed };
+    }
     default: return s;
   }
 }
@@ -436,6 +447,8 @@ const __seed: State = {
   rateOverrides: __rateOverrides,
   rateRequests: [],
   auth: null,
+  mockOffline: false,
+  simSpeed: 1,
 };
 
 // คีย์เก็บ state ทั้งก้อนใน localStorage (เปิดใช้เมื่อ persist=true เท่านั้น — เทสต์จึงไม่แตะ)
@@ -714,7 +727,8 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
       void rehydrate();
     };
     const isNetworkError = (err: any) => {
-      return !navigator.onLine || 
+      return stateRef.current.mockOffline ||
+             !navigator.onLine || 
              err?.message?.includes('Failed to fetch') || 
              err?.message?.includes('NetworkError') ||
              err?.message?.includes('Network request failed');
@@ -731,6 +745,11 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
         rollback(err);
       }
     };
+
+    if (stateRef.current.mockOffline && action.type !== 'toggleMockOffline' && action.type !== 'setSimSpeed') {
+      handleMutationError(action, new Error('Network request failed (Simulated Offline Mode)'));
+      return;
+    }
 
     if (action.type === 'submitRateRequest') {
       const localId = `rr${prev.rateRequests.length + 1}`;

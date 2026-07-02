@@ -113,9 +113,10 @@ export function Rider() {
 
   useEffect(() => {
     if (!held) return;
-    const id = setInterval(() => setWaited((w) => w + 1), 1000);
+    const speed = state.simSpeed ?? 1;
+    const id = setInterval(() => setWaited((w) => w + 1), Math.max(50, 1000 / speed));
     return () => clearInterval(id);
-  }, [held]);
+  }, [held, state.simSpeed]);
 
   // เสียงแจ้งเตือนเมื่อมีงานใหม่เข้าสำหรับไรเดอร์
   useEffect(() => {
