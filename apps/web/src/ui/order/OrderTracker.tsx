@@ -2,7 +2,7 @@ import type { OrderState } from '@app/domain/order/state.js';
 import { orderView } from './orderView';
 import type { Status } from './orderView';
 import './OrderTracker.css';
-import { IconTimer, IconFlame, IconMotorbike, IconStar, IconTrash, IconHourglass, IconDoor, IconWrench } from '../components/Icons';
+import { IconTimer, IconFlame, IconMotorbike, IconStar, IconTrash, IconHourglass, IconDoor, IconWrench, IconAlertTriangle } from '../components/Icons';
 
 const TERMINAL_ICONS: Record<string, JSX.Element> = {
   flame: <IconFlame size={28} />,
@@ -14,7 +14,7 @@ const TERMINAL_ICONS: Record<string, JSX.Element> = {
 
 const nodeClass = (s: Status) => `node is-${s}`;
 
-export function OrderTracker({ state, riderName = 'สมชาย ใจดี' }: { state: OrderState; riderName?: string }) {
+export function OrderTracker({ state, riderName = 'สมชาย ใจดี' }: { state: OrderState; riderName?: string | undefined }) {
   const v = orderView(state);
   const otpHint =
     v.otp === 'live' ? 'ไรเดอร์รออยู่หน้าบ้าน — แจ้งรหัสนี้ได้เลย'

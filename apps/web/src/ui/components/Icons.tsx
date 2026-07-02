@@ -1,4 +1,4 @@
-import { SVGProps } from 'react';
+import type { SVGProps } from 'react';
 
 /**
  * Shared SVG icon components — ใช้แทน emoji ทั่วแอป

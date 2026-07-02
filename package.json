@@ -9,7 +9,7 @@
     "build": "vite build apps/web",
     "preview": "vite preview apps/web",
     "typecheck": "tsc -p apps/web/tsconfig.json && tsc -p packages/domain/tsconfig.json",
-    "test": "node --import tsx --test \"packages/domain/src/**/*.test.ts\"",
+    "test": "node scripts/run-tests.js",
     "test:ui": "vitest run --root apps/web",
     "test:ui:watch": "vitest --root apps/web"
   },

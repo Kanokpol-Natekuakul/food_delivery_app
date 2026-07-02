@@ -827,7 +827,7 @@ export function StoreProvider({ children, initialState, persist, hydrate, sync, 
       return () => {
         active = false;
         clearInterval(pollInterval);
-        if (sse) sse.close();
+        if (sse) (sse as EventSource).close();
         console.log('[Real-time Sync] ปิดการเชื่อมต่อเรียลไทม์');
       };
     } catch (e) {
